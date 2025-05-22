@@ -1,7 +1,7 @@
 [
     {
         "caption": "Preferences",
-        "mnemonic": "P",
+        "mnemonic": "n",
         "id": "preferences",
         "children": [
             {
@@ -13,8 +13,8 @@
                             {
                                 "command": "edit_settings",
                                 "args": {
-                                    "base_file": "${packages}/Ollama-Sublime/Ollama.sublime-settings",
-                                    "default": "{\n\t\"ollama_server_url\": \"http://localhost:11434\",\n\t\"default_model\": \"llama2\",\n\t\"timeout\": 30\n}"
+                                    "base_file": "${packages}/ollama-sublime/Ollama.sublime-settings",
+                                    "default": "{\n  \"model\": \"codellama\",\n  \"url\": \"http://127.0.0.1:11434/api/generate\",\n  \"explain_prompt\": \"Explain what the following Laravel code does in simple terms.\",\n  \"optimize_prompt\": \"Act as laravel and php expert and optimize the following code and return improved code snippets with explanation.\",\n  \"tab_title_prefix\": \"Ollama\",\n  \"syntax\": \"Packages/Markdown/Markdown.sublime-syntax\"\n}"
                                 }
                             }
                         ]

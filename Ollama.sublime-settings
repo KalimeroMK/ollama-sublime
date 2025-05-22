@@ -1,9 +1,8 @@
 {
-  "model": "codellama",
-  "url": "http://127.0.0.1:11434/api/generate",
-  "explain_prompt": "Explain what the following Laravel code does in simple terms.",
-  "optimize_prompt": "Act as laravel and php expert and optimize the following code and return improved code
-   snippets with explanation.",
-  "tab_title_prefix": "Ollama",
-  "syntax": "Packages/Markdown/Markdown.sublime-syntax"
+    "model": "codellama",
+    "url": "http://127.0.0.1:11434/api/generate",
+    "explain_prompt": "Explain what the following Laravel code does in simple terms.",
+    "optimize_prompt": "Act as laravel and php expert and optimize the following code and return improved code snippets with explanation.",
+    "tab_title_prefix": "Ollama",
+    "syntax": "Packages/Markdown/Markdown.sublime-syntax"
 }
