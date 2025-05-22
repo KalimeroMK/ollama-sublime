@@ -17,7 +17,7 @@ class OllamaPromptCommand(sublime_plugin.WindowCommand):
         tab.set_name("💬 Ollama Prompt")
         tab.set_scratch(True)
         tab.set_syntax_file(syntax)
-        tab.run_command("append", {"characters": "🧠 Prompt: {}
+        tab.run_command("append", {"characters": "🧠 Prompt: {}\n⏳ Model: {}\n\n".format(user_input, model)})
 ⏳ Model: {}
 
 ".format(user_input, model)})
