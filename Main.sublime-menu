@@ -12,9 +12,11 @@
             "children":
             [
               {
-                "caption": "Settings",
+                "caption": "Settings – Default",
                 "command": "open_file",
-                "args": {"file": "${packages}/ollama-sublime/Ollama.sublime-settings"}
+                "args": {
+                  "file": "${packages}/ollama-sublime/Ollama.sublime-settings"
+                }
               }
             ]
           }
