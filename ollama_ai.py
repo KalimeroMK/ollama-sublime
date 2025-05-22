@@ -10,6 +10,7 @@ class OllamaPromptCommand(sublime_plugin.WindowCommand):
     def on_done(self, user_input):
         settings = sublime.load_settings("Ollama.sublime-settings")
         model = settings.get("model", "codellama")
+        url = settings.get("url", "http://127.0.0.1:11434/api/generate")
         syntax = settings.get("syntax", "Packages/Markdown/Markdown.sublime-syntax")
         tab = self.window.new_file()
         tab.set_name("💬 Prompt")
@@ -26,7 +27,7 @@ class OllamaPromptCommand(sublime_plugin.WindowCommand):
         }).encode("utf-8")
 
         req = urllib.request.Request(
-            url="http://127.0.0.1:11434/api/generate",
+            url=url,
             data=data,
             headers={"Content-Type": "application/json"}
         )
@@ -54,6 +55,7 @@ class OllamaAiExplainCommand(sublime_plugin.TextCommand):
         settings = sublime.load_settings("Ollama.sublime-settings")
         instruction = settings.get(prompt_key)
         model = settings.get("model", "codellama")
+        url = settings.get("url", "http://127.0.0.1:11434/api/generate")
         syntax = settings.get("syntax", "Packages/Markdown/Markdown.sublime-syntax")
         prefix = settings.get("tab_title_prefix", "💬 Ollama")
 
@@ -72,7 +74,7 @@ class OllamaAiExplainCommand(sublime_plugin.TextCommand):
         }).encode("utf-8")
 
         req = urllib.request.Request(
-            url="http://127.0.0.1:11434/api/generate",
+            url=url,
             data=data,
             headers={"Content-Type": "application/json"}
         )
