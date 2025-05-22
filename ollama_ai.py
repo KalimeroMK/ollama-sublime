@@ -5,7 +5,7 @@ import json
 
 class OllamaPromptCommand(sublime_plugin.WindowCommand):
     def run(self):
-        self.window.show_input_panel("💬 Enter your prompt:", "", self.on_done, None, None)
+        self.window.show_input_panel("Enter your prompt:", "", self.on_done, None, None)
 
     def on_done(self, user_input):
         settings = sublime.load_settings("Ollama.sublime-settings")
@@ -14,13 +14,15 @@ class OllamaPromptCommand(sublime_plugin.WindowCommand):
         syntax = settings.get("syntax", "Packages/Markdown/Markdown.sublime-syntax")
 
         tab = self.window.new_file()
-        tab.set_name("💬 Ollama Prompt")
+        tab.set_name("Ollama Prompt")
         tab.set_scratch(True)
         tab.set_syntax_file(syntax)
-        tab.run_command("append", {"characters": "🧠 Prompt: {}\n⏳ Model: {}\n\n".format(user_input, model)})
-⏳ Model: {}
+        tab.run_command("append", {
+            "characters": "Prompt: {}
+Model: {}
 
-".format(user_input, model)})
+".format(user_input, model)
+        })
 
         payload = json.dumps({
             "model": model,
@@ -39,11 +41,11 @@ class OllamaPromptCommand(sublime_plugin.WindowCommand):
                         result += parsed.get("response", "")
                         if parsed.get("done", False):
                             break
-                tab.run_command("append", {"characters": "✅ Response:
+                tab.run_command("append", {"characters": "Response:
 
 {}".format(result.strip())})
             except Exception as e:
-                tab.run_command("append", {"characters": "\n❌ ERROR: {}".format(e)})
+                tab.run_command("append", {"characters": "\nERROR: {}".format(e)})
 
         sublime.set_timeout_async(fetch, 0)
 
@@ -57,7 +59,7 @@ class OllamaAiExplainCommand(sublime_plugin.TextCommand):
         model = settings.get("model", "codellama")
         url = settings.get("url", "http://127.0.0.1:11434/api/generate")
         syntax = settings.get("syntax", "Packages/Markdown/Markdown.sublime-syntax")
-        prefix = settings.get("tab_title_prefix", "💬 Ollama")
+        prefix = settings.get("tab_title_prefix", "Ollama")
 
         sels = self.view.sel()
         if not sels or sels[0].empty():
@@ -80,7 +82,9 @@ class OllamaAiExplainCommand(sublime_plugin.TextCommand):
         self.output_tab.set_scratch(True)
         self.output_tab.set_syntax_file(syntax)
         self.output_tab.run_command("append", {
-            "characters": "## 🧠 {}:\n`{}`\n\n⏳ Requesting response from model `{}`...\n".format(mode_label, instruction, model)
+            "characters": "Running {}...
+
+".format(mode_label)
         })
 
         sublime.set_timeout_async(lambda: self.fetch_response(req, model), 0)
@@ -98,12 +102,14 @@ class OllamaAiExplainCommand(sublime_plugin.TextCommand):
                     except json.JSONDecodeError:
                         continue
 
-                final = "## ✅ Response from {}\n\n{}".format(model, result)
+                final = "Response from {}:
+
+{}".format(model, result)
                 self.output_tab.run_command("select_all")
                 self.output_tab.run_command("right_delete")
                 self.output_tab.run_command("append", {"characters": final})
         except Exception as e:
-            self.output_tab.run_command("append", {"characters": "\n\n❌ ERROR: {}".format(str(e))})
+            self.output_tab.run_command("append", {"characters": "\n\nERROR: {}".format(str(e))})
 
 class OllamaAiOptimizeCommand(OllamaAiExplainCommand):
     def run(self, edit):
