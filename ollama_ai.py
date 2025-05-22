@@ -18,10 +18,7 @@ class OllamaPromptCommand(sublime_plugin.WindowCommand):
         tab.set_scratch(True)
         tab.set_syntax_file(syntax)
         tab.run_command("append", {
-            "characters": "Prompt: {}
-Model: {}
-
-".format(user_input, model)
+            "characters": "Prompt: {}\nModel: {}\n\n".format(user_input, model)
         })
 
         payload = json.dumps({
@@ -41,9 +38,7 @@ Model: {}
                         result += parsed.get("response", "")
                         if parsed.get("done", False):
                             break
-                tab.run_command("append", {"characters": "Response:
-
-{}".format(result.strip())})
+                tab.run_command("append", {"characters": "Response:\n\n{}".format(result.strip())})
             except Exception as e:
                 tab.run_command("append", {"characters": "\nERROR: {}".format(e)})
 
@@ -82,9 +77,7 @@ class OllamaAiExplainCommand(sublime_plugin.TextCommand):
         self.output_tab.set_scratch(True)
         self.output_tab.set_syntax_file(syntax)
         self.output_tab.run_command("append", {
-            "characters": "Running {}...
-
-".format(mode_label)
+            "characters": "Running {}...\n\n".format(mode_label)
         })
 
         sublime.set_timeout_async(lambda: self.fetch_response(req, model), 0)
@@ -102,9 +95,7 @@ class OllamaAiExplainCommand(sublime_plugin.TextCommand):
                     except json.JSONDecodeError:
                         continue
 
-                final = "Response from {}:
-
-{}".format(model, result)
+                final = "Response from {}:\n\n{}".format(model, result)
                 self.output_tab.run_command("select_all")
                 self.output_tab.run_command("right_delete")
                 self.output_tab.run_command("append", {"characters": final})
