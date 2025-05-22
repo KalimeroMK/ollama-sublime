@@ -6,5 +6,9 @@
   {
     "caption": "Ollama AI: Optimize Selection",
     "command": "ollama_ai_optimize"
+  },
+  {
+    "caption": "Ollama AI: Custom Prompt",
+    "command": "ollama_prompt"
   }
 ]

@@ -1,6 +1,6 @@
 [
   {
     "keys": ["super+ctrl+enter"],
-    "command": "ollama_ai_explain"
+    "command": "ollama_prompt"
   }
 ]

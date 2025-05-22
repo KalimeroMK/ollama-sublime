@@ -3,6 +3,50 @@ import sublime_plugin
 import urllib.request
 import json
 
+class OllamaPromptCommand(sublime_plugin.WindowCommand):
+    def run(self):
+        self.window.show_input_panel("💬 Ollama Prompt:", "", self.on_done, None, None)
+
+    def on_done(self, user_input):
+        settings = sublime.load_settings("Ollama.sublime-settings")
+        model = settings.get("model", "codellama")
+        syntax = settings.get("syntax", "Packages/Markdown/Markdown.sublime-syntax")
+        tab = self.window.new_file()
+        tab.set_name("💬 Prompt")
+        tab.set_scratch(True)
+        tab.set_syntax_file(syntax)
+
+        prompt_text = "You are a senior Laravel PHP developer.\n\n{}".format(user_input)
+        tab.run_command("append", {"characters": "⏳ Sending prompt to `{}`...\n".format(model)})
+
+        data = json.dumps({
+            "model": model,
+            "prompt": prompt_text,
+            "stream": True
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            url="http://127.0.0.1:11434/api/generate",
+            data=data,
+            headers={"Content-Type": "application/json"}
+        )
+
+        def fetch():
+            try:
+                result = ""
+                with urllib.request.urlopen(req) as response:
+                    for line in response:
+                        parsed = json.loads(line.decode("utf-8"))
+                        result += parsed.get("response", "")
+                        if parsed.get("done", False):
+                            break
+                tab.run_command("append", {"characters": "\n\n✅ {}
+".format(result.strip())})
+            except Exception as e:
+                tab.run_command("append", {"characters": "\n❌ ERROR: {}".format(e)})
+
+        sublime.set_timeout_async(fetch, 0)
+
 class OllamaAiExplainCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         self.run_with_mode("explain_prompt", "Explain")
