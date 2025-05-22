@@ -1,18 +1,13 @@
-# Ollama for Sublime Text
+# Ollama Sublime Plugin
 
-A lightweight Sublime Text plugin that allows you to run `Ollama` models (e.g., CodeLlama) on selected code and receive contextual explanations or optimizations.
+This plugin integrates local [Ollama](https://ollama.com/) models with Sublime Text. Supports contextual code explanations and Laravel/PHP optimization suggestions.
 
 ## Features
-- 🧠 Explain selected code
-- 🔧 Optimize selected PHP/Laravel code
-- 💬 Integrated result in new Markdown tab
 
-## Installation
-1. Clone this repo into your Sublime Text `Packages` directory:
-```
-git clone https://github.com/your-username/ollama-sublime.git
-```
-2. Or add it to Package Control as a custom repo.
+- Explain selected code
+- Optimize Laravel code
+- Integrated Markdown result tab
 
 ## Requirements
-- [Ollama](https://ollama.com/) running locally at `http://127.0.0.1:11434`
+
+- Ollama running locally: https://ollama.com/
