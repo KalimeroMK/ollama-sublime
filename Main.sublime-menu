@@ -1,25 +1,14 @@
 [
     {
-        "caption": "Preferences",
-        "mnemonic": "n",
-        "id": "preferences",
+        "caption": "Ollama",
+        "id": "ollama-settings",
         "children": [
             {
-                "caption": "Package Settings",
-                "children": [
-                    {
-                        "caption": "Ollama",
-                        "children": [
-                            {
-                                "command": "edit_settings",
-                                "args": {
-                                    "base_file": "${packages}/ollama-sublime/Ollama.sublime-settings",
-                                    "default": "{\n  \"model\": \"codellama\",\n  \"url\": \"http://127.0.0.1:11434/api/generate\",\n  \"explain_prompt\": \"Explain what the following Laravel code does in simple terms.\",\n  \"optimize_prompt\": \"Act as laravel and php expert and optimize the following code and return improved code snippets with explanation.\",\n  \"tab_title_prefix\": \"Ollama\",\n  \"syntax\": \"Packages/Markdown/Markdown.sublime-syntax\"\n}"
-                                }
-                            }
-                        ]
-                    }
-                ]
+                "command": "edit_settings",
+                "args": {
+                    "base_file": "${packages}/ollama-sublime/Ollama.sublime-settings",
+                    "default": "{\n  \"model\": \"codellama\",\n  \"url\": \"http://127.0.0.1:11434/api/generate\",\n  \"explain_prompt\": \"Explain what the following Laravel code does in simple terms.\",\n  \"optimize_prompt\": \"Act as laravel and php expert and optimize the following code and return improved code snippets with explanation.\",\n  \"tab_title_prefix\": \"Ollama\",\n  \"syntax\": \"Packages/Markdown/Markdown.sublime-syntax\"\n}"
+                }
             }
         ]
     }
