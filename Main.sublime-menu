@@ -1,16 +1,13 @@
 [
   {
-    "id": "preferences",
-    "children":
-    [
+    "id": "tools",
+    "children": [
       {
         "caption": "Package Settings",
-        "children":
-        [
+        "children": [
           {
             "caption": "Ollama",
-            "children":
-            [
+            "children": [
               {
                 "caption": "Settings – Default",
                 "command": "open_file",
