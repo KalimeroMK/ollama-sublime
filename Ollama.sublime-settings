@@ -1,0 +1,7 @@
+{
+  "model": "codellama",
+  "explain_prompt": "Explain what the following Laravel code does in simple terms.",
+  "optimize_prompt": "Optimize the following Laravel PHP code and return improved code snippets with explanation.",
+  "tab_title_prefix": "💬 Ollama",
+  "syntax": "Packages/Markdown/Markdown.sublime-syntax"
+}
