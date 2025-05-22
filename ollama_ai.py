@@ -5,32 +5,30 @@ import json
 
 class OllamaPromptCommand(sublime_plugin.WindowCommand):
     def run(self):
-        self.window.show_input_panel("💬 Ollama Prompt:", "", self.on_done, None, None)
+        self.window.show_input_panel("💬 Enter your prompt:", "", self.on_done, None, None)
 
     def on_done(self, user_input):
         settings = sublime.load_settings("Ollama.sublime-settings")
         model = settings.get("model", "codellama")
         url = settings.get("url", "http://127.0.0.1:11434/api/generate")
         syntax = settings.get("syntax", "Packages/Markdown/Markdown.sublime-syntax")
+
         tab = self.window.new_file()
-        tab.set_name("💬 Prompt")
+        tab.set_name("💬 Ollama Prompt")
         tab.set_scratch(True)
         tab.set_syntax_file(syntax)
+        tab.run_command("append", {"characters": "🧠 Prompt: {}
+⏳ Model: {}
 
-        prompt_text = "You are a senior Laravel PHP developer.\n\n{}".format(user_input)
-        tab.run_command("append", {"characters": "⏳ Sending prompt to `{}`...\n".format(model)})
+".format(user_input, model)})
 
-        data = json.dumps({
+        payload = json.dumps({
             "model": model,
-            "prompt": prompt_text,
+            "prompt": user_input,
             "stream": True
         }).encode("utf-8")
 
-        req = urllib.request.Request(
-            url=url,
-            data=data,
-            headers={"Content-Type": "application/json"}
-        )
+        req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
 
         def fetch():
             try:
@@ -41,7 +39,9 @@ class OllamaPromptCommand(sublime_plugin.WindowCommand):
                         result += parsed.get("response", "")
                         if parsed.get("done", False):
                             break
-                tab.run_command("append", {"characters": "\n\n✅ {}".format(result.strip())})
+                tab.run_command("append", {"characters": "✅ Response:
+
+{}".format(result.strip())})
             except Exception as e:
                 tab.run_command("append", {"characters": "\n❌ ERROR: {}".format(e)})
 
@@ -73,11 +73,7 @@ class OllamaAiExplainCommand(sublime_plugin.TextCommand):
             "stream": True
         }).encode("utf-8")
 
-        req = urllib.request.Request(
-            url=url,
-            data=data,
-            headers={"Content-Type": "application/json"}
-        )
+        req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
 
         self.output_tab = self.view.window().new_file()
         self.output_tab.set_name("{} [{}]".format(prefix, mode_label))
@@ -106,7 +102,6 @@ class OllamaAiExplainCommand(sublime_plugin.TextCommand):
                 self.output_tab.run_command("select_all")
                 self.output_tab.run_command("right_delete")
                 self.output_tab.run_command("append", {"characters": final})
-
         except Exception as e:
             self.output_tab.run_command("append", {"characters": "\n\n❌ ERROR: {}".format(str(e))})
 

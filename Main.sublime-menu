@@ -1,0 +1,25 @@
+[
+  {
+    "id": "preferences",
+    "children":
+    [
+      {
+        "caption": "Package Settings",
+        "children":
+        [
+          {
+            "caption": "Ollama",
+            "children":
+            [
+              {
+                "caption": "Settings",
+                "command": "open_file",
+                "args": {"file": "${packages}/ollama-sublime/Ollama.sublime-settings"}
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
