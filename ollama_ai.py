@@ -40,8 +40,7 @@ class OllamaPromptCommand(sublime_plugin.WindowCommand):
                         result += parsed.get("response", "")
                         if parsed.get("done", False):
                             break
-                tab.run_command("append", {"characters": "\n\n✅ {}
-".format(result.strip())})
+                tab.run_command("append", {"characters": "\n\n✅ {}".format(result.strip())})
             except Exception as e:
                 tab.run_command("append", {"characters": "\n❌ ERROR: {}".format(e)})
 
