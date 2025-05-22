@@ -1,13 +1,16 @@
 # Ollama Sublime Plugin
 
-This plugin integrates local [Ollama](https://ollama.com/) models with Sublime Text. Supports contextual code explanations and Laravel/PHP optimization suggestions.
+Compatible with Sublime Text 3 Python 3.3 environment.
 
 ## Features
 
-- Explain selected code
-- Optimize Laravel code
-- Integrated Markdown result tab
+- Explain selected PHP / Laravel code
+- Optimize selected PHP / Laravel code
+
+## Installation
+
+Add this repository to Package Control or install manually.
 
 ## Requirements
 
-- Ollama running locally: https://ollama.com/
+- Ollama running locally on `http://127.0.0.1:11434`

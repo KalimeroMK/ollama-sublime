@@ -16,11 +16,11 @@ class OllamaAiExplainCommand(sublime_plugin.TextCommand):
 
         sels = self.view.sel()
         if not sels or sels[0].empty():
-            sublime.message_dialog(f"[{mode_label}] Please select some code first.")
+            sublime.message_dialog("[{}] Please select some code first.".format(mode_label))
             return
 
         code = self.view.substr(sels[0])
-        full_prompt = f"You are a senior Laravel PHP developer.\n\n{instruction}\n\nCode:\n{code}"
+        full_prompt = "You are a senior Laravel PHP developer.\n\n{}\n\nCode:\n{}".format(instruction, code)
 
         data = json.dumps({
             "model": model,
@@ -35,14 +35,16 @@ class OllamaAiExplainCommand(sublime_plugin.TextCommand):
         )
 
         self.output_tab = self.view.window().new_file()
-        self.output_tab.set_name(f"{prefix} [{mode_label}]")
+        self.output_tab.set_name("{} [{}]".format(prefix, mode_label))
         self.output_tab.set_scratch(True)
         self.output_tab.set_syntax_file(syntax)
-        self.output_tab.run_command("append", {"characters": f"## 🧠 {mode_label}:\n`{instruction}`\n\n⏳ Requesting response from model `{model}`...\n"})
+        self.output_tab.run_command("append", {
+            "characters": "## 🧠 {}:\n`{}`\n\n⏳ Requesting response from model `{}`...\n".format(mode_label, instruction, model)
+        })
 
-        sublime.set_timeout_async(lambda: self.fetch_response(req, model, instruction), 0)
+        sublime.set_timeout_async(lambda: self.fetch_response(req, model), 0)
 
-    def fetch_response(self, req, model, instruction):
+    def fetch_response(self, req, model):
         try:
             with urllib.request.urlopen(req) as response:
                 result = ""
@@ -55,13 +57,13 @@ class OllamaAiExplainCommand(sublime_plugin.TextCommand):
                     except json.JSONDecodeError:
                         continue
 
-                final = f"## ✅ Response from {model}\n\n{result}"
+                final = "## ✅ Response from {}\n\n{}".format(model, result)
                 self.output_tab.run_command("select_all")
                 self.output_tab.run_command("right_delete")
                 self.output_tab.run_command("append", {"characters": final})
 
         except Exception as e:
-            self.output_tab.run_command("append", {"characters": f"\n\n❌ ERROR: {str(e)}"})
+            self.output_tab.run_command("append", {"characters": "\n\n❌ ERROR: {}".format(str(e))})
 
 class OllamaAiOptimizeCommand(OllamaAiExplainCommand):
     def run(self, edit):
