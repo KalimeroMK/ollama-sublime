@@ -38,8 +38,7 @@ def find_symbol_usages(symbol, project_root, code_file_extensions):
                                 start = max(0, i - 2)
                                 end = min(len(lines), i + 3)
                                 snippet = "".join(lines[start:end])
-                                matching_snippets.append("... (line {})
-{}".format(i + 1, snippet))
+                                matching_snippets.append("... (line {})\n{}".format(i + 1, snippet))
                         
                         if matching_snippets:
                             relative_path = os.path.relpath(file_path, project_root)
