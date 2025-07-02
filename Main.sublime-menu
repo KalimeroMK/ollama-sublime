@@ -1,5 +1,41 @@
 [
     {
+        "caption": "Tools",
+        "id": "tools",
+        "children": [
+            {
+                "caption": "Ollama AI",
+                "id": "ollama-ai",
+                "children": [
+                    {
+                        "caption": "Custom Prompt",
+                        "command": "ollama_prompt"
+                    },
+                    {
+                        "caption": "Explain Selection",
+                        "command": "ollama_ai_explain"
+                    },
+                    {
+                        "caption": "Optimize Selection",
+                        "command": "ollama_ai_optimize"
+                    },
+                    {
+                        "caption": "Analyze Codebase",
+                        "command": "ollama_code_analyze"
+                    },
+                    {
+                        "caption": "Create New File",
+                        "command": "ollama_create_file"
+                    },
+                    {
+                        "caption": "Generate Laravel Feature",
+                        "command": "ollama_generate_laravel_feature"
+                    }
+                ]
+            }
+        ]
+    },
+    {
         "caption": "Preferences",
         "id": "preferences",
         "children": [
@@ -11,10 +47,19 @@
                         "caption": "Ollama",
                         "children": [
                             {
+                                "caption": "Settings",
                                 "command": "open_file",
                                 "args": {
                                     "file": "${packages}/ollama-sublime/Ollama.sublime-settings"
                                 }
+                            },
+                            {
+                                "caption": "Edit Model Settings",
+                                "command": "ollama_edit_settings"
+                            },
+                            {
+                                "caption": "Edit System Prompts",
+                                "command": "ollama_edit_system_prompts"
                             }
                         ]
                     }

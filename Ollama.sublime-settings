@@ -1,8 +1,11 @@
 {
-    "model": "codellama",
-    "url": "http://127.0.0.1:11434/api/generate",
+    "model": "qwen2.5-coder",
+    "url": "http://127.0.0.1:11434/api/chat",
     "explain_prompt": "Explain what the following Laravel code does in simple terms.",
-    "optimize_prompt": "Act as laravel and php expert and optimize the following code and return improved code snippets with explanation.",
+    "optimize_prompt": "Act as a Laravel and PHP expert and optimize the following code. Return improved code snippets with explanation.",
+    "analysis_prompt": "Analyze this code and provide insights on structure, patterns, and potential improvements.",
+    "file_creation_prompt_template": "You are a professional developer. Create a {language} file that: {description}",
     "tab_title_prefix": "Ollama",
-    "syntax": "Packages/Markdown/Markdown.sublime-syntax"
+    "syntax": "Packages/Markdown/Markdown.sublime-syntax",
+    "code_file_extensions": [".py", ".php", ".js", ".html", ".css", ".json", ".md", ".rb", ".java", ".c", ".cpp", ".go", ".ts"]
 }
