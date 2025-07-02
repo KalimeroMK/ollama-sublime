@@ -157,12 +157,12 @@ class OllamaCodeAnalyzeCommand(sublime_plugin.WindowCommand):
                                     # Update progress
                                     sublime.set_timeout(lambda path=file_path: 
                                         self.progress_view.run_command("append", 
-                                            {"characters": f"Scanning: {path}\n"}), 0)
+                                            {"characters": "Scanning: {}\n".format(path)}), 0)
                                     
                             except Exception as e:
                                 sublime.set_timeout(lambda e=e, path=file_path: 
                                     self.progress_view.run_command("append", 
-                                        {"characters": f"Error reading {path}: {e}\n"}), 0)
+                                        {"characters": "Error reading {}: {}\n".format(path, e)}), 0)
             
             # Prepare a summary for the AI
             summary = json.dumps({
@@ -175,18 +175,18 @@ class OllamaCodeAnalyzeCommand(sublime_plugin.WindowCommand):
             }, indent=2)
             
             # Create the AI prompt
-            prompt = f"""You are a code analysis assistant like Cascade.
+            prompt = """You are a code analysis assistant like Cascade.
             
-Analyze this codebase and provide insights based on the following request: "{user_input}"
+Analyze this codebase and provide insights based on the following request: "{}"
 
 Project information:
-{summary}
+{}
 
 Provide an in-depth analysis with:
 1. Key insights about the codebase structure
 2. Recommendations based on the user's request
 3. Potential improvements or issues you identify
-"""
+""".format(user_input, summary)
             
             # Send to Ollama
             payload = json.dumps({
@@ -205,7 +205,7 @@ Provide an in-depth analysis with:
             
         except Exception as e:
             sublime.set_timeout(lambda e=e: self.progress_view.run_command("append", 
-                {"characters": f"\nERROR during analysis: {e}\n"}), 0)
+                {"characters": "\nERROR during analysis: {}\n".format(e)}), 0)
     
     def create_output_view(self, req, model):
         settings = sublime.load_settings("Ollama.sublime-settings")
@@ -216,7 +216,7 @@ Provide an in-depth analysis with:
         output_view.set_name("Ollama Code Analysis")
         output_view.set_scratch(True)
         output_view.set_syntax_file(syntax)
-        output_view.run_command("append", {"characters": "# Code Analysis\n\nModel: " + model + "\n\n"})
+        output_view.run_command("append", {"characters": "# Code Analysis\n\nModel: {}\n\n".format(model)})
         
         # Start fetching the response
         threading.Thread(target=self.fetch_analysis, args=(req, output_view)).start()
@@ -242,7 +242,7 @@ Provide an in-depth analysis with:
             
         except Exception as e:
             sublime.set_timeout(lambda e=e: 
-                output_view.run_command("append", {"characters": f"\n\nERROR: {e}"}), 0)
+                output_view.run_command("append", {"characters": "\n\nERROR: {}".format(e)}), 0)
 
 class OllamaCreateFileCommand(sublime_plugin.WindowCommand):
     """
@@ -287,16 +287,15 @@ class OllamaCreateFileCommand(sublime_plugin.WindowCommand):
         progress_view = self.window.new_file()
         progress_view.set_name("Creating File")
         progress_view.set_scratch(True)
-        progress_view.run_command("append", {"characters": f"Creating file at {full_path}...\n"})
+        progress_view.run_command("append", {"characters": "Creating file at {}\n".format(full_path)})
         
         # Generate the prompt for file creation
-        prompt = f"""You are a professional developer. Create a new {language} file based on this description:
-{self.description}
-
-File should be created at: {full_path}
+        prompt = """You are a professional developer. Create a new {} file based on this description:
+{}
+File should be created at: {}
 
 Generate only the file content, with no additional explanations or markdown formatting.
-"""
+""".format(language, self.description, full_path)
         
         # Create the payload
         payload = json.dumps({
@@ -336,12 +335,12 @@ Generate only the file content, with no additional explanations or markdown form
                 except Exception as e:
                     sublime.set_timeout(lambda e=e: 
                         progress_view.run_command("append", 
-                            {"characters": f"\nERROR writing file: {e}"}), 0)
+                            {"characters": "\nERROR writing file: {}".format(e)}), 0)
                     
             except Exception as e:
                 sublime.set_timeout(lambda e=e: 
                     progress_view.run_command("append", 
-                        {"characters": f"\nERROR: {e}"}), 0)
+                        {"characters": "\nERROR: {}".format(e)}), 0)
                     
         threading.Thread(target=fetch).start()
 
@@ -354,7 +353,7 @@ class OllamaEditSettingsCommand(sublime_plugin.WindowCommand):
         
         # Get available models from Ollama API
         url = settings.get("url", "http://127.0.0.1:11434/api/generate").replace("/api/generate", "/api")
-        models_url = f"{url}/tags"
+        models_url = "{}{}".format(url, "/tags")
         
         def fetch_models():
             try:
@@ -367,7 +366,7 @@ class OllamaEditSettingsCommand(sublime_plugin.WindowCommand):
                     
                     sublime.set_timeout(lambda models=models: self.show_models_panel(models), 0)
             except Exception as e:
-                print(f"Error fetching models: {e}")
+                print("Error fetching models: {}".format(e))
                 # Fallback to default models
                 models = ["codellama", "llama2", "mistral", "phi"]
                 sublime.set_timeout(lambda models=models: self.show_models_panel(models), 0)
@@ -390,7 +389,7 @@ class OllamaEditSettingsCommand(sublime_plugin.WindowCommand):
         sublime.save_settings("Ollama.sublime-settings")
         
         # Show confirmation
-        sublime.status_message(f"Ollama model updated to: {model}")
+        sublime.status_message("Ollama model updated to: {}".format(model))
         
         # Now ask for URL configuration
         self.window.show_input_panel(
@@ -404,7 +403,7 @@ class OllamaEditSettingsCommand(sublime_plugin.WindowCommand):
             settings = sublime.load_settings("Ollama.sublime-settings")
             settings.set("url", url)
             sublime.save_settings("Ollama.sublime-settings")
-            sublime.status_message(f"Ollama API URL updated to: {url}")
+            sublime.status_message("Ollama API URL updated to: {}".format(url))
             
         # Open the settings file for additional editing
         self.window.run_command("open_file", {"file": "${packages}/User/Ollama.sublime-settings"})
@@ -436,7 +435,7 @@ class OllamaEditSystemPromptsCommand(sublime_plugin.WindowCommand):
         
         self.selected_prompt = prompt_key
         self.window.show_input_panel(
-            f"Edit {self.prompt_descriptions[index]}:",
+            "{}".format(self.prompt_descriptions[index]),
             current_value,
             self.on_prompt_edited, None, None
         )
@@ -445,7 +444,7 @@ class OllamaEditSystemPromptsCommand(sublime_plugin.WindowCommand):
         settings = sublime.load_settings("Ollama.sublime-settings")
         settings.set(self.selected_prompt, new_value)
         sublime.save_settings("Ollama.sublime-settings")
-        sublime.status_message(f"Updated {self.selected_prompt}")
+        sublime.status_message("Updated {}".format(self.selected_prompt))
 
 class OllamaGenerateLaravelFeatureCommand(sublime_plugin.WindowCommand):
     """
@@ -467,7 +466,7 @@ class OllamaGenerateLaravelFeatureCommand(sublime_plugin.WindowCommand):
         self.progress_view = self.window.new_file()
         self.progress_view.set_name("Laravel Feature Generation Progress")
         self.progress_view.set_scratch(True)
-        self.progress_view.run_command("append", {"characters": f"Generating files for: {user_prompt}\n"})
+        self.progress_view.run_command("append", {"characters": "Generating files for: {}\n".format(user_prompt)})
 
         # Meta-instruction for the model
         meta_instruction = (
@@ -479,7 +478,7 @@ class OllamaGenerateLaravelFeatureCommand(sublime_plugin.WindowCommand):
             "[\n"
             "  {\n    'path': 'app/Http/Controllers/ProductController.php', 'content': '...php code...'\n  },\n"
             "  {\n    'path': 'app/DataTransferObjects/ProductDTO.php', 'content': '...php code...'\n  },\n"
-            "  {\n    'append_to': 'routes/web.php', 'content': "Route::resource('products', ProductController::class);"\n  }\n"
+            "  {\n    'append_to': 'routes/web.php', 'content': \"Route::resource('products', ProductController::class);\"\n  }\n"
             "]\n"
             "Now, here is the feature request: " + user_prompt
         )
@@ -536,7 +535,7 @@ class OllamaGenerateLaravelFeatureCommand(sublime_plugin.WindowCommand):
             try:
                 manifest = json.loads(manifest_str.replace("'", '"'))
             except Exception as e:
-                sublime.set_timeout(lambda: self.progress_view.run_command("append", {"characters": f"\nERROR parsing manifest: {e}"}), 0)
+                sublime.set_timeout(lambda: self.progress_view.run_command("append", {"characters": "\nERROR parsing manifest: {}".format(e)}), 0)
                 return
             # Create files and append to routes
             for item in manifest:
@@ -545,14 +544,14 @@ class OllamaGenerateLaravelFeatureCommand(sublime_plugin.WindowCommand):
                     os.makedirs(os.path.dirname(abs_path), exist_ok=True)
                     with open(abs_path, 'w', encoding='utf-8') as f:
                         f.write(item['content'])
-                    sublime.set_timeout(lambda p=abs_path: self.progress_view.run_command("append", {"characters": f"\nCreated: {p}"}), 0)
+                    sublime.set_timeout(lambda p=abs_path: self.progress_view.run_command("append", {"characters": "\nCreated: {}".format(p)}), 0)
                     sublime.set_timeout(lambda p=abs_path: self.window.open_file(p), 0)
                 elif 'append_to' in item:
                     abs_path = os.path.join(self.project_root, item['append_to'])
                     os.makedirs(os.path.dirname(abs_path), exist_ok=True)
                     with open(abs_path, 'a', encoding='utf-8') as f:
                         f.write('\n' + item['content'])
-                    sublime.set_timeout(lambda p=abs_path: self.progress_view.run_command("append", {"characters": f"\nAppended to: {p}"}), 0)
+                    sublime.set_timeout(lambda p=abs_path: self.progress_view.run_command("append", {"characters": "\nAppended to: {}".format(p)}), 0)
             sublime.set_timeout(lambda: self.progress_view.run_command("append", {"characters": "\nAll files generated."}), 0)
         except Exception as e:
-            sublime.set_timeout(lambda: self.progress_view.run_command("append", {"characters": f"\nERROR: {e}"}), 0)
+            sublime.set_timeout(lambda: self.progress_view.run_command("append", {"characters": "\nERROR: {}".format(e)}), 0)
