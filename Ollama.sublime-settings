@@ -1,12 +1,17 @@
 {
     "model": "qwen2.5-coder",
     "url": "http://127.0.0.1:11434/api/chat",
-    "explain_prompt": "Explain what the following Laravel PHP code does in simple terms.",
-    "optimize_prompt": "Act as a Laravel and PHP expert and optimize the following code. Return improved code snippets with explanation.",
+    "explain_prompt": "Explain the following code in a concise and clear way, assuming a professional Laravel PHP developer audience. Focus on the code's purpose, its role in the system, and any non-obvious logic.\n\n---\n\n{code}",
+    "optimize_prompt": "Optimize the following code, keeping in mind the conventions of modern Laravel PHP development. Return only the optimized code, without any extra explanations or markdown formatting.\n\n---\n\n{code}",
     "analysis_prompt": "Analyze this Laravel PHP code and provide insights on structure, patterns, and potential improvements.",
+    "code_smell_prompt": "Analyze the following code for potential code smells, such as poor design choices, bugs, or non-optimal code. Provide specific, actionable suggestions for improvement. Based on the provided usage context, also determine if this code appears to be unused. If it is unused, explicitly state that it can likely be deleted.\n\nCode to analyze:\n{code}",
+    "selection_prompt": "{text}\n\n---\n\n{code}",
+    "feature_architect_prompt": "You are a senior Laravel project architect. Based on the user's request, generate a JSON object containing a list of files to create for the new feature. The user's request is: \"{description}\". For each file, provide a 'path' (relative to the Laravel project root) and a 'description' of what the file should contain. The JSON output must be a single JSON object with a 'files' key. Example: { \"files\": [ { \"path\": \"app/Http/Controllers/ProductController.php\", \"description\": \"A controller to handle product-related requests.\" } ] }. Return ONLY the raw JSON object.",
+    "feature_coder_prompt": "You are a professional Laravel developer. Create the content for the following file. File Path: {path}. Description: {description}. Return ONLY the raw code for the file. Do not include any explanation, markdown, or any text other than the code itself.",
     "file_creation_prompt_template": "You are a professional Laravel PHP developer. Create a {language} file that: {description}",
     "tab_title_prefix": "Ollama",
+    "tab_title": "Ollama: {selection}",
     "syntax": "Packages/Markdown/Markdown.sublime-syntax",
     "code_file_extensions": [ ".php", "blade.php",".js", ".html", ".css", ".json",],
-    "system_prompt": "You are a Laravel PHP expert. When asked about code analysis or test generation, you should always assume the code is PHP Laravel unless explicitly specified otherwise. Always return PHP code examples, not Java or other languages."
+    "system_prompt": "You are a Laravel PHP expert. When asked about code analysis or test generation, always assume PHP Laravel unless specified otherwise."
 }

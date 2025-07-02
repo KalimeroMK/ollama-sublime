@@ -12,6 +12,9 @@
                         "command": "ollama_prompt"
                     },
                     {
+                        "caption": "-"
+                    },
+                    {
                         "caption": "Explain Selection",
                         "command": "ollama_ai_explain"
                     },
@@ -20,16 +23,12 @@
                         "command": "ollama_ai_optimize"
                     },
                     {
-                        "caption": "Analyze Codebase",
-                        "command": "ollama_code_analyze"
+                        "caption": "Find Code Smells",
+                        "command": "ollama_code_smell_finder"
                     },
                     {
-                        "caption": "Create New File",
-                        "command": "ollama_create_file"
-                    },
-                    {
-                        "caption": "Generate Laravel Feature",
-                        "command": "ollama_generate_laravel_feature"
+                        "caption": "Generate Feature...",
+                        "command": "ollama_generate_feature"
                     }
                 ]
             }

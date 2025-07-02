@@ -1,6 +1,7 @@
 [
   {
     "caption": "Ollama AI",
+    "id": "ollama_ai_context_menu",
     "children": [
       {
         "caption": "Explain this code",
@@ -11,13 +12,17 @@
         "command": "ollama_ai_optimize"
       },
       {
-        "caption": "Custom Prompt for Selection...",
-        "command": "ollama_selection_prompt"
+        "command": "ollama_code_smell_finder",
+        "caption": "Find Code Smells..."
       },
       { "caption": "-" },
       {
         "caption": "Suggest Refactoring...",
         "command": "ollama_inline_refactor"
+      },
+      {
+        "caption": "Custom Prompt for Selection...",
+        "command": "ollama_selection_prompt"
       }
     ]
   }
