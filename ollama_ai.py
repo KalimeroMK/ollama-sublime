@@ -131,13 +131,13 @@ class OllamaAiExplainCommand(sublime_plugin.TextCommand):
                         # Handle different API formats
                         if is_chat_api:
                             if "message" in parsed and "content" in parsed["message"]:
-                                content = parsed["message"]["content"]
-                                result += content
-                                self.output_tab.run_command("append", {"characters": content})
+                                chunk = parsed["message"]["content"]
+                                result += chunk
+                                self.output_tab.run_command("append", {"characters": chunk})
                         else:
-                            content = parsed.get("response", "")
-                            result += content
-                            self.output_tab.run_command("append", {"characters": content})
+                            chunk = parsed.get("response", "")
+                            result += chunk
+                            self.output_tab.run_command("append", {"characters": chunk})
                         
                         if parsed.get("done", False):
                             break
@@ -1040,7 +1040,7 @@ class OllamaSmartGenerateCommand(sublime_plugin.WindowCommand):
                                 file_paths.append(file_path)
                                 file_contents.append(file_content)
                                 
-                                preview_content += f"## {file_path}\n\n```php\n{file_content}\n```\n\n"
+                                preview_content += "# {}\n\n```php\n{}\n```\n\n".format(file_path, file_content)
                         
                         preview_view.run_command("append", {"characters": preview_content})
                         
@@ -1056,12 +1056,12 @@ class OllamaSmartGenerateCommand(sublime_plugin.WindowCommand):
                         
                         # Log success to progress view
                         self.progress_view.run_command("append", {
-                            "characters": "✅ Generated {} files. Review them in the preview and choose to save or discard.\n".format(len(file_paths))
+                            "characters": "Generated {} files. Review them in the preview and choose to save or discard.\n".format(len(file_paths))
                         })
                         
                     except json.JSONDecodeError as e:
                         # If we couldn't parse JSON, show the raw output in a tab
-                        self.progress_view.run_command("append", {"characters": "❌ Failed to parse JSON response: {}\n".format(str(e))})
+                        self.progress_view.run_command("append", {"characters": "Failed to parse JSON response: {}\n".format(str(e))})
                         
                         # Show raw response in a new tab
                         raw_view = self.window.new_file()
@@ -1069,9 +1069,9 @@ class OllamaSmartGenerateCommand(sublime_plugin.WindowCommand):
                         raw_view.set_scratch(True)
                         raw_view.run_command("append", {"characters": "Failed to parse JSON. Raw response:\n\n" + content})
                 else:
-                    self.progress_view.run_command("append", {"characters": "❌ API returned error status: {}\n".format(response.status)})
+                    self.progress_view.run_command("append", {"characters": "API returned error status: {}\n".format(response.status)})
         except Exception as e:
-            self.progress_view.run_command("append", {"characters": "❌ Error: {}\n".format(str(e))})
+            self.progress_view.run_command("append", {"characters": "Error: {}\n".format(str(e))})
     
     def add_phantom_buttons(self, view):
         """Add Save/Discard buttons to the preview view"""
@@ -1115,7 +1115,7 @@ class OllamaSmartGenerateCommand(sublime_plugin.WindowCommand):
                     
                     created_files.append(rel_path)
                 except Exception as e:
-                    sublime.error_message(f"Error creating file {rel_path}: {str(e)}")
+                    sublime.error_message("Error creating file {}: {}".format(rel_path, str(e)))
             
             # Close preview tab
             self.window.focus_view(view)
@@ -1123,7 +1123,7 @@ class OllamaSmartGenerateCommand(sublime_plugin.WindowCommand):
             
             # Show success message
             if created_files:
-                message = f"Created {len(created_files)} files:\n" + "\n".join(created_files)
+                message = "Created {} files:\n".format(len(created_files)) + "\n".join(created_files)
                 sublime.message_dialog(message)
                 
                 # Open the first file
