@@ -4,12 +4,12 @@
     "id": "ollama_ai_context_menu",
     "children": [
       {
-        "caption": "Explain this code",
-        "command": "ollama_ai_explain"
+        "caption": "Explain Selection",
+        "command": "ollama_explain_selection"
       },
       {
-        "caption": "Optimize this code",
-        "command": "ollama_ai_optimize"
+        "caption": "Optimize Selection",
+        "command": "ollama_optimize_selection"
       },
       {
         "command": "ollama_code_smell_finder",

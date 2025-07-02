@@ -16,11 +16,11 @@
                     },
                     {
                         "caption": "Explain Selection",
-                        "command": "ollama_ai_explain"
+                        "command": "ollama_explain_selection"
                     },
                     {
                         "caption": "Optimize Selection",
-                        "command": "ollama_ai_optimize"
+                        "command": "ollama_optimize_selection"
                     },
                     {
                         "caption": "Find Code Smells",

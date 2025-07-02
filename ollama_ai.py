@@ -226,6 +226,12 @@ class OllamaSelectionCommandBase(OllamaBaseCommand, sublime_plugin.TextCommand):
     def get_prompt(self, settings):
         return settings.get("prompt", "Please explain this code:\n{}\n")
 
+
+class OllamaExplainSelectionCommand(OllamaSelectionCommandBase):
+    def get_prompt(self, settings):
+        return settings.get("explain_prompt", "Explain the following code in a concise and clear way, assuming a professional Laravel PHP developer audience. Focus on the code's purpose, its role in the system, and any non-obvious logic.\n\n---\n\n{code}")
+
+
 class OllamaOptimizeSelectionCommand(OllamaSelectionCommandBase):
     def get_prompt(self, settings):
         return settings.get("optimize_prompt", "Optimize the following code, keeping in mind the conventions of modern Laravel PHP development. Return only the optimized code, without any extra explanations or markdown formatting.\n\n---\n\n{code}")
