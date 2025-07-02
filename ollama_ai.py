@@ -271,7 +271,7 @@ class OllamaCreateFileCommand(sublime_plugin.WindowCommand):
             try:
                 os.makedirs(directory)
             except Exception as e:
-                sublime.message_dialog(f"Error creating directory: {e}")
+                sublime.message_dialog("Error creating directory: {}".format(e))
                 return
                 
         # Get file extension to determine language
