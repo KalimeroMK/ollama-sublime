@@ -4,6 +4,7 @@ import urllib.request
 import json
 import os
 import threading
+import re
 
 class OllamaPromptCommand(sublime_plugin.WindowCommand):
     def run(self):
@@ -732,3 +733,405 @@ and follow Laravel best practices.""".format(description)
                 progress_view.run_command("append", {"characters": "\nERROR: {}".format(e)})
 
         sublime.set_timeout_async(fetch, 0)
+
+class OllamaGenerateTestCommand(sublime_plugin.WindowCommand):
+    """
+    Command to generate unit tests for a controller by analyzing the existing controller file
+    and creating a proper test file in the tests directory.
+    """
+    
+    def run(self):
+        # Get active folders in project
+        folders = self.window.folders()
+        if not folders:
+            sublime.error_message("No project folders found. Please open a project first.")
+            return
+            
+        # Create a progress indicator
+        self.progress_view = self.window.create_output_panel("ollama_test_progress")
+        self.window.run_command("show_panel", {"panel": "output.ollama_test_progress"})
+        self.progress_view.run_command("append", {"characters": "Searching for controllers...\n"})
+        
+        # Start search in a background thread
+        sublime.set_timeout_async(lambda: self.find_controllers(folders[0]), 0)
+    
+    def find_controllers(self, project_root):
+        controllers = []
+        controllers_dir = os.path.join(project_root, "app", "Http", "Controllers")
+        
+        # Check if the Controllers directory exists
+        if not os.path.exists(controllers_dir):
+            # Try app/Controllers as fallback
+            controllers_dir = os.path.join(project_root, "app", "Controllers")
+            if not os.path.exists(controllers_dir):
+                self.progress_view.run_command("append", {"characters": "❌ No controllers directory found. Looking for PHP files...\n"})
+                # Fallback: Search for all PHP files that might be controllers
+                for root, dirs, files in os.walk(os.path.join(project_root, "app")):
+                    for file in files:
+                        if file.endswith(".php") and "Controller" in file:
+                            rel_path = os.path.relpath(os.path.join(root, file), project_root)
+                            controllers.append(rel_path)
+                
+                if not controllers:
+                    self.progress_view.run_command("append", {"characters": "❌ No controllers found in the project.\n"})
+                    return
+        else:
+            # Find all PHP files in the Controllers directory and subdirectories
+            for root, dirs, files in os.walk(controllers_dir):
+                for file in files:
+                    if file.endswith(".php"):
+                        rel_path = os.path.relpath(os.path.join(root, file), project_root)
+                        controllers.append(rel_path)
+        
+        # Sort controllers alphabetically
+        controllers.sort()
+        
+        if controllers:
+            self.progress_view.run_command("append", {"characters": "✅ Found {} controllers\n".format(len(controllers))})
+            self.project_root = project_root
+            
+            # Show quick panel to select controller
+            sublime.set_timeout(lambda: self.window.show_quick_panel(controllers, lambda idx: self.on_controller_selected(idx, controllers, project_root)), 0)
+        else:
+            self.progress_view.run_command("append", {"characters": "❌ No controllers found in the project.\n"})
+    
+    def on_controller_selected(self, idx, controllers, project_root):
+        if idx == -1:
+            return  # User cancelled
+            
+        controller_path = controllers[idx]
+        controller_file = os.path.join(project_root, controller_path)
+        
+        self.progress_view.run_command("append", {"characters": "Selected: {}\n".format(controller_path)})
+        
+        # Read the controller file
+        try:
+            with open(controller_file, 'r') as f:
+                controller_code = f.read()
+        except Exception as e:
+            self.progress_view.run_command("append", {"characters": "❌ Error reading controller file: {}\n".format(str(e))})
+            return
+        
+        # Extract the controller name from file path
+        controller_name = os.path.basename(controller_path)
+        controller_name = os.path.splitext(controller_name)[0]
+        
+        # Generate test file path (following Laravel convention)
+        test_dir = os.path.join(project_root, "tests", "Feature")
+        if not os.path.exists(test_dir):
+            # Try Unit directory if Feature doesn't exist
+            test_dir = os.path.join(project_root, "tests", "Unit")
+            if not os.path.exists(test_dir):
+                # Create Feature directory if neither exists
+                os.makedirs(os.path.join(project_root, "tests", "Feature"), exist_ok=True)
+                test_dir = os.path.join(project_root, "tests", "Feature")
+        
+        test_file = os.path.join(test_dir, controller_name + "Test.php")
+        
+        self.progress_view.run_command("append", {"characters": "Analyzing controller: {}\nGenerating test...\n".format(controller_name)})
+        
+        # Get settings
+        settings = sublime.load_settings("Ollama.sublime-settings")
+        model = settings.get("model", "qwen2.5-coder")
+        url = settings.get("url", "http://127.0.0.1:11434/api/chat")
+        system_prompt = settings.get("system_prompt", "You are a Laravel PHP expert.")
+        is_chat_api = "/api/chat" in url
+        
+        # Prepare the prompt
+        user_prompt = "Create a PHPUnit test for this Laravel controller. Return ONLY the complete PHP code for a test file that would go in {}. Include proper namespaces and imports. The test should cover all methods and functionality of this controller:\n\n```php\n{}\n```".format(test_file, controller_code)
+        
+        # Prepare API payload
+        if is_chat_api:
+            payload = json.dumps({
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                "stream": False  # We want complete response, not streamed
+            }).encode("utf-8")
+        else:
+            payload = json.dumps({
+                "model": model,
+                "prompt": "{}\n\n{}".format(system_prompt, user_prompt),
+                "stream": False
+            }).encode("utf-8")
+        
+        req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+        
+        # Call API in a separate thread
+        sublime.set_timeout_async(lambda: self.fetch_test(req, test_file, is_chat_api, controller_name), 0)
+    
+    def fetch_test(self, req, test_file, is_chat_api, controller_name):
+        try:
+            with urllib.request.urlopen(req) as response:
+                if response.status == 200:
+                    # Parse response
+                    response_data = json.loads(response.read().decode("utf-8"))
+                    
+                    # Extract code from response
+                    if is_chat_api and "message" in response_data:
+                        test_code = response_data["message"]["content"]
+                    else:
+                        test_code = response_data.get("response", "")
+                    
+                    # Extract code block if wrapped in markdown
+                    if "```php" in test_code:
+                        code_blocks = re.findall(r"```php\n(.*?)\n```", test_code, re.DOTALL)
+                        if code_blocks:
+                            test_code = code_blocks[0]
+                    elif "```" in test_code:
+                        code_blocks = re.findall(r"```\n(.*?)\n```", test_code, re.DOTALL)
+                        if code_blocks:
+                            test_code = code_blocks[0]
+                    
+                    # Write test to file
+                    os.makedirs(os.path.dirname(test_file), exist_ok=True)
+                    with open(test_file, 'w') as f:
+                        f.write(test_code)
+                    
+                    # Show success message
+                    self.progress_view.run_command("append", {"characters": "✅ Test file created: {}\n".format(test_file)})
+                    
+                    # Open the test file
+                    self.window.open_file(test_file)
+                else:
+                    self.progress_view.run_command("append", {"characters": "Error: API returned status {}\n".format(response.status)})
+        
+        except Exception as e:
+            self.progress_view.run_command("append", {"characters": "Error generating test: {}\n".format(str(e))})
+
+class OllamaSmartGenerateCommand(sublime_plugin.WindowCommand):
+    """
+    Advanced command to generate multiple files from a single prompt.
+    Similar to how Cascade works, this can create controllers, models, DTOs,
+    and other related files from a natural language description.
+    """
+    
+    def run(self):
+        # Get user prompt for what to generate
+        self.window.show_input_panel(
+            "Describe what to generate (e.g., 'Create a Product controller with DTOs and action classes'):",
+            "",
+            self.on_prompt_done,
+            None,
+            None
+        )
+    
+    def on_prompt_done(self, user_prompt):
+        if not user_prompt.strip():
+            return
+            
+        # Get project folders
+        folders = self.window.folders()
+        if not folders:
+            sublime.error_message("No project folders found. Please open a project first.")
+            return
+            
+        project_root = folders[0]
+        
+        # Create progress view
+        self.progress_view = self.window.create_output_panel("ollama_generate_progress")
+        self.window.run_command("show_panel", {"panel": "output.ollama_generate_progress"})
+        self.progress_view.run_command("append", {"characters": "Analyzing request: '{}'\n".format(user_prompt)})
+        
+        # Get settings
+        settings = sublime.load_settings("Ollama.sublime-settings")
+        model = settings.get("model", "qwen2.5-coder")
+        url = settings.get("url", "http://127.0.0.1:11434/api/chat")
+        system_prompt = settings.get("system_prompt", "You are a Laravel PHP expert.")
+        is_chat_api = "/api/chat" in url
+        
+        # Prepare the prompt
+        feature_prompt = """
+        Analyze the user's request and generate multiple Laravel files as needed. 
+        Output must be a valid JSON object with this structure:
+        
+        {
+          "files": [
+            {
+              "path": "relative/path/to/file.php",
+              "content": "<?php\\n\\nnamespace...the full file content"
+            },
+            ...more files...
+          ]
+        }
+        
+        You must return valid JSON only. Create all necessary files for the request including controllers, 
+        models, DTOs, repositories, services, routes, migrations, etc. Follow Laravel best practices 
+        with proper namespaces. The path should be relative to the Laravel project root.
+        
+        User request: {}
+        """.format(user_prompt)
+        
+        # Prepare API payload
+        if is_chat_api:
+            payload = json.dumps({
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": feature_prompt}
+                ],
+                "stream": False  # We need the complete response at once
+            }).encode("utf-8")
+        else:
+            payload = json.dumps({
+                "model": model,
+                "prompt": "{}\n\n{}".format(system_prompt, feature_prompt),
+                "stream": False
+            }).encode("utf-8")
+        
+        req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+        
+        # Call API in a separate thread
+        sublime.set_timeout_async(lambda: self.fetch_and_process_files(req, is_chat_api, project_root), 0)
+    
+    def fetch_and_process_files(self, req, is_chat_api, project_root):
+        try:
+            with urllib.request.urlopen(req) as response:
+                if response.status == 200:
+                    # Parse response
+                    response_data = json.loads(response.read().decode("utf-8"))
+                    
+                    # Extract content from response
+                    if is_chat_api and "message" in response_data:
+                        content = response_data["message"]["content"]
+                    else:
+                        content = response_data.get("response", "")
+                    
+                    # Try to extract JSON from the content
+                    try:
+                        # Find JSON content within markdown or text
+                        json_match = re.search(r'```json\n(.*?)\n```', content, re.DOTALL)
+                        if json_match:
+                            content = json_match.group(1)
+                        else:
+                            # Try to find any JSON block
+                            json_match = re.search(r'```\n(.*?)\n```', content, re.DOTALL)
+                            if json_match:
+                                content = json_match.group(1)
+                        
+                        # Parse the JSON
+                        files_data = json.loads(content)
+                        
+                        # If there's no "files" key but the response is a valid array
+                        if isinstance(files_data, list):
+                            files = files_data
+                        else:
+                            files = files_data.get("files", [])
+                        
+                        # Create a new tab to preview the files
+                        preview_view = self.window.new_file()
+                        preview_view.set_name("Ollama Generate Preview")
+                        preview_view.set_scratch(True)
+                        
+                        # Add header and files content to preview
+                        preview_content = "# Generated Files Preview\n\n"
+                        preview_content += "The following files will be created:\n\n"
+                        
+                        file_paths = []
+                        file_contents = []
+                        
+                        for file_info in files:
+                            file_path = file_info.get("path")
+                            file_content = file_info.get("content")
+                            
+                            if file_path and file_content:
+                                file_paths.append(file_path)
+                                file_contents.append(file_content)
+                                
+                                preview_content += f"## {file_path}\n\n```php\n{file_content}\n```\n\n"
+                        
+                        preview_view.run_command("append", {"characters": preview_content})
+                        
+                        # Store files data for later use
+                        preview_view.settings().set("ollama_files", {
+                            "paths": file_paths,
+                            "contents": file_contents,
+                            "project_root": project_root
+                        })
+                        
+                        # Add buttons for save/discard
+                        self.add_phantom_buttons(preview_view)
+                        
+                        # Log success to progress view
+                        self.progress_view.run_command("append", {
+                            "characters": "✅ Generated {} files. Review them in the preview and choose to save or discard.\n".format(len(file_paths))
+                        })
+                        
+                    except json.JSONDecodeError as e:
+                        # If we couldn't parse JSON, show the raw output in a tab
+                        self.progress_view.run_command("append", {"characters": "❌ Failed to parse JSON response: {}\n".format(str(e))})
+                        
+                        # Show raw response in a new tab
+                        raw_view = self.window.new_file()
+                        raw_view.set_name("Ollama Raw Response")
+                        raw_view.set_scratch(True)
+                        raw_view.run_command("append", {"characters": "Failed to parse JSON. Raw response:\n\n" + content})
+                else:
+                    self.progress_view.run_command("append", {"characters": "❌ API returned error status: {}\n".format(response.status)})
+        except Exception as e:
+            self.progress_view.run_command("append", {"characters": "❌ Error: {}\n".format(str(e))})
+    
+    def add_phantom_buttons(self, view):
+        """Add Save/Discard buttons to the preview view"""
+        phantom_content = """
+        <div style="padding: 10px;">
+            <a href="save">Save All Files</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="discard">Discard</a>
+        </div>
+        """
+        
+        phantom_set = sublime.PhantomSet(view, "ollama_buttons")
+        phantom = sublime.Phantom(
+            sublime.Region(0, 0),
+            phantom_content,
+            sublime.LAYOUT_BLOCK,
+            on_navigate=lambda href: self.on_button_click(href, view)
+        )
+        phantom_set.update([phantom])
+    
+    def on_button_click(self, href, view):
+        """Handle button clicks in the preview"""
+        if href == "save":
+            # Get stored file data
+            file_data = view.settings().get("ollama_files")
+            if not file_data:
+                sublime.error_message("File data not found")
+                return
+                
+            paths = file_data.get("paths", [])
+            contents = file_data.get("contents", [])
+            project_root = file_data.get("project_root", "")
+            
+            # Create files
+            created_files = []
+            for i, (rel_path, content) in enumerate(zip(paths, contents)):
+                try:
+                    full_path = os.path.join(project_root, rel_path)
+                    os.makedirs(os.path.dirname(full_path), exist_ok=True)
+                    
+                    with open(full_path, "w") as f:
+                        f.write(content)
+                    
+                    created_files.append(rel_path)
+                except Exception as e:
+                    sublime.error_message(f"Error creating file {rel_path}: {str(e)}")
+            
+            # Close preview tab
+            self.window.focus_view(view)
+            self.window.run_command("close")
+            
+            # Show success message
+            if created_files:
+                message = f"Created {len(created_files)} files:\n" + "\n".join(created_files)
+                sublime.message_dialog(message)
+                
+                # Open the first file
+                if created_files:
+                    self.window.open_file(os.path.join(project_root, created_files[0]))
+                    
+        elif href == "discard":
+            # Close preview tab without saving
+            self.window.focus_view(view)
+            self.window.run_command("close")
+            sublime.status_message("Generation discarded")

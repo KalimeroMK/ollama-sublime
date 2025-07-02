@@ -20,6 +20,14 @@
     "command": "ollama_create_file"
   },
   {
+    "caption": "Ollama AI: Generate Unit Test",
+    "command": "ollama_generate_test"
+  },
+  {
+    "caption": "Ollama AI: Generate Feature",
+    "command": "ollama_smart_generate"
+  },
+  {
     "caption": "Ollama AI: Edit Model Settings",
     "command": "ollama_edit_settings"
   },
