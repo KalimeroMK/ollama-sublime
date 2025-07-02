@@ -352,36 +352,65 @@ class OllamaEditSettingsCommand(sublime_plugin.WindowCommand):
         settings = sublime.load_settings("Ollama.sublime-settings")
         
         # Get available models from Ollama API
-        url = settings.get("url", "http://127.0.0.1:11434/api/generate").replace("/api/generate", "/api")
-        models_url = "{}{}".format(url, "/tags")
+        url = settings.get("url", "http://127.0.0.1:11434/api/chat")
+        base_url = url.split('/api/')[0] + '/api'
         
+        # Try different model listing endpoints
         def fetch_models():
             try:
+                # First try the newer Ollama API endpoint
+                models_url = "{}/models".format(base_url)
                 with urllib.request.urlopen(models_url) as response:
                     data = json.loads(response.read().decode('utf-8'))
-                    # Extract model names
                     models = [model['name'] for model in data.get('models', [])]
+                    if not models and 'models' not in data:
+                        # If no models in response, try alternate structure
+                        models = [model for model in data]
+                        
                     if not models:
-                        models = ["codellama", "llama2", "mistral", "phi"]  # Fallback options
+                        # Try older API endpoint
+                        models_url_alt = "{}/tags".format(base_url)
+                        with urllib.request.urlopen(models_url_alt) as response:
+                            data = json.loads(response.read().decode('utf-8'))
+                            models = [model['name'] for model in data.get('models', [])]
+                            
+                    if not models:
+                        # Fallback options
+                        models = ["codellama", "llama2", "mistral", "phi", "qwen2.5-coder"]
                     
                     sublime.set_timeout(lambda models=models: self.show_models_panel(models), 0)
             except Exception as e:
                 print("Error fetching models: {}".format(e))
                 # Fallback to default models
-                models = ["codellama", "llama2", "mistral", "phi"]
+                models = ["codellama", "llama2", "mistral", "phi", "qwen2.5-coder"]
                 sublime.set_timeout(lambda models=models: self.show_models_panel(models), 0)
         
+        import threading
         threading.Thread(target=fetch_models).start()
     
     def show_models_panel(self, models):
         self.models = models
-        self.window.show_quick_panel(models, self.on_model_selected)
+        try:
+            self.window.show_quick_panel(models, self.on_model_selected)
+        except Exception as e:
+            print("Error showing quick panel: {}".format(e))
+            # Fallback to input panel if quick panel fails
+            self.window.show_input_panel("Enter model name:", 
+                                         models[0] if models else "qwen2.5-coder", 
+                                         self.on_model_input, None, None)
+    
+    def on_model_input(self, model):
+        if not model:
+            return
+        self.update_model_settings(model)
     
     def on_model_selected(self, index):
         if index == -1:
             return
-            
         model = self.models[index]
+        self.update_model_settings(model)
+    
+    def update_model_settings(self, model):
         settings = sublime.load_settings("Ollama.sublime-settings")
         
         # Update model in settings
@@ -394,7 +423,7 @@ class OllamaEditSettingsCommand(sublime_plugin.WindowCommand):
         # Now ask for URL configuration
         self.window.show_input_panel(
             "Ollama API URL (leave empty for default):",
-            settings.get("url", "http://127.0.0.1:11434/api/generate"),
+            settings.get("url", "http://127.0.0.1:11434/api/chat"),
             self.on_url_entered, None, None
         )
     
@@ -406,7 +435,15 @@ class OllamaEditSettingsCommand(sublime_plugin.WindowCommand):
             sublime.status_message("Ollama API URL updated to: {}".format(url))
             
         # Open the settings file for additional editing
-        self.window.run_command("open_file", {"file": "${packages}/User/Ollama.sublime-settings"})
+        # First try package-specific path
+        package_path = sublime.packages_path()
+        settings_path = os.path.join(package_path, "ollama-sublime", "Ollama.sublime-settings")
+        
+        # Check if file exists or try User folder
+        if not os.path.exists(settings_path):
+            settings_path = "${packages}/User/Ollama.sublime-settings"
+            
+        self.window.run_command("open_file", {"file": settings_path})
 
 class OllamaEditSystemPromptsCommand(sublime_plugin.WindowCommand):
     """
@@ -486,7 +523,7 @@ class OllamaGenerateLaravelFeatureCommand(sublime_plugin.WindowCommand):
         # Get settings
         settings = sublime.load_settings("Ollama.sublime-settings")
         model = settings.get("model", "codellama")
-        url = settings.get("url", "http://127.0.0.1:11434/api/generate")
+        url = settings.get("url", "http://127.0.0.1:11434/api/chat")
 
         # Prepare payload (use /api/chat if needed)
         if "/chat" in url:
