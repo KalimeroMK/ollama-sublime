@@ -13,6 +13,11 @@
       {
         "caption": "Custom Prompt for Selection...",
         "command": "ollama_selection_prompt"
+      },
+      { "caption": "-" },
+      {
+        "caption": "Suggest Refactoring...",
+        "command": "ollama_inline_refactor"
       }
     ]
   }

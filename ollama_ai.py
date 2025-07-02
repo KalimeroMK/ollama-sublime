@@ -1160,7 +1160,7 @@ class OllamaSmartGenerateCommand(sublime_plugin.WindowCommand):
                     self.progress_view.run_command("append", {"characters": "API returned error status: {}\n".format(response.status)})
         except Exception as e:
             self.progress_view.run_command("append", {"characters": "Error: {}\n".format(str(e))})
-    
+
     def add_phantom_buttons(self, view):
         """Add Save/Discard buttons to the preview view"""
         phantom_content = """
@@ -1223,3 +1223,118 @@ class OllamaSmartGenerateCommand(sublime_plugin.WindowCommand):
             self.window.focus_view(view)
             self.window.run_command("close")
             sublime.status_message("Generation discarded")
+
+class OllamaInlineRefactorCommand(sublime_plugin.TextCommand):
+    """
+    Shows an inline phantom with a refactoring suggestion for the selected code.
+    The user can then approve or dismiss the suggestion.
+    """
+    def run(self, edit):
+        self.selected_text = ""
+        self.selection_region = None
+        for region in self.view.sel():
+            if not region.empty():
+                self.selected_text = self.view.substr(region)
+                self.selection_region = region
+                break
+
+        if not self.selected_text.strip():
+            sublime.status_message("Ollama: No text selected.")
+            return
+
+        prompt = "Refactor the following code. IMPORTANT: Return ONLY the raw, updated code block. Do not include any explanation, markdown, or any text other than the code itself."
+        full_prompt = "{}\n\n---\n\n{}".format(prompt, self.selected_text)
+
+        settings = sublime.load_settings("Ollama.sublime-settings")
+        model = settings.get("model", "qwen2.5-coder")
+        url = settings.get("url", "http://127.0.0.1:11434/api/chat")
+        system_prompt = settings.get("system_prompt", "You are a Laravel PHP expert.")
+        is_chat_api = "/api/chat" in url
+
+        if is_chat_api:
+            payload = json.dumps({
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": full_prompt}
+                ],
+                "stream": False
+            }).encode("utf-8")
+        else:
+            payload = json.dumps({
+                "model": model,
+                "prompt": "{}\n\n{}".format(system_prompt, full_prompt),
+                "stream": False
+            }).encode("utf-8")
+
+        req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+        sublime.set_timeout_async(lambda: self.fetch_suggestion(req, is_chat_api), 0)
+
+    def fetch_suggestion(self, req, is_chat_api):
+        try:
+            with urllib.request.urlopen(req) as response:
+                response_data = json.loads(response.read().decode("utf-8"))
+                suggestion = response_data["message"]["content"] if is_chat_api else response_data.get("response", "")
+                suggestion = re.sub(r'^```[a-zA-Z]*\n', '', suggestion)
+                suggestion = re.sub(r'\n```$', '', suggestion).strip()
+
+                if suggestion:
+                    self.view.settings().set("ollama_inline_suggestion", suggestion)
+                    self.show_phantom(suggestion)
+                else:
+                    sublime.status_message("Ollama: No suggestion received.")
+        except Exception as e:
+            sublime.error_message("Ollama Error: {}".format(str(e)))
+
+    def show_phantom(self, suggestion):
+        import html
+        escaped_suggestion = html.escape(suggestion, quote=False)
+        phantom_key = "ollama_inline_refactor"
+        phantom_content = """
+        <body id="ollama-inline-suggestion">
+            <style>
+                div.ollama-suggestion {{ background-color: var(--background); color: var(--foreground); border: 1px solid var(--accent); padding: 10px; margin-top: 5px; border-radius: 5px; }}
+                div.ollama-suggestion pre {{ margin: 0; padding: 0; }}
+                div.ollama-actions a {{ background-color: var(--accent); color: var(--background); padding: 2px 8px; text-decoration: none; border-radius: 3px; font-weight: bold; }}
+            </style>
+            <div class="ollama-suggestion">
+                <div class="ollama-actions">
+                    <a href=\"approve\">Approve</a>&nbsp;&nbsp;
+                    <a href=\"dismiss\">Dismiss</a>
+                </div>
+                <hr>
+                <pre><code>{}</code></pre>
+            </div>
+        </body>
+        """.format(escaped_suggestion)
+
+        phantom_set = sublime.PhantomSet(self.view, phantom_key)
+        phantom = sublime.Phantom(self.selection_region, phantom_content, sublime.LAYOUT_BLOCK, on_navigate=self.on_phantom_navigate)
+        phantom_set.update([phantom])
+
+    def on_phantom_navigate(self, href):
+        phantom_key = "ollama_inline_refactor"
+        if href == "approve":
+            suggestion = self.view.settings().get("ollama_inline_suggestion")
+            if suggestion:
+                self.view.run_command("ollama_replace_text", {
+                    "start": self.selection_region.begin(),
+                    "end": self.selection_region.end(),
+                    "text": suggestion
+                })
+        
+        phantom_set = sublime.PhantomSet(self.view, phantom_key)
+        phantom_set.update([])
+        self.view.settings().erase("ollama_inline_suggestion")
+
+    def is_visible(self):
+        for region in self.view.sel():
+            if not region.empty():
+                return True
+        return False
+
+
+class OllamaReplaceTextCommand(sublime_plugin.TextCommand):
+    def run(self, edit, start, end, text):
+        region = sublime.Region(start, end)
+        self.view.replace(edit, region, text)
