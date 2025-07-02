@@ -13,11 +13,11 @@
                     },
                     {
                         "caption": "Explain Selection",
-                        "command": "ollama_ai_explain"
+                        "command": "ollama_explain"
                     },
                     {
                         "caption": "Optimize Selection",
-                        "command": "ollama_ai_optimize"
+                        "command": "ollama_optimize"
                     },
                     {
                         "caption": "Analyze Codebase",
@@ -44,15 +44,8 @@
                 "id": "package-settings",
                 "children": [
                     {
-                        "caption": "Ollama",
+                        "caption": "Ollama AI",
                         "children": [
-                            {
-                                "caption": "Settings",
-                                "command": "open_file",
-                                "args": {
-                                    "file": "${packages}/ollama-sublime/Ollama.sublime-settings"
-                                }
-                            },
                             {
                                 "caption": "Edit Model Settings",
                                 "command": "ollama_edit_settings"
