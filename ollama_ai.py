@@ -154,6 +154,94 @@ class OllamaAiOptimizeCommand(OllamaAiExplainCommand):
     def run(self, edit):
         self.run_with_mode("optimize_prompt", "Optimize")
 
+class OllamaSelectionPromptCommand(sublime_plugin.TextCommand):
+    """
+    Shows an input panel to get a custom prompt for the selected text.
+    """
+    def run(self, edit):
+        self.selected_text = ""
+        for region in self.view.sel():
+            if not region.empty():
+                self.selected_text += self.view.substr(region)
+
+        if not self.selected_text.strip():
+            sublime.status_message("Ollama: No text selected.")
+            return
+
+        self.view.window().show_input_panel(
+            "Enter prompt for selected code:",
+            "",
+            self.on_done,
+            None,
+            None
+        )
+
+    def on_done(self, user_prompt):
+        if not user_prompt.strip():
+            return
+
+        full_prompt = "{}\n\n---\n\n{}".format(user_prompt, self.selected_text)
+
+        settings = sublime.load_settings("Ollama.sublime-settings")
+        model = settings.get("model", "qwen2.5-coder")
+        url = settings.get("url", "http://127.0.0.1:11434/api/chat")
+        system_prompt = settings.get("system_prompt", "You are a Laravel PHP expert.")
+        is_chat_api = "/api/chat" in url
+
+        tab = self.view.window().new_file()
+        tab.set_name("Ollama Custom Prompt")
+        tab.set_scratch(True)
+        tab.set_syntax_file(settings.get("syntax", "Packages/Markdown/Markdown.sublime-syntax"))
+        tab.run_command("append", {
+            "characters": "Prompt: {}\nModel: {}\n\n---\n\n".format(user_prompt, model)
+        })
+
+        if is_chat_api:
+            payload = json.dumps({
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": full_prompt}
+                ],
+                "stream": True
+            }).encode("utf-8")
+        else:
+            payload = json.dumps({
+                "model": model,
+                "prompt": "{}\n\n{}".format(system_prompt, full_prompt),
+                "stream": True
+            }).encode("utf-8")
+
+        req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+
+        def fetch():
+            try:
+                with urllib.request.urlopen(req) as response:
+                    for line in response:
+                        try:
+                            parsed = json.loads(line.decode("utf-8"))
+                            if is_chat_api and "message" in parsed and "content" in parsed["message"]:
+                                content = parsed["message"]["content"]
+                                tab.run_command("append", {"characters": content})
+                            elif not is_chat_api and "response" in parsed:
+                                content = parsed.get("response", "")
+                                tab.run_command("append", {"characters": content})
+                            if parsed.get("done", False):
+                                break
+                        except json.JSONDecodeError:
+                            continue
+            except Exception as e:
+                tab.run_command("append", {"characters": "\nERROR: {}".format(e)})
+
+        sublime.set_timeout_async(fetch, 0)
+
+    def is_visible(self):
+        for region in self.view.sel():
+            if not region.empty():
+                return True
+        return False
+
+
 class OllamaCodeAnalyzeCommand(sublime_plugin.WindowCommand):
     """
     Analyze codebase and provide insights similar to Cascade

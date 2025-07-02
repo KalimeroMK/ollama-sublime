@@ -1,10 +1,19 @@
 [
   {
-    "caption": "Ollama AI: Explain this code",
-    "command": "ollama_ai_explain"
-  },
-  {
-    "caption": "Ollama AI: Optimize this code",
-    "command": "ollama_ai_optimize"
+    "caption": "Ollama AI",
+    "children": [
+      {
+        "caption": "Explain this code",
+        "command": "ollama_ai_explain"
+      },
+      {
+        "caption": "Optimize this code",
+        "command": "ollama_ai_optimize"
+      },
+      {
+        "caption": "Custom Prompt for Selection...",
+        "command": "ollama_selection_prompt"
+      }
+    ]
   }
 ]
