@@ -13,6 +13,7 @@ class OllamaPromptCommand(sublime_plugin.WindowCommand):
         settings = sublime.load_settings("Ollama.sublime-settings")
         model = settings.get("model", "qwen2.5-coder")
         url = settings.get("url", "http://127.0.0.1:11434/api/chat")
+        system_prompt = settings.get("system_prompt", "You are a Laravel PHP expert. When asked about code analysis or test generation, always assume PHP Laravel unless specified otherwise.")
         syntax = settings.get("syntax", "Packages/Markdown/Markdown.sublime-syntax")
         is_chat_api = "/api/chat" in url
 
@@ -28,6 +29,7 @@ class OllamaPromptCommand(sublime_plugin.WindowCommand):
             payload = json.dumps({
                 "model": model,
                 "messages": [
+                    {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_input}
                 ],
                 "stream": True
@@ -35,7 +37,7 @@ class OllamaPromptCommand(sublime_plugin.WindowCommand):
         else:
             payload = json.dumps({
                 "model": model,
-                "prompt": user_input,
+                "prompt": "{}\n\n{}".format(system_prompt, user_input),
                 "stream": True
             }).encode("utf-8")
 
@@ -48,23 +50,16 @@ class OllamaPromptCommand(sublime_plugin.WindowCommand):
                     for line in response:
                         try:
                             parsed = json.loads(line.decode("utf-8"))
-
-                            # Handle chat API format
-                            if is_chat_api:
-                                if "message" in parsed and "content" in parsed["message"]:
-                                    content = parsed["message"]["content"]
-                                    result += content
-                                    tab.run_command("append", {"characters": content})
-                            # Handle generate API format
-                            else:
-                                if "response" in parsed:
-                                    result += parsed.get("response", "")
-
+                            if is_chat_api and "message" in parsed and "content" in parsed["message"]:
+                                content = parsed["message"]["content"]
+                                result += content
+                                tab.run_command("append", {"characters": content})
+                            elif "response" in parsed:
+                                result += parsed.get("response", "")
                             if parsed.get("done", False):
                                 break
                         except json.JSONDecodeError:
                             continue
-
                 if not result:
                     tab.run_command("append", {"characters": "Response:\n\nNo content returned from Ollama API. Please check your configuration."})
             except Exception as e:

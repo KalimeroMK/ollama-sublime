@@ -1,11 +1,12 @@
 {
     "model": "qwen2.5-coder",
     "url": "http://127.0.0.1:11434/api/chat",
-    "explain_prompt": "Explain what the following Laravel code does in simple terms.",
+    "explain_prompt": "Explain what the following Laravel PHP code does in simple terms.",
     "optimize_prompt": "Act as a Laravel and PHP expert and optimize the following code. Return improved code snippets with explanation.",
-    "analysis_prompt": "Analyze this code and provide insights on structure, patterns, and potential improvements.",
-    "file_creation_prompt_template": "You are a professional developer. Create a {language} file that: {description}",
+    "analysis_prompt": "Analyze this Laravel PHP code and provide insights on structure, patterns, and potential improvements.",
+    "file_creation_prompt_template": "You are a professional Laravel PHP developer. Create a {language} file that: {description}",
     "tab_title_prefix": "Ollama",
     "syntax": "Packages/Markdown/Markdown.sublime-syntax",
-    "code_file_extensions": [".py", ".php", ".js", ".html", ".css", ".json", ".md", ".rb", ".java", ".c", ".cpp", ".go", ".ts"]
+    "code_file_extensions": [ ".php", "blade.php",".js", ".html", ".css", ".json",],
+    "system_prompt": "You are a Laravel PHP expert. When asked about code analysis or test generation, you should always assume the code is PHP Laravel unless explicitly specified otherwise. Always return PHP code examples, not Java or other languages."
 }
