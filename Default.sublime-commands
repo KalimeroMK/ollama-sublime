@@ -1,11 +1,11 @@
 [
   {
     "caption": "Ollama AI: Explain Selection",
-    "command": "ollama_explain"
+    "command": "ollama_ai_explain"
   },
   {
     "caption": "Ollama AI: Optimize Selection",
-    "command": "ollama_optimize"
+    "command": "ollama_ai_optimize"
   },
   {
     "caption": "Ollama AI: Custom Prompt",

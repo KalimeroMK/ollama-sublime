@@ -72,161 +72,91 @@ class OllamaPromptCommand(sublime_plugin.WindowCommand):
 
         sublime.set_timeout_async(fetch, 0)
 
-class OllamaExplainCommand(sublime_plugin.TextCommand):
+class OllamaAiExplainCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        # Get selected text
-        selected_text = ""
-        for region in self.view.sel():
-            if not region.empty():
-                selected_text += self.view.substr(region)
+        self.run_with_mode("explain_prompt", "Explain")
 
-        if not selected_text:
-            sublime.status_message("Nothing selected")
-            return
-
-        # Get settings
+    def run_with_mode(self, prompt_key, mode_label):
         settings = sublime.load_settings("Ollama.sublime-settings")
+        instruction = settings.get(prompt_key)
         model = settings.get("model", "qwen2.5-coder")
         url = settings.get("url", "http://127.0.0.1:11434/api/chat")
         syntax = settings.get("syntax", "Packages/Markdown/Markdown.sublime-syntax")
-        tab_title_prefix = settings.get("tab_title_prefix", "Ollama: ")
-        explain_prompt = settings.get("explain_prompt", "Explain this code in detail:")
+        prefix = settings.get("tab_title_prefix", "Ollama")
         is_chat_api = "/api/chat" in url
 
+        sels = self.view.sel()
+        if not sels or sels[0].empty():
+            sublime.message_dialog("[{}] Please select some code first.".format(mode_label))
+            return
+
+        code = self.view.substr(sels[0])
+        
         # Create output tab
-        tab = self.view.window().new_file()
-        tab.set_name("{}Explain".format(tab_title_prefix))
-        tab.set_syntax_file(syntax)
-        tab.set_scratch(True)
+        self.output_tab = self.view.window().new_file()
+        self.output_tab.set_name("{} [{}]".format(prefix, mode_label))
+        self.output_tab.set_scratch(True)
+        self.output_tab.set_syntax_file(syntax)
+        self.output_tab.run_command("append", {
+            "characters": "# {} Code\n\n```\n{}\n```\n\nRunning {}...\n\n".format(mode_label, code, mode_label)
+        })
 
-        # Add header to tab
-        tab.run_command("append", {"characters": "# Code Explanation\n\n```\n{}\n```\n\n".format(selected_text)})
-
-        # Prepare payload
+        # Prepare payload based on API type
         if is_chat_api:
-            payload = json.dumps({
+            data = json.dumps({
                 "model": model,
                 "messages": [
-                    {"role": "system", "content": "You are a helpful code explanation assistant."},
-                    {"role": "user", "content": "{}\n\n```\n{}\n```".format(explain_prompt, selected_text)}
+                    {"role": "system", "content": "You are a senior developer."},
+                    {"role": "user", "content": "{}\n\nCode:\n```\n{}\n```".format(instruction, code)}
                 ],
                 "stream": True
             }).encode("utf-8")
         else:
-            prompt = "{}\n\n```\n{}\n```".format(explain_prompt, selected_text)
-            payload = json.dumps({
+            full_prompt = "You are a senior developer.\n\n{}\n\nCode:\n```\n{}\n```".format(instruction, code)
+            data = json.dumps({
                 "model": model,
-                "prompt": prompt,
+                "prompt": full_prompt,
                 "stream": True
             }).encode("utf-8")
 
-        req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+        req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+        
+        # Start fetching response
+        sublime.set_timeout_async(lambda: self.fetch_response(req, model, is_chat_api), 0)
 
-        tab.run_command("append", {"characters": "## Explanation\n\n"})
+    def fetch_response(self, req, model, is_chat_api):
+        try:
+            result = ""
+            with urllib.request.urlopen(req) as response:
+                for line in response:
+                    try:
+                        parsed = json.loads(line.decode("utf-8"))
+                        
+                        # Handle different API formats
+                        if is_chat_api:
+                            if "message" in parsed and "content" in parsed["message"]:
+                                content = parsed["message"]["content"]
+                                result += content
+                                self.output_tab.run_command("append", {"characters": content})
+                        else:
+                            content = parsed.get("response", "")
+                            result += content
+                            self.output_tab.run_command("append", {"characters": content})
+                        
+                        if parsed.get("done", False):
+                            break
+                    except json.JSONDecodeError:
+                        continue
+                        
+            if not result:
+                self.output_tab.run_command("append", {"characters": "No response received from model."})
+                
+        except Exception as e:
+            self.output_tab.run_command("append", {"characters": "\n\nERROR: {}".format(str(e))})
 
-        def fetch():
-            try:
-                with urllib.request.urlopen(req) as response:
-                    for line in response:
-                        try:
-                            parsed = json.loads(line.decode("utf-8"))
-
-                            # Handle both API formats
-                            if is_chat_api:
-                                if "message" in parsed and "content" in parsed["message"]:
-                                    content = parsed["message"]["content"]
-                                    tab.run_command("append", {"characters": content})
-                            else:
-                                if "response" in parsed:
-                                    content = parsed.get("response", "")
-                                    tab.run_command("append", {"characters": content})
-
-                            if parsed.get("done", False):
-                                break
-                        except json.JSONDecodeError:
-                            continue
-            except Exception as e:
-                tab.run_command("append", {"characters": "\n\nERROR: {}".format(e)})
-
-        sublime.set_timeout_async(fetch, 0)
-
-class OllamaOptimizeCommand(sublime_plugin.TextCommand):
+class OllamaAiOptimizeCommand(OllamaAiExplainCommand):
     def run(self, edit):
-        # Get selected text
-        selected_text = ""
-        for region in self.view.sel():
-            if not region.empty():
-                selected_text += self.view.substr(region)
-
-        if not selected_text:
-            sublime.status_message("Nothing selected")
-            return
-
-        # Get settings
-        settings = sublime.load_settings("Ollama.sublime-settings")
-        model = settings.get("model", "qwen2.5-coder")
-        url = settings.get("url", "http://127.0.0.1:11434/api/chat")
-        syntax = settings.get("syntax", "Packages/Markdown/Markdown.sublime-syntax")
-        tab_title_prefix = settings.get("tab_title_prefix", "Ollama: ")
-        optimize_prompt = settings.get("optimize_prompt", "Optimize this code and explain your changes:")
-        is_chat_api = "/api/chat" in url
-
-        # Create output tab
-        tab = self.view.window().new_file()
-        tab.set_name("{}Optimize".format(tab_title_prefix))
-        tab.set_syntax_file(syntax)
-        tab.set_scratch(True)
-
-        # Add header to tab
-        tab.run_command("append", {"characters": "# Code Optimization\n\n```\n{}\n```\n\n".format(selected_text)})
-
-        # Prepare payload
-        if is_chat_api:
-            payload = json.dumps({
-                "model": model,
-                "messages": [
-                    {"role": "system", "content": "You are a helpful code optimization assistant."},
-                    {"role": "user", "content": "{}\n\n```\n{}\n```".format(optimize_prompt, selected_text)}
-                ],
-                "stream": True
-            }).encode("utf-8")
-        else:
-            prompt = "{}\n\n```\n{}\n```".format(optimize_prompt, selected_text)
-            payload = json.dumps({
-                "model": model,
-                "prompt": prompt,
-                "stream": True
-            }).encode("utf-8")
-
-        req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
-
-        tab.run_command("append", {"characters": "## Optimized Code & Explanation\n\n"})
-
-        def fetch():
-            try:
-                with urllib.request.urlopen(req) as response:
-                    for line in response:
-                        try:
-                            parsed = json.loads(line.decode("utf-8"))
-
-                            # Handle both API formats
-                            if is_chat_api:
-                                if "message" in parsed and "content" in parsed["message"]:
-                                    content = parsed["message"]["content"]
-                                    tab.run_command("append", {"characters": content})
-                            else:
-                                if "response" in parsed:
-                                    content = parsed.get("response", "")
-                                    tab.run_command("append", {"characters": content})
-
-                            if parsed.get("done", False):
-                                break
-                        except json.JSONDecodeError:
-                            continue
-            except Exception as e:
-                tab.run_command("append", {"characters": "\n\nERROR: {}".format(e)})
-
-        sublime.set_timeout_async(fetch, 0)
+        self.run_with_mode("optimize_prompt", "Optimize")
 
 class OllamaCodeAnalyzeCommand(sublime_plugin.WindowCommand):
     """

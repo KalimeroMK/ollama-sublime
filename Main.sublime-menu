@@ -13,11 +13,11 @@
                     },
                     {
                         "caption": "Explain Selection",
-                        "command": "ollama_explain"
+                        "command": "ollama_ai_explain"
                     },
                     {
                         "caption": "Optimize Selection",
-                        "command": "ollama_optimize"
+                        "command": "ollama_ai_optimize"
                     },
                     {
                         "caption": "Analyze Codebase",
