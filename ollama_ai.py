@@ -595,19 +595,29 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
             </body>
         """.format(escaped_suggestion)
 
+        phantom_set = sublime.PhantomSet(self.view, phantom_key)
         phantom = sublime.Phantom(
             self.selection_region,
             phantom_content,
             sublime.LAYOUT_BLOCK,
             on_navigate=self.on_phantom_navigate
         )
-        self.view.add_phantoms(phantom_key, [phantom])
+        phantom_set.update([phantom])
 
     def on_phantom_navigate(self, href):
         if href == "approve":
             if hasattr(self, 'suggestion') and self.suggestion:
                 self.view.run_command("ollama_replace_text", {"region_start": self.selection_region.begin(), "region_end": self.selection_region.end(), "text": self.suggestion})
-        self.view.erase_phantoms("ollama_inline_refactor")
+        
+        # Erase phantoms using the ST3 compatible API
+        phantom_set = sublime.PhantomSet(self.view, "ollama_inline_refactor")
+        phantom_set.update([])
+
+    def is_visible(self):
+        for region in self.view.sel():
+            if not region.empty():
+                return True
+        return False
 
 
 class OllamaReplaceTextCommand(sublime_plugin.TextCommand):
