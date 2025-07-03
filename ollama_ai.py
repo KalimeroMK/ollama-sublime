@@ -474,6 +474,9 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
     def run(self, edit):
         self.selected_text = ""
         self.selection_region = None
+        # Persist the phantom set on the instance to prevent garbage collection
+        self.phantom_set = sublime.PhantomSet(self.view, "ollama_inline_refactor")
+
         for region in self.view.sel():
             if not region.empty():
                 self.selected_text = self.view.substr(region)
@@ -539,34 +542,76 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
     def show_inline_suggestion(self, suggestion):
         self.suggestion = suggestion  # Store suggestion for the 'approve' action
         escaped_suggestion = html.escape(suggestion, quote=False)
-        phantom_key = "ollama_inline_refactor"
 
-        html_body = '<body style="background-color: #333; color: #FFF; border: 1px solid #555; padding: 5px;">'
-        html_header = '<b>AI Suggestion:</b>'
-        html_pre = '<pre style="background-color: #222; padding: 5px;"><code>'
-        html_code = escaped_suggestion
-        html_post_pre = '</code></pre>'
-        html_buttons = '<a href="approve">Approve</a> <a href="dismiss">Dismiss</a>'
-        html_end = '</body>'
-        phantom_content = html_body + html_header + html_pre + html_code + html_post_pre + html_buttons + html_end
+        # Restore the original, styled HTML
+        phantom_content = """
+            <body id="ollama-inline-refactor">
+                <style>
+                    body {
+                        font-family: sans-serif;
+                        margin: 0;
+                        padding: 8px;
+                        border-radius: 4px;
+                        background-color: var(--background);
+                        color: var(--foreground);
+                        border: 1px solid var(--border);
+                    }
+                    .header {
+                        font-weight: bold;
+                        margin-bottom: 8px;
+                        padding-bottom: 4px;
+                        border-bottom: 1px solid var(--border);
+                    }
+                    pre {
+                        margin: 0;
+                        padding: 8px;
+                        border-radius: 4px;
+                        background-color: var(--background_light);
+                        white-space: pre-wrap;
+                        word-wrap: break-word;
+                    }
+                    .buttons {
+                        margin-top: 8px;
+                        text-align: right;
+                    }
+                    a {
+                        text-decoration: none;
+                        padding: 4px 8px;
+                        border-radius: 4px;
+                        background-color: var(--button_background);
+                        color: var(--button_foreground);
+                        margin-left: 4px;
+                    }
+                    a.approve {
+                        background-color: var(--greenish);
+                    }
+                </style>
+                <div class="header">AI Refactoring Suggestion</div>
+                <pre><code>""" + escaped_suggestion + """</code></pre>
+                <div class="buttons">
+                    <a href="approve" class="approve">Approve</a>
+                    <a href="dismiss">Dismiss</a>
+                </div>
+            </body>
+        """
 
-        phantom_set = sublime.PhantomSet(self.view, phantom_key)
         phantom = sublime.Phantom(
             self.selection_region,
             phantom_content,
             sublime.LAYOUT_BLOCK,
             on_navigate=self.on_phantom_navigate
         )
-        phantom_set.update([phantom])
+        self.phantom_set.update([phantom])
+
 
     def on_phantom_navigate(self, href):
         if href == "approve":
             if hasattr(self, 'suggestion') and self.suggestion:
                 self.view.run_command("ollama_replace_text", {"region_start": self.selection_region.begin(), "region_end": self.selection_region.end(), "text": self.suggestion})
         
-        # Erase phantoms using the ST3 compatible API
-        phantom_set = sublime.PhantomSet(self.view, "ollama_inline_refactor")
-        phantom_set.update([])
+        # Erase phantoms by updating the set with an empty list
+        if hasattr(self, 'phantom_set'):
+            self.phantom_set.update([])
 
     def is_visible(self):
         for region in self.view.sel():
