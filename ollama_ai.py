@@ -547,7 +547,7 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
         phantom_content = """
             <body id=\"ollama-inline-refactor\">
                 <style>
-                    body {
+                    body {{
                         font-family: sans-serif;
                         margin: 0;
                         padding: 8px;
@@ -555,36 +555,36 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
                         background-color: var(--background);
                         color: var(--foreground);
                         border: 1px solid var(--border);
-                    }
-                    .header {
+                    }}
+                    .header {{
                         font-weight: bold;
                         margin-bottom: 8px;
                         padding-bottom: 4px;
                         border-bottom: 1px solid var(--border);
-                    }
-                    pre {
+                    }}
+                    pre {{
                         margin: 0;
                         padding: 8px;
                         border-radius: 4px;
                         background-color: var(--background_light);
                         white-space: pre-wrap;
                         word-wrap: break-word;
-                    }
-                    .buttons {
+                    }}
+                    .buttons {{
                         margin-top: 8px;
                         text-align: right;
-                    }
-                    a {
+                    }}
+                    a {{
                         text-decoration: none;
                         padding: 4px 8px;
                         border-radius: 4px;
                         background-color: var(--button_background);
                         color: var(--button_foreground);
                         margin-left: 4px;
-                    }
-                    a.approve {
+                    }}
+                    a.approve {{
                         background-color: var(--greenish);
-                    }
+                    }}
                 </style>
                 <div class=\"header\">AI Refactoring Suggestion</div>
                 <pre><code>{}</code></pre>
