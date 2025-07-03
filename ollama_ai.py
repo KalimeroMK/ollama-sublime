@@ -82,10 +82,11 @@ class OllamaBaseCommand:
     def get_settings(self):
         settings = sublime.load_settings("Ollama.sublime-settings")
         model = settings.get("model", "qwen2.5-coder")
-        url = settings.get("url", "http://127.0.0.1:11434/api/chat")
+        url_from_settings = settings.get("url", "http://127.0.0.1:11434")
         system_prompt = settings.get("system_prompt", "You are a Laravel PHP expert.")
-        is_chat_api = "/api/chat" in url
-        return model, url, system_prompt, is_chat_api
+        is_chat_api = "/api/chat" in url_from_settings
+        base_url = url_from_settings.replace('/api/chat', '').replace('/api/generate', '').rstrip('/')
+        return model, base_url, system_prompt, is_chat_api
 
 class OllamaPromptCommand(OllamaBaseCommand, sublime_plugin.WindowCommand):
     def run(self):
@@ -102,7 +103,7 @@ class OllamaPromptCommand(OllamaBaseCommand, sublime_plugin.WindowCommand):
             return
 
         settings = self.get_settings()
-        model, url, system_prompt, is_chat_api = settings
+        model, base_url, system_prompt, is_chat_api = settings
         
         # --- CONTEXT AWARE ---
         symbol = extract_symbol_from_text(user_input)
@@ -121,6 +122,9 @@ class OllamaPromptCommand(OllamaBaseCommand, sublime_plugin.WindowCommand):
             "characters": "Prompt: {}\nModel: {}\n\n---\n\n".format(user_input, model)
         })
 
+        api_endpoint = "/api/chat" if is_chat_api else "/api/generate"
+        full_url = base_url + api_endpoint
+
         if is_chat_api:
             payload = {
                 "model": model,
@@ -137,7 +141,7 @@ class OllamaPromptCommand(OllamaBaseCommand, sublime_plugin.WindowCommand):
                 "stream": True
             }
 
-        req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={"Content-Type": "application/json"})
+        req = urllib.request.Request(full_url, data=json.dumps(payload).encode('utf-8'), headers={"Content-Type": "application/json"})
 
         def fetch():
             try:
@@ -163,7 +167,7 @@ class OllamaPromptCommand(OllamaBaseCommand, sublime_plugin.WindowCommand):
 class OllamaSelectionCommandBase(OllamaBaseCommand, sublime_plugin.TextCommand):
     def run(self, edit):
         settings = sublime.load_settings("Ollama.sublime-settings")
-        model, url, system_prompt, is_chat_api = self.get_settings()
+        model, base_url, system_prompt, is_chat_api = self.get_settings()
 
         for region in self.view.sel():
             if not region.empty():
@@ -184,6 +188,9 @@ class OllamaSelectionCommandBase(OllamaBaseCommand, sublime_plugin.TextCommand):
                     "characters": "Prompt: {}\nModel: {}\n\n---\n\n".format(prompt, model)
                 })
 
+                api_endpoint = "/api/chat" if is_chat_api else "/api/generate"
+                full_url = base_url + api_endpoint
+
                 if is_chat_api:
                     payload = {
                         "model": model,
@@ -200,7 +207,7 @@ class OllamaSelectionCommandBase(OllamaBaseCommand, sublime_plugin.TextCommand):
                         "stream": True
                     }
 
-                req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={"Content-Type": "application/json"})
+                req = urllib.request.Request(full_url, data=json.dumps(payload).encode('utf-8'), headers={"Content-Type": "application/json"})
 
                 def fetch():
                     try:
@@ -282,7 +289,7 @@ class OllamaSelectionPromptCommand(OllamaSelectionCommandBase):
         full_prompt = "{}\n\n---\n\n{}".format(user_prompt, self.selected_text)
 
         settings = sublime.load_settings("Ollama.sublime-settings")
-        model, url, system_prompt, is_chat_api = self.get_settings()
+        model, base_url, system_prompt, is_chat_api = self.get_settings()
 
         # --- CONTEXT AWARE ---
         symbol = extract_symbol_from_text(self.selected_text)
@@ -297,6 +304,9 @@ class OllamaSelectionPromptCommand(OllamaSelectionCommandBase):
         self.output_tab.run_command("append", {
             "characters": "Prompt: {}\nModel: {}\n\n---\n\n".format(user_prompt, model)
         })
+
+        api_endpoint = "/api/chat" if is_chat_api else "/api/generate"
+        full_url = base_url + api_endpoint
 
         if is_chat_api:
             payload = {
@@ -314,7 +324,7 @@ class OllamaSelectionPromptCommand(OllamaSelectionCommandBase):
                 "stream": True
             }
 
-        req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={"Content-Type": "application/json"})
+        req = urllib.request.Request(full_url, data=json.dumps(payload).encode('utf-8'), headers={"Content-Type": "application/json"})
 
         def fetch():
             try:
@@ -381,7 +391,8 @@ class OllamaCreateFileCommand(sublime_plugin.WindowCommand):
         # Get Ollama settings
         settings = sublime.load_settings("Ollama.sublime-settings")
         model = settings.get("model", "codellama")
-        url = settings.get("url", "http://127.0.0.1:11434/api/chat")
+        base_url = settings.get("url", "http://127.0.0.1:11434").replace('/api/chat', '').replace('/api/generate', '').rstrip('/')
+        is_chat_api = "/api/chat" in settings.get("url", "http://127.0.0.1:11434")
 
         # Create a progress view
         progress_view = self.window.new_file()
@@ -401,6 +412,9 @@ Generate only the file content, with no additional explanations or markdown form
         usage_context = get_project_context_for_symbol(self.window.active_view(), symbol)
         full_prompt = "{}{}".format(prompt, usage_context)
 
+        api_endpoint = "/api/chat" if is_chat_api else "/api/generate"
+        full_url = base_url + api_endpoint
+
         # Create the payload
         payload = {
             "model": model,
@@ -411,7 +425,7 @@ Generate only the file content, with no additional explanations or markdown form
             "stream": True
         }
 
-        req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={"Content-Type": "application/json"})
+        req = urllib.request.Request(full_url, data=json.dumps(payload).encode('utf-8'), headers={"Content-Type": "application/json"})
 
         # Start fetching the response
         def fetch():
@@ -467,7 +481,7 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
             return
 
         settings = sublime.load_settings("Ollama.sublime-settings")
-        model, url, system_prompt, is_chat_api = self.get_settings()
+        model, base_url, system_prompt, is_chat_api = self.get_settings()
 
         # --- CONTEXT AWARE ---
         symbol = extract_symbol_from_text(self.selected_text)
@@ -476,6 +490,9 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
 
         prompt_template = settings.get("refactor_prompt", "Refactor this code: {code}")
         full_prompt = prompt_template.format(code=self.selected_text, context=usage_context)
+
+        api_endpoint = "/api/chat" if is_chat_api else "/api/generate"
+        full_url = base_url + api_endpoint
 
         if is_chat_api:
             payload = {
@@ -501,14 +518,14 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
 
         thread = threading.Thread(
             target=self.make_request,
-            args=(url, payload, is_chat_api, on_done, on_error)
+            args=(base_url, payload, is_chat_api, on_done, on_error)
         )
         thread.start()
 
-    def make_request(self, url, payload, is_chat_api, on_done, on_error):
+    def make_request(self, base_url, payload, is_chat_api, on_done, on_error):
         try:
             api_endpoint = "/api/chat" if is_chat_api else "/api/generate"
-            full_url = url.rstrip('/') + api_endpoint
+            full_url = base_url + api_endpoint
 
             req = urllib.request.Request(
                 full_url,
@@ -684,7 +701,10 @@ class OllamaGenerateFeatureCommand(OllamaBaseCommand, sublime_plugin.WindowComma
             self.window.open_file(file_path)
 
     def _make_blocking_ollama_request(self, prompt):
-        model, url, system_prompt, is_chat_api = self.get_settings()
+        model, base_url, system_prompt, is_chat_api = self.get_settings()
+
+        api_endpoint = "/api/chat" if is_chat_api else "/api/generate"
+        full_url = base_url + api_endpoint
 
         if is_chat_api:
             payload = {
@@ -702,7 +722,7 @@ class OllamaGenerateFeatureCommand(OllamaBaseCommand, sublime_plugin.WindowComma
                 "stream": False
             }
 
-        req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={"Content-Type": "application/json"})
+        req = urllib.request.Request(full_url, data=json.dumps(payload).encode('utf-8'), headers={"Content-Type": "application/json"})
         response = urllib.request.urlopen(req)
         response_data = json.loads(response.read().decode("utf-8"))
 
