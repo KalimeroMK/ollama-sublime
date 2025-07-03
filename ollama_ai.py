@@ -601,7 +601,7 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
             sublime.LAYOUT_BLOCK,
             on_navigate=self.on_phantom_navigate
         )
-        self.view.add_phantom_set(phantom_key, [phantom])
+        self.view.add_phantoms(phantom_key, [phantom])
 
     def on_phantom_navigate(self, href):
         if href == "approve":
