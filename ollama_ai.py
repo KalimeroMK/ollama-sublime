@@ -122,22 +122,22 @@ class OllamaPromptCommand(OllamaBaseCommand, sublime_plugin.WindowCommand):
         })
 
         if is_chat_api:
-            payload = json.dumps({
+            payload = {
                 "model": model,
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": full_prompt}
                 ],
                 "stream": True
-            }).encode("utf-8")
+            }
         else:
-            payload = json.dumps({
+            payload = {
                 "model": model,
                 "prompt": "{}\n\n{}".format(system_prompt, full_prompt),
                 "stream": True
-            }).encode("utf-8")
+            }
 
-        req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+        req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={"Content-Type": "application/json"})
 
         def fetch():
             try:
@@ -185,22 +185,22 @@ class OllamaSelectionCommandBase(OllamaBaseCommand, sublime_plugin.TextCommand):
                 })
 
                 if is_chat_api:
-                    payload = json.dumps({
+                    payload = {
                         "model": model,
                         "messages": [
                             {"role": "system", "content": system_prompt},
                             {"role": "user", "content": full_prompt}
                         ],
                         "stream": True
-                    }).encode("utf-8")
+                    }
                 else:
-                    payload = json.dumps({
+                    payload = {
                         "model": model,
                         "prompt": "{}\n\n{}".format(system_prompt, full_prompt),
                         "stream": True
-                    }).encode("utf-8")
+                    }
 
-                req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+                req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={"Content-Type": "application/json"})
 
                 def fetch():
                     try:
@@ -299,22 +299,22 @@ class OllamaSelectionPromptCommand(OllamaSelectionCommandBase):
         })
 
         if is_chat_api:
-            payload = json.dumps({
+            payload = {
                 "model": model,
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": full_prompt}
                 ],
                 "stream": True
-            }).encode("utf-8")
+            }
         else:
-            payload = json.dumps({
+            payload = {
                 "model": model,
                 "prompt": "{}\n\n{}".format(system_prompt, full_prompt),
                 "stream": True
-            }).encode("utf-8")
+            }
 
-        req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+        req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={"Content-Type": "application/json"})
 
         def fetch():
             try:
@@ -402,16 +402,16 @@ Generate only the file content, with no additional explanations or markdown form
         full_prompt = "{}{}".format(prompt, usage_context)
 
         # Create the payload
-        payload = json.dumps({
+        payload = {
             "model": model,
             "messages": [
                 {"role": "system", "content": "You are a helpful code generator."},
                 {"role": "user", "content": full_prompt}
             ],
             "stream": True
-        }).encode("utf-8")
+        }
 
-        req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+        req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={"Content-Type": "application/json"})
 
         # Start fetching the response
         def fetch():
@@ -478,20 +478,20 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
         full_prompt = prompt_template.format(code=self.selected_text, context=usage_context)
 
         if is_chat_api:
-            payload = json.dumps({
+            payload = {
                 "model": model,
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": full_prompt}
                 ],
                 "stream": False
-            }).encode("utf-8")
+            }
         else:
-            payload = json.dumps({
+            payload = {
                 "model": model,
                 "prompt": "{}\n\n{}".format(system_prompt, full_prompt),
                 "stream": False
-            }).encode("utf-8")
+            }
 
         def on_done(suggestion):
             self.show_inline_suggestion(suggestion)
@@ -512,7 +512,7 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
 
             req = urllib.request.Request(
                 full_url,
-                data=payload.encode('utf-8'),
+                data=json.dumps(payload).encode('utf-8'),
                 headers={'Content-Type': 'application/json'}
             )
             with urllib.request.urlopen(req) as response:
@@ -687,22 +687,22 @@ class OllamaGenerateFeatureCommand(OllamaBaseCommand, sublime_plugin.WindowComma
         model, url, system_prompt, is_chat_api = self.get_settings()
 
         if is_chat_api:
-            payload = json.dumps({
+            payload = {
                 "model": model,
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": prompt}
                 ],
                 "stream": False
-            }).encode("utf-8")
+            }
         else:
-            payload = json.dumps({
+            payload = {
                 "model": model,
                 "prompt": "{}\n\n{}".format(system_prompt, prompt),
                 "stream": False
-            }).encode("utf-8")
+            }
 
-        req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+        req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={"Content-Type": "application/json"})
         response = urllib.request.urlopen(req)
         response_data = json.loads(response.read().decode("utf-8"))
 
