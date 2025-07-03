@@ -480,6 +480,9 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
                 self.selection_region = region
                 break
 
+        print("[DEBUG] Selected text:", repr(self.selected_text))
+        print("[DEBUG] Selection region:", self.selection_region)
+
         if not self.selected_text.strip():
             sublime.status_message("Ollama: No text selected.")
             return
@@ -537,6 +540,7 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
         thread.start()
 
     def show_inline_suggestion(self, suggestion):
+        print("[DEBUG] Suggestion received:", repr(suggestion))
         if not suggestion:
             sublime.status_message("Ollama: Received an empty suggestion.")
             return
