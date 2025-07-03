@@ -540,16 +540,24 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
         thread.start()
 
     def show_inline_suggestion(self, suggestion):
-        print("[DEBUG] Suggestion received:", repr(suggestion))
         if not suggestion:
             sublime.status_message("Ollama: Received an empty suggestion.")
             return
+
+        # ✂️ Strip ```php and ``` if present
+        suggestion = suggestion.strip()
+        if suggestion.startswith("```php"):
+            suggestion = suggestion[6:].lstrip('\n')
+        if suggestion.endswith("```"):
+            suggestion = suggestion[:-3].rstrip('\n')
+
+        print("[DEBUG] Cleaned suggestion:", repr(suggestion))
 
         self.suggestion = suggestion  # Store suggestion for the 'approve' action
         escaped_suggestion = html.escape(suggestion, quote=False)
         phantom_key = "ollama_inline_refactor"
         phantom_content = """
-            <body id=\"ollama-inline-refactor\">
+            <body id="ollama-inline-refactor">
                 <style>
                     body {{
                         font-family: sans-serif;
@@ -590,11 +598,11 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
                         background-color: var(--greenish);
                     }}
                 </style>
-                <div class=\"header\">AI Refactoring Suggestion</div>
+                <div class="header">AI Refactoring Suggestion</div>
                 <pre><code>{}</code></pre>
-                <div class=\"buttons\">
-                    <a href=\"approve\" class=\"approve\">Approve</a>
-                    <a href=\"dismiss\">Dismiss</a>
+                <div class="buttons">
+                    <a href="approve" class="approve">Approve</a>
+                    <a href="dismiss">Dismiss</a>
                 </div>
             </body>
         """.format(escaped_suggestion)
@@ -607,6 +615,7 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
             on_navigate=self.on_phantom_navigate
         )
         phantom_set.update([phantom])
+
 
     def on_phantom_navigate(self, href):
         if href == "approve":
