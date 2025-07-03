@@ -512,7 +512,7 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
 
             req = urllib.request.Request(
                 full_url,
-                data=payload,
+                data=payload.encode('utf-8'),
                 headers={'Content-Type': 'application/json'}
             )
             with urllib.request.urlopen(req) as response:
@@ -523,7 +523,7 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
                     suggestion = response_data['response']
                 sublime.set_timeout(lambda: on_done(suggestion.strip()), 0)
         except Exception as e:
-            sublime.set_timeout(lambda: on_error(e), 0)
+            sublime.set_timeout(lambda e=e: on_error(e), 0)
 
     def show_inline_suggestion(self, suggestion):
         if not suggestion:
