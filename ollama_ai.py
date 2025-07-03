@@ -425,7 +425,11 @@ Generate only the file content, with no additional explanations or markdown form
             "stream": True
         }
 
-        req = urllib.request.Request(full_url, data=json.dumps(payload).encode('utf-8'), headers={"Content-Type": "application/json"})
+        req = urllib.request.Request(
+            full_url,
+            data=json.dumps(payload).encode('utf-8'),
+            headers={'Content-Type': 'application/json'}
+        )
 
         # Start fetching the response
         def fetch():
@@ -480,7 +484,6 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
             sublime.status_message("Ollama: No text selected.")
             return
 
-        settings = sublime.load_settings("Ollama.sublime-settings")
         model, base_url, system_prompt, is_chat_api = self.get_settings()
 
         # --- CONTEXT AWARE ---
@@ -488,11 +491,9 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
         usage_context = get_project_context_for_symbol(self.view, symbol)
         # --- END CONTEXT AWARE ---
 
+        settings = sublime.load_settings("Ollama.sublime-settings")
         prompt_template = settings.get("refactor_prompt", "Refactor this code: {code}")
         full_prompt = prompt_template.format(code=self.selected_text, context=usage_context)
-
-        api_endpoint = "/api/chat" if is_chat_api else "/api/generate"
-        full_url = base_url + api_endpoint
 
         if is_chat_api:
             payload = {
@@ -510,195 +511,212 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
                 "stream": False
             }
 
-        def on_done(suggestion):
-            self.show_inline_suggestion(suggestion)
+        def do_request():
+            try:
+                api_endpoint = "/api/chat" if is_chat_api else "/api/generate"
+                full_url = base_url + api_endpoint
 
-        def on_error(e):
-            sublime.status_message("Ollama: Refactor error: {}".format(e))
+                req = urllib.request.Request(
+                    full_url,
+                    data=json.dumps(payload).encode('utf-8'),
+                    headers={'Content-Type': 'application/json'}
+                )
 
-        thread = threading.Thread(
-            target=self.make_request,
-            args=(base_url, payload, is_chat_api, on_done, on_error)
-        )
+                with urllib.request.urlopen(req) as response:
+                    response_data = json.loads(response.read().decode('utf-8'))
+                    if is_chat_api:
+                        suggestion = response_data.get('message', {}).get('content', '')
+                    else:
+                        suggestion = response_data.get('response', '')
+                    sublime.set_timeout(lambda: self.show_inline_suggestion(suggestion.strip()), 0)
+
+            except Exception as e:
+                sublime.set_timeout(lambda: sublime.status_message("Ollama: Refactor error: {}".format(e)), 0)
+
+        thread = threading.Thread(target=do_request)
         thread.start()
-
-    def make_request(self, base_url, payload, is_chat_api, on_done, on_error):
-        try:
-            api_endpoint = "/api/chat" if is_chat_api else "/api/generate"
-            full_url = base_url + api_endpoint
-
-            req = urllib.request.Request(
-                full_url,
-                data=json.dumps(payload).encode('utf-8'),
-                headers={'Content-Type': 'application/json'}
-            )
-            with urllib.request.urlopen(req) as response:
-                response_data = json.loads(response.read().decode('utf-8'))
-                if is_chat_api:
-                    suggestion = response_data['message']['content']
-                else:
-                    suggestion = response_data['response']
-                sublime.set_timeout(lambda: on_done(suggestion.strip()), 0)
-        except Exception as e:
-            sublime.set_timeout(lambda e=e: on_error(e), 0)
 
     def show_inline_suggestion(self, suggestion):
         if not suggestion:
             sublime.status_message("Ollama: Received an empty suggestion.")
+            return
+
+        self.suggestion = suggestion  # Store suggestion for the 'approve' action
         escaped_suggestion = html.escape(suggestion, quote=False)
         phantom_key = "ollama_inline_refactor"
         phantom_content = """
-        <body id="ollama-inline-suggestion">
-            <style>
-                div.ollama-suggestion {{ background-color: var(--background); color: var(--foreground); border: 1px solid var(--accent); padding: 10px; margin-top: 5px; border-radius: 5px; }}
-                div.ollama-suggestion pre {{ margin: 0; padding: 0; }}
-                div.ollama-actions a {{ background-color: var(--accent); color: var(--background); padding: 2px 8px; text-decoration: none; border-radius: 3px; font-weight: bold; }}
-            </style>
-            <div class="ollama-suggestion">
-                <div class="ollama-actions">
-                    <a href="approve">Approve</a>&nbsp;&nbsp;
-                    <a href="dismiss">Dismiss</a>
-                </div>
-                <hr>
+            <body id=\"ollama-inline-refactor\">
+                <style>
+                    body {
+                        font-family: sans-serif;
+                        margin: 0;
+                        padding: 8px;
+                        border-radius: 4px;
+                        background-color: var(--background);
+                        color: var(--foreground);
+                        border: 1px solid var(--border);
+                    }
+                    .header {
+                        font-weight: bold;
+                        margin-bottom: 8px;
+                        padding-bottom: 4px;
+                        border-bottom: 1px solid var(--border);
+                    }
+                    pre {
+                        margin: 0;
+                        padding: 8px;
+                        border-radius: 4px;
+                        background-color: var(--background_light);
+                        white-space: pre-wrap;
+                        word-wrap: break-word;
+                    }
+                    .buttons {
+                        margin-top: 8px;
+                        text-align: right;
+                    }
+                    a {
+                        text-decoration: none;
+                        padding: 4px 8px;
+                        border-radius: 4px;
+                        background-color: var(--button_background);
+                        color: var(--button_foreground);
+                        margin-left: 4px;
+                    }
+                    a.approve {
+                        background-color: var(--greenish);
+                    }
+                </style>
+                <div class=\"header\">AI Refactoring Suggestion</div>
                 <pre><code>{}</code></pre>
-            </div>
-        </body>
+                <div class=\"buttons\">
+                    <a href=\"approve\" class=\"approve\">Approve</a>
+                    <a href=\"dismiss\">Dismiss</a>
+                </div>
+            </body>
         """.format(escaped_suggestion)
 
-        phantom_set = sublime.PhantomSet(self.view, phantom_key)
-        phantom = sublime.Phantom(self.selection_region, phantom_content, sublime.LAYOUT_BLOCK, on_navigate=self.on_phantom_navigate)
-        phantom_set.update([phantom])
+        phantom = sublime.Phantom(
+            self.selection_region,
+            phantom_content,
+            sublime.LAYOUT_BLOCK,
+            on_navigate=self.on_phantom_navigate
+        )
+        self.view.add_phantom_set(phantom_key, [phantom])
 
     def on_phantom_navigate(self, href):
-        phantom_key = "ollama_inline_refactor"
         if href == "approve":
-            suggestion = self.view.settings().get("ollama_inline_suggestion")
-            if suggestion:
-                self.view.run_command("ollama_replace_text", {
-                    "start": self.selection_region.begin(),
-                    "end": self.selection_region.end(),
-                    "text": suggestion
-                })
-        
-        phantom_set = sublime.PhantomSet(self.view, phantom_key)
-        phantom_set.update([])
-        self.view.settings().erase("ollama_inline_suggestion")
-
-    def is_visible(self):
-        for region in self.view.sel():
-            if not region.empty():
-                return True
-        return False
+            if hasattr(self, 'suggestion') and self.suggestion:
+                self.view.run_command("ollama_replace_text", {"region_start": self.selection_region.begin(), "region_end": self.selection_region.end(), "text": self.suggestion})
+        self.view.erase_phantoms("ollama_inline_refactor")
 
 
 class OllamaReplaceTextCommand(sublime_plugin.TextCommand):
-    def run(self, edit, start, end, text):
-        region = sublime.Region(start, end)
+    def run(self, edit, region_start, region_end, text):
+        region = sublime.Region(region_start, region_end)
         self.view.replace(edit, region, text)
 
 
 class OllamaGenerateFeatureCommand(OllamaBaseCommand, sublime_plugin.WindowCommand):
     """
-    Generates a multi-file feature based on a high-level description using a two-step AI process.
+    Generates multiple files for a new feature based on a high-level description.
+    Uses a two-step process: Architect AI for planning and Coder AI for implementation.
     """
     def run(self):
         self.window.show_input_panel(
-            "Describe the feature to generate (e.g., 'a product module with controller, model, and migration'):",
+            "Enter a description for the new feature:",
             "",
-            self.on_description_done,
+            self.on_done,
             None,
             None
         )
 
-    def on_description_done(self, description):
-        if not description.strip():
+    def on_done(self, description):
+        if not description:
             return
-        self.description = description
-        sublime.status_message("Ollama: Asking AI architect for a feature plan...")
-        threading.Thread(target=self.get_feature_plan).start()
 
-    def get_feature_plan(self):
-        settings = sublime.load_settings("Ollama.sublime-settings")
-        prompt_template = settings.get("feature_architect_prompt")
-        prompt = prompt_template.format(description=self.description)
+        thread = threading.Thread(target=self.generate_feature, args=(description,))
+        thread.start()
 
+    def generate_feature(self, description):
         try:
-            raw_plan = self._make_blocking_ollama_request(prompt)
-            if not raw_plan:
-                sublime.error_message("Ollama: AI did not return a plan.")
-                return
+            sublime.set_timeout(lambda: self.window.active_view().set_status("ollama_status", "Ollama: Asking Architect AI to create a plan..."), 0)
 
-            clean_plan = self._clean_json_response(raw_plan)
-            self.plan = json.loads(clean_plan)
+            # Step 1: Get the plan from the Architect AI
+            architect_prompt = sublime.load_settings("Ollama.sublime-settings").get("feature_architect_prompt", "Create a JSON plan for this feature: {prompt}")
+            full_architect_prompt = architect_prompt.format(prompt=description)
+            plan_json_str = self._make_blocking_ollama_request(full_architect_prompt)
 
-            if 'files' not in self.plan or not isinstance(self.plan['files'], list):
-                raise ValueError("Plan must contain a 'files' list.")
+            if not plan_json_str:
+                raise Exception("Architect AI returned an empty plan.")
 
-            sublime.set_timeout(self.show_plan_for_approval, 0)
+            # Clean up the response to ensure it's valid JSON
+            plan_json_str = plan_json_str.strip()
+            if plan_json_str.startswith('```json'):
+                plan_json_str = plan_json_str[7:]
+            if plan_json_str.endswith('```'):
+                plan_json_str = plan_json_str[:-3]
 
-        except (json.JSONDecodeError, ValueError) as e:
-            sublime.error_message("Ollama: AI returned an invalid plan. Error: {}\n\nResponse:\n{}".format(e, raw_plan))
+            plan = json.loads(plan_json_str)
+            files_to_create = plan.get("files", [])
+
+            if not files_to_create:
+                raise Exception("Architect AI did not specify any files to create.")
+
+            sublime.set_timeout(lambda: self.window.active_view().set_status("ollama_status", ""), 0)
+            sublime.set_timeout(lambda: self.show_plan_for_approval(files_to_create), 0)
+
         except Exception as e:
-            sublime.error_message("Ollama: Failed to get feature plan. Error: {}".format(e))
+            sublime.set_timeout(lambda: sublime.error_message("Ollama Feature Generation Error: {}\n\nCheck the console for more details.".format(e)), 0)
+            print("Ollama Error: Failed to generate feature plan. Raw response from AI was:")
+            print(plan_json_str)
 
-    def show_plan_for_approval(self):
-        self.plan_items = []
-        self.plan_items.append(sublime.QuickPanelItem("✅ Approve and Create {} Files".format(len(self.plan['files'])), "Proceed with generating all files below"))
-        self.plan_items.append(sublime.QuickPanelItem("❌ Cancel", "Abort the operation"))
-        self.plan_items.append(sublime.QuickPanelItem("---", "", sublime.KIND_SEPARATOR))
+    def show_plan_for_approval(self, files_to_create):
+        self.files_to_create = files_to_create
+        plan_items = ["[✅ Approve and Create Files]", "[❌ Cancel]"] + ["- " + f["path"] for f in files_to_create]
 
-        for file_info in self.plan['files']:
-            self.plan_items.append(sublime.QuickPanelItem(file_info['path'], file_info['description']))
-
-        self.window.show_quick_panel(self.plan_items, self.on_plan_selection)
+        self.window.show_quick_panel(plan_items, self.on_plan_selection)
 
     def on_plan_selection(self, index):
-        if index == -1 or index == 1: # Canceled
-            sublime.status_message("Ollama: Feature generation canceled.")
+        if index == -1 or index == 1:
+            sublime.status_message("Ollama: Feature generation cancelled.")
             return
-        if index == 0: # Approved
-            sublime.status_message("Ollama: Approved! Starting feature generation...")
-            threading.Thread(target=self.create_feature_files).start()
 
-    def create_feature_files(self):
-        folders = self.window.folders()
-        if not folders:
-            sublime.error_message("Ollama: No project folder open.")
-            return
-        project_root = folders[0]
+        if index == 0:
+            thread = threading.Thread(target=self.create_files)
+            thread.start()
 
-        settings = sublime.load_settings("Ollama.sublime-settings")
-        coder_prompt_template = settings.get("feature_coder_prompt")
+    def create_files(self):
+        try:
+            project_root = self.window.folders()[0]
+            coder_prompt_template = sublime.load_settings("Ollama.sublime-settings").get("feature_coder_prompt", "Create this file: {path} - {description}")
 
-        total_files = len(self.plan['files'])
-        created_files = []
+            for i, file_info in enumerate(self.files_to_create):
+                path = file_info["path"]
+                description = file_info["description"]
+                progress_msg = "Ollama: ({}/{}) Asking Coder AI to write {}...".format(i + 1, len(self.files_to_create), path)
+                sublime.set_timeout(lambda: self.window.active_view().set_status("ollama_status", progress_msg), 0)
 
-        for i, file_info in enumerate(self.plan['files']):
-            path = file_info['path']
-            description = file_info['description']
-            sublime.status_message("Ollama: Generating file {} of {}: {}".format(i + 1, total_files, path))
-
-            try:
-                prompt = coder_prompt_template.format(path=path, description=description)
-                file_content = self._make_blocking_ollama_request(prompt)
+                # Step 2: Get the code from the Coder AI
+                full_coder_prompt = coder_prompt_template.format(path=path, description=description)
+                file_content = self._make_blocking_ollama_request(full_coder_prompt)
 
                 if not file_content:
-                    sublime.log_message("Ollama: AI returned no content for {}. Skipping.".format(path))
+                    print("Ollama Warning: Coder AI returned empty content for {}. Skipping.".format(path))
                     continue
 
-                full_path = os.path.join(project_root, path)
-                os.makedirs(os.path.dirname(full_path), exist_ok=True)
-
-                with open(full_path, 'w', encoding='utf-8') as f:
+                # Create the file
+                file_path = os.path.join(project_root, path)
+                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                with open(file_path, "w", encoding="utf-8") as f:
                     f.write(file_content)
-                created_files.append(full_path)
 
-            except Exception as e:
-                sublime.error_message("Ollama: Failed to create file {}. Error: {}".format(path, e))
+                # Open the newly created file
+                sublime.set_timeout(lambda p=file_path: self.window.open_file(p), 0)
 
-        sublime.status_message("Ollama: Feature generation complete! Created {} files.".format(len(created_files)))
-        for file_path in created_files:
-            self.window.open_file(file_path)
+            sublime.set_timeout(lambda: self.window.active_view().set_status("ollama_status", "Ollama: Feature generation complete!"), 0)
+
+        except Exception as e:
+            sublime.set_timeout(lambda: sublime.error_message("Ollama File Creation Error: {}".format(e)), 0)
 
     def _make_blocking_ollama_request(self, prompt):
         model, base_url, system_prompt, is_chat_api = self.get_settings()
@@ -722,18 +740,15 @@ class OllamaGenerateFeatureCommand(OllamaBaseCommand, sublime_plugin.WindowComma
                 "stream": False
             }
 
-        req = urllib.request.Request(full_url, data=json.dumps(payload).encode('utf-8'), headers={"Content-Type": "application/json"})
-        response = urllib.request.urlopen(req)
-        response_data = json.loads(response.read().decode("utf-8"))
+        try:
+            req = urllib.request.Request(full_url, data=json.dumps(payload).encode('utf-8'), headers={"Content-Type": "application/json"})
+            response = urllib.request.urlopen(req)
+            response_data = json.loads(response.read().decode("utf-8"))
 
-        if is_chat_api:
-            return response_data.get('message', {}).get('content', '')
-        else:
-            return response_data.get('response', '')
-
-    def _clean_json_response(self, text):
-        text = text.strip()
-        match = re.search(r'```json\n(.*?)\n```', text, re.DOTALL)
-        if match:
-            return match.group(1).strip()
-        return text
+            if is_chat_api:
+                return response_data.get('message', {}).get('content', '')
+            else:
+                return response_data.get('response', '')
+        except Exception as e:
+            print("Ollama blocking request error: {}".format(e))
+            return None
