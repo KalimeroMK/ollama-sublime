@@ -531,7 +531,18 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
                         suggestion = response_data.get('message', {}).get('content', '')
                     else:
                         suggestion = response_data.get('response', '')
-                    sublime.set_timeout(lambda: self.show_inline_suggestion(suggestion.strip()), 0)
+                    # Strip markdown code fences like ```php and ```
+                    cleaned_suggestion = suggestion.strip()
+                    if cleaned_suggestion.startswith("```php"):
+                        cleaned_suggestion = cleaned_suggestion[6:].lstrip()
+                    if cleaned_suggestion.endswith("```"):
+                        cleaned_suggestion = cleaned_suggestion[:-3].rstrip()
+
+                    if not cleaned_suggestion:
+                        sublime.status_message("Ollama: Received an empty suggestion.")
+                        return
+
+                    sublime.set_timeout(lambda: self.show_inline_suggestion(cleaned_suggestion), 0)
 
             except Exception as e:
                 sublime.set_timeout(lambda: sublime.status_message("Ollama: Refactor error: {}".format(e)), 0)
@@ -541,7 +552,7 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
 
     def show_inline_suggestion(self, suggestion):
         self.suggestion = suggestion  # Store suggestion for the 'approve' action
-        escaped_suggestion = html.escape(suggestion, quote=False)
+        escaped_suggestion = html.escape(self.suggestion, quote=False)
 
         # Restore the original, styled HTML
         phantom_content = """
