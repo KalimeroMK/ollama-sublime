@@ -466,6 +466,7 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
             sublime.status_message("Ollama: No text selected.")
             return
 
+        settings = sublime.load_settings("Ollama.sublime-settings")
         model, url, system_prompt, is_chat_api = self.get_settings()
 
         # --- CONTEXT AWARE ---
@@ -473,8 +474,8 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
         usage_context = get_project_context_for_symbol(self.view, symbol)
         # --- END CONTEXT AWARE ---
 
-        prompt = "Refactor the following code. IMPORTANT: Return ONLY the raw, updated code block. Do not include any explanation, markdown, or any text other than the code itself."
-        full_prompt = "{}\n\n---\n\n{}{}".format(prompt, self.selected_text, usage_context)
+        prompt_template = settings.get("refactor_prompt", "Refactor this code: {code}")
+        full_prompt = prompt_template.format(code=self.selected_text, context=usage_context)
 
         if is_chat_api:
             payload = json.dumps({
@@ -492,26 +493,41 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
                 "stream": False
             }).encode("utf-8")
 
-        req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
-        sublime.set_timeout_async(lambda: self.fetch_suggestion(req, is_chat_api), 0)
+        def on_done(suggestion):
+            self.show_inline_suggestion(suggestion)
 
-    def fetch_suggestion(self, req, is_chat_api):
+        def on_error(e):
+            sublime.status_message("Ollama: Refactor error: {}".format(e))
+
+        thread = threading.Thread(
+            target=self.make_request,
+            args=(url, payload, is_chat_api, on_done, on_error)
+        )
+        thread.start()
+
+    def make_request(self, url, payload, is_chat_api, on_done, on_error):
         try:
+            api_endpoint = "/api/chat" if is_chat_api else "/api/generate"
+            full_url = url.rstrip('/') + api_endpoint
+
+            req = urllib.request.Request(
+                full_url,
+                data=payload,
+                headers={'Content-Type': 'application/json'}
+            )
             with urllib.request.urlopen(req) as response:
-                response_data = json.loads(response.read().decode("utf-8"))
-                suggestion = response_data["message"]["content"] if is_chat_api else response_data.get("response", "")
-                suggestion = re.sub(r'^```[a-zA-Z]*\n', '', suggestion)
-                suggestion = re.sub(r'\n```$', '', suggestion).strip()
-
-                if suggestion:
-                    self.view.settings().set("ollama_inline_suggestion", suggestion)
-                    self.show_phantom(suggestion)
+                response_data = json.loads(response.read().decode('utf-8'))
+                if is_chat_api:
+                    suggestion = response_data['message']['content']
                 else:
-                    sublime.status_message("Ollama: No suggestion received.")
+                    suggestion = response_data['response']
+                sublime.set_timeout(lambda: on_done(suggestion.strip()), 0)
         except Exception as e:
-            sublime.error_message("Ollama Error: {}".format(str(e)))
+            sublime.set_timeout(lambda: on_error(e), 0)
 
-    def show_phantom(self, suggestion):
+    def show_inline_suggestion(self, suggestion):
+        if not suggestion:
+            sublime.status_message("Ollama: Received an empty suggestion.")
         escaped_suggestion = html.escape(suggestion, quote=False)
         phantom_key = "ollama_inline_refactor"
         phantom_content = """
