@@ -540,10 +540,6 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
         thread.start()
 
     def show_inline_suggestion(self, suggestion):
-        if not suggestion:
-            sublime.status_message("Ollama: Received an empty suggestion.")
-            return
-
         # ✂️ Strip ```php and ``` if present
         suggestion = suggestion.strip()
         if suggestion.startswith("```php"):
@@ -553,13 +549,19 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
 
         print("[DEBUG] Cleaned suggestion:", repr(suggestion))
 
+        if not suggestion:
+            sublime.status_message("Ollama: Received an empty suggestion.")
+            return
+
         self.suggestion = suggestion  # Store suggestion for the 'approve' action
         escaped_suggestion = html.escape(suggestion, quote=False)
         phantom_key = "ollama_inline_refactor"
+
+        # Build the HTML safely without using .format() on the suggestion content
         phantom_content = """
             <body id="ollama-inline-refactor">
                 <style>
-                    body {{
+                    body {
                         font-family: sans-serif;
                         margin: 0;
                         padding: 8px;
@@ -567,46 +569,47 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
                         background-color: var(--background);
                         color: var(--foreground);
                         border: 1px solid var(--border);
-                    }}
-                    .header {{
+                    }
+                    .header {
                         font-weight: bold;
                         margin-bottom: 8px;
                         padding-bottom: 4px;
                         border-bottom: 1px solid var(--border);
-                    }}
-                    pre {{
+                    }
+                    pre {
                         margin: 0;
                         padding: 8px;
                         border-radius: 4px;
                         background-color: var(--background_light);
                         white-space: pre-wrap;
                         word-wrap: break-word;
-                    }}
-                    .buttons {{
+                    }
+                    .buttons {
                         margin-top: 8px;
                         text-align: right;
-                    }}
-                    a {{
+                    }
+                    a {
                         text-decoration: none;
                         padding: 4px 8px;
                         border-radius: 4px;
                         background-color: var(--button_background);
                         color: var(--button_foreground);
                         margin-left: 4px;
-                    }}
-                    a.approve {{
+                    }
+                    a.approve {
                         background-color: var(--greenish);
-                    }}
+                    }
                 </style>
                 <div class="header">AI Refactoring Suggestion</div>
-                <pre><code>{}</code></pre>
+                <pre><code>""" + escaped_suggestion + """</code></pre>
                 <div class="buttons">
                     <a href="approve" class="approve">Approve</a>
                     <a href="dismiss">Dismiss</a>
                 </div>
             </body>
-        """.format(escaped_suggestion)
+        """
 
+        print("[DEBUG] Creating phantom with content length:", len(phantom_content))
         phantom_set = sublime.PhantomSet(self.view, phantom_key)
         phantom = sublime.Phantom(
             self.selection_region,
@@ -614,8 +617,9 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
             sublime.LAYOUT_BLOCK,
             on_navigate=self.on_phantom_navigate
         )
+        print("[DEBUG] Updating phantom set...")
         phantom_set.update([phantom])
-
+        print("[DEBUG] Phantom set updated.")
 
     def on_phantom_navigate(self, href):
         if href == "approve":
