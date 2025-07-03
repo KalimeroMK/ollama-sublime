@@ -448,7 +448,7 @@ Generate only the file content, with no additional explanations or markdown form
         threading.Thread(target=fetch).start()
 
 
-class OllamaInlineRefactorCommand(sublime_plugin.TextCommand):
+class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand):
     """
     Shows an inline phantom with a refactoring suggestion for the selected code.
     The user can then approve or dismiss the suggestion.
@@ -466,15 +466,15 @@ class OllamaInlineRefactorCommand(sublime_plugin.TextCommand):
             sublime.status_message("Ollama: No text selected.")
             return
 
-        # Find context for the selected symbol
+        model, url, system_prompt, is_chat_api = self.get_settings()
+
+        # --- CONTEXT AWARE ---
         symbol = extract_symbol_from_text(self.selected_text)
         usage_context = get_project_context_for_symbol(self.view, symbol)
+        # --- END CONTEXT AWARE ---
 
         prompt = "Refactor the following code. IMPORTANT: Return ONLY the raw, updated code block. Do not include any explanation, markdown, or any text other than the code itself."
         full_prompt = "{}\n\n---\n\n{}{}".format(prompt, self.selected_text, usage_context)
-
-        settings = sublime.load_settings("Ollama.sublime-settings")
-        model, url, system_prompt, is_chat_api = OllamaBaseCommand().get_settings()
 
         if is_chat_api:
             payload = json.dumps({
