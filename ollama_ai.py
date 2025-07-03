@@ -480,9 +480,6 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
                 self.selection_region = region
                 break
 
-        print("[DEBUG] Selected text:", repr(self.selected_text))
-        print("[DEBUG] Selection region:", self.selection_region)
-
         if not self.selected_text.strip():
             sublime.status_message("Ollama: No text selected.")
             return
@@ -540,76 +537,19 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
         thread.start()
 
     def show_inline_suggestion(self, suggestion):
-        # ✂️ Strip ```php and ``` if present
-        suggestion = suggestion.strip()
-        if suggestion.startswith("```php"):
-            suggestion = suggestion[6:].lstrip('\n')
-        if suggestion.endswith("```"):
-            suggestion = suggestion[:-3].rstrip('\n')
-
-        print("[DEBUG] Cleaned suggestion:", repr(suggestion))
-
-        if not suggestion:
-            sublime.status_message("Ollama: Received an empty suggestion.")
-            return
-
         self.suggestion = suggestion  # Store suggestion for the 'approve' action
         escaped_suggestion = html.escape(suggestion, quote=False)
         phantom_key = "ollama_inline_refactor"
 
-        # Build the HTML safely without using .format() on the suggestion content
-        phantom_content = """
-            <body id="ollama-inline-refactor">
-                <style>
-                    body {
-                        font-family: sans-serif;
-                        margin: 0;
-                        padding: 8px;
-                        border-radius: 4px;
-                        background-color: var(--background);
-                        color: var(--foreground);
-                        border: 1px solid var(--border);
-                    }
-                    .header {
-                        font-weight: bold;
-                        margin-bottom: 8px;
-                        padding-bottom: 4px;
-                        border-bottom: 1px solid var(--border);
-                    }
-                    pre {
-                        margin: 0;
-                        padding: 8px;
-                        border-radius: 4px;
-                        background-color: var(--background_light);
-                        white-space: pre-wrap;
-                        word-wrap: break-word;
-                    }
-                    .buttons {
-                        margin-top: 8px;
-                        text-align: right;
-                    }
-                    a {
-                        text-decoration: none;
-                        padding: 4px 8px;
-                        border-radius: 4px;
-                        background-color: var(--button_background);
-                        color: var(--button_foreground);
-                        margin-left: 4px;
-                    }
-                    a.approve {
-                        background-color: var(--greenish);
-                    }
-                </style>
-                <div class="header">AI Refactoring Suggestion</div>
-                <pre><code>""" + escaped_suggestion + """</code></pre>
-                <div class="buttons">
-                    <a href="approve" class="approve">Approve</a>
-                    <a href="dismiss">Dismiss</a>
-                </div>
-            </body>
-        """
+        html_body = '<body style="background-color: #333; color: #FFF; border: 1px solid #555; padding: 5px;">'
+        html_header = '<b>AI Suggestion:</b>'
+        html_pre = '<pre style="background-color: #222; padding: 5px;"><code>'
+        html_code = escaped_suggestion
+        html_post_pre = '</code></pre>'
+        html_buttons = '<a href="approve">Approve</a> <a href="dismiss">Dismiss</a>'
+        html_end = '</body>'
+        phantom_content = html_body + html_header + html_pre + html_code + html_post_pre + html_buttons + html_end
 
-        print("[DEBUG] Creating phantom with content length:", len(phantom_content))
         phantom_set = sublime.PhantomSet(self.view, phantom_key)
         phantom = sublime.Phantom(
             self.selection_region,
@@ -617,9 +557,7 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
             sublime.LAYOUT_BLOCK,
             on_navigate=self.on_phantom_navigate
         )
-        print("[DEBUG] Updating phantom set...")
         phantom_set.update([phantom])
-        print("[DEBUG] Phantom set updated.")
 
     def on_phantom_navigate(self, href):
         if href == "approve":
