@@ -14,5 +14,6 @@
     "tab_title": "Ollama: {selection}",
     "syntax": "Packages/Markdown/Markdown.sublime-syntax",
     "code_file_extensions": [ ".php", "blade.php",".js", ".html", ".css", ".json",],
-    "system_prompt": "You are a Laravel PHP expert. When asked about code analysis or test generation, always assume PHP Laravel unless specified otherwise."
+    "system_prompt": "You are a Laravel PHP expert. When asked about code analysis or test generation, always assume PHP Laravel unless specified otherwise.",
+    "continue_chat": true
 }

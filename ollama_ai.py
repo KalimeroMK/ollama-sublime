@@ -86,10 +86,12 @@ class OllamaBaseCommand:
         system_prompt = settings.get("system_prompt", "You are a Laravel PHP expert.")
         is_chat_api = "/api/chat" in url_from_settings
         base_url = url_from_settings.replace('/api/chat', '').replace('/api/generate', '').rstrip('/')
-        return model, base_url, system_prompt, is_chat_api
+        continue_chat = settings.get("continue_chat", True)
+        return model, base_url, system_prompt, is_chat_api, continue_chat
 
 class OllamaPromptCommand(OllamaBaseCommand, sublime_plugin.WindowCommand):
     def run(self):
+        self.chat_history = []
         self.window.show_input_panel(
             "Enter your prompt:",
             "",
@@ -102,72 +104,97 @@ class OllamaPromptCommand(OllamaBaseCommand, sublime_plugin.WindowCommand):
         if not user_input:
             return
 
-        settings = self.get_settings()
-        model, base_url, system_prompt, is_chat_api = settings
-        
+        model, base_url, system_prompt, is_chat_api, continue_chat = self.get_settings()
+
+        # Maintain chat history if continue_chat is enabled
+        if getattr(self, 'chat_history', None) is None:
+            self.chat_history = []
+
         # --- CONTEXT AWARE ---
         symbol = extract_symbol_from_text(user_input)
         usage_context = ""
         view = self.window.active_view()
         if view:
-             usage_context = get_project_context_for_symbol(view, symbol)
+            usage_context = get_project_context_for_symbol(view, symbol)
         # --- END CONTEXT AWARE ---
-        
+
         full_prompt = "{}{}".format(user_input, usage_context)
 
         tab = self.window.new_file()
         tab.set_name("Ollama Custom Prompt")
         tab.set_scratch(True)
         tab.run_command("append", {
-            "characters": "Prompt: {}\nModel: {}\n\n---\n\n".format(user_input, model)
+            "characters": "\n> " + user_input + "\n"
         })
-
-        api_endpoint = "/api/chat" if is_chat_api else "/api/generate"
-        full_url = base_url + api_endpoint
-
-        if is_chat_api:
-            payload = {
-                "model": model,
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": full_prompt}
-                ],
-                "stream": True
-            }
-        else:
-            payload = {
-                "model": model,
-                "prompt": "{}\n\n{}".format(system_prompt, full_prompt),
-                "stream": True
-            }
-
-        req = urllib.request.Request(full_url, data=json.dumps(payload).encode('utf-8'), headers={"Content-Type": "application/json"})
 
         def fetch():
             try:
-                with urllib.request.urlopen(req) as response:
-                    for line in response:
-                        try:
-                            parsed = json.loads(line.decode("utf-8"))
-                            if is_chat_api and "message" in parsed and "content" in parsed["message"]:
-                                content = parsed["message"]["content"]
-                                tab.run_command("append", {"characters": content})
-                            elif not is_chat_api and "response" in parsed:
-                                content = parsed.get("response", "")
-                                tab.run_command("append", {"characters": content})
-                            if parsed.get("done", False):
-                                break
-                        except json.JSONDecodeError:
-                            continue
+                api_endpoint = "/api/chat" if is_chat_api else "/api/generate"
+                full_url = base_url + api_endpoint
+                headers = {"Content-Type": "application/json"}
+
+                if is_chat_api:
+                    # Build messages array for chat
+                    messages = []
+                    if continue_chat and self.chat_history:
+                        messages.extend(self.chat_history)
+                    else:
+                        self.chat_history = []
+                    messages.append({"role": "system", "content": system_prompt})
+                    messages.append({"role": "user", "content": full_prompt})
+                    payload = {
+                        "model": model,
+                        "messages": messages,
+                        "stream": False
+                    }
+                else:
+                    payload = {
+                        "model": model,
+                        "prompt": "{}\n\n{}".format(system_prompt, full_prompt),
+                        "stream": False
+                    }
+                req = urllib.request.Request(full_url, data=json.dumps(payload).encode('utf-8'), headers=headers)
+                response = urllib.request.urlopen(req)
+                response_data = json.loads(response.read().decode("utf-8"))
+                if is_chat_api:
+                    content = response_data.get('message', {}).get('content', '')
+                    tab.run_command("append", {"characters": content})
+                    # Save the message to chat history if continue_chat is enabled
+                    if continue_chat:
+                        # Only keep user/assistant roles in history for next round
+                        if len(self.chat_history) > 0 and self.chat_history[0].get("role") == "system":
+                            self.chat_history = self.chat_history[1:]
+                        self.chat_history.append({"role": "user", "content": full_prompt})
+                        self.chat_history.append({"role": "assistant", "content": content})
+                else:
+                    content = response_data.get('response', '')
+                    tab.run_command("append", {"characters": content})
             except Exception as e:
                 tab.run_command("append", {"characters": "\nERROR: {}".format(e)})
 
         sublime.set_timeout_async(fetch, 0)
 
+        # If continue_chat is enabled, prompt for next input automatically
+        if getattr(self, 'continue_chat_panel', None):
+            try:
+                self.continue_chat_panel.close()
+            except Exception:
+                pass
+        if continue_chat:
+            def ask_next():
+                self.window.show_input_panel(
+                    "Continue chat (leave blank to end):",
+                    "",
+                    self.on_done,
+                    None,
+                    None
+                )
+            self.continue_chat_panel = sublime.set_timeout_async(ask_next, 500)
+
 class OllamaSelectionCommandBase(OllamaBaseCommand, sublime_plugin.TextCommand):
     def run(self, edit):
         settings = sublime.load_settings("Ollama.sublime-settings")
-        model, base_url, system_prompt, is_chat_api = self.get_settings()
+        model, base_url, system_prompt, is_chat_api, continue_chat = self.get_settings()
 
         for region in self.view.sel():
             if not region.empty():
@@ -289,7 +316,7 @@ class OllamaSelectionPromptCommand(OllamaSelectionCommandBase):
         full_prompt = "{}\n\n---\n\n{}".format(user_prompt, self.selected_text)
 
         settings = sublime.load_settings("Ollama.sublime-settings")
-        model, base_url, system_prompt, is_chat_api = self.get_settings()
+        model, base_url, system_prompt, is_chat_api, continue_chat = self.get_settings()
 
         # --- CONTEXT AWARE ---
         symbol = extract_symbol_from_text(self.selected_text)
@@ -487,7 +514,7 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
             sublime.status_message("Ollama: No text selected.")
             return
 
-        model, base_url, system_prompt, is_chat_api = self.get_settings()
+        model, base_url, system_prompt, is_chat_api, continue_chat = self.get_settings()
 
         # --- CONTEXT AWARE ---
         symbol = extract_symbol_from_text(self.selected_text)
@@ -740,7 +767,7 @@ class OllamaGenerateFeatureCommand(OllamaBaseCommand, sublime_plugin.WindowComma
             sublime.set_timeout(lambda: sublime.error_message("Ollama File Creation Error: {}".format(e)), 0)
 
     def _make_blocking_ollama_request(self, prompt):
-        model, base_url, system_prompt, is_chat_api = self.get_settings()
+        model, base_url, system_prompt, is_chat_api, continue_chat = self.get_settings()
 
         api_endpoint = "/api/chat" if is_chat_api else "/api/generate"
         full_url = base_url + api_endpoint
