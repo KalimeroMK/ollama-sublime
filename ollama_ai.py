@@ -155,20 +155,32 @@ class OllamaPromptCommand(OllamaBaseCommand, sublime_plugin.WindowCommand):
                     }
                 req = urllib.request.Request(full_url, data=json.dumps(payload).encode('utf-8'), headers=headers)
                 response = urllib.request.urlopen(req)
-                response_data = json.loads(response.read().decode("utf-8"))
+                response_text = response.read().decode("utf-8")
+                try:
+                    response_data = json.loads(response_text)
+                except Exception as e:
+                    tab.run_command("append", {"characters": "\n[DEBUG] Invalid JSON from API: {}\n{}".format(e, response_text)})
+                    return
                 if is_chat_api:
-                    content = response_data.get('message', {}).get('content', '')
-                    tab.run_command("append", {"characters": content})
-                    # Save the message to chat history if continue_chat is enabled
-                    if continue_chat:
-                        # Only keep user/assistant roles in history for next round
-                        if len(self.chat_history) > 0 and self.chat_history[0].get("role") == "system":
-                            self.chat_history = self.chat_history[1:]
-                        self.chat_history.append({"role": "user", "content": full_prompt})
-                        self.chat_history.append({"role": "assistant", "content": content})
+                    content = response_data.get('message', {}).get('content', None)
+                    if content is not None:
+                        tab.run_command("append", {"characters": content})
+                        # Save the message to chat history if continue_chat is enabled
+                        if continue_chat:
+                            # Only keep user/assistant roles in history for next round
+                            if len(self.chat_history) > 0 and self.chat_history[0].get("role") == "system":
+                                self.chat_history = self.chat_history[1:]
+                            self.chat_history.append({"role": "user", "content": full_prompt})
+                            self.chat_history.append({"role": "assistant", "content": content})
+                    else:
+                        # Print the full response for debugging
+                        tab.run_command("append", {"characters": "\n[DEBUG] Unexpected API response:\n{}".format(json.dumps(response_data, indent=2))})
                 else:
-                    content = response_data.get('response', '')
-                    tab.run_command("append", {"characters": content})
+                    content = response_data.get('response', None)
+                    if content is not None:
+                        tab.run_command("append", {"characters": content})
+                    else:
+                        tab.run_command("append", {"characters": "\n[DEBUG] Unexpected API response:\n{}".format(json.dumps(response_data, indent=2))})
             except Exception as e:
                 tab.run_command("append", {"characters": "\nERROR: {}".format(e)})
 
@@ -552,25 +564,50 @@ class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand)
                     headers={'Content-Type': 'application/json'}
                 )
 
-                with urllib.request.urlopen(req) as response:
-                    response_data = json.loads(response.read().decode('utf-8'))
-                    if is_chat_api:
-                        suggestion = response_data.get('message', {}).get('content', '')
+                response = urllib.request.urlopen(req)
+                response_text = response.read().decode("utf-8")
+                try:
+                    response_data = json.loads(response_text)
+                except Exception as e:
+                    sublime.set_timeout(lambda: sublime.status_message("[DEBUG] Invalid JSON from API: {}\n{}".format(e, response_text)), 0)
+                    return
+                if is_chat_api:
+                    suggestion = response_data.get('message', {}).get('content', None)
+                    if suggestion is not None:
+                        # Strip markdown code fences like ```php and ```
+                        cleaned_suggestion = suggestion.strip()
+                        if cleaned_suggestion.startswith("```php"):
+                            cleaned_suggestion = cleaned_suggestion[6:].lstrip()
+                        if cleaned_suggestion.endswith("```"):
+                            cleaned_suggestion = cleaned_suggestion[:-3].rstrip()
+
+                        if not cleaned_suggestion:
+                            sublime.status_message("Ollama: Received an empty suggestion.")
+                            return
+
+                        sublime.set_timeout(lambda: self.show_inline_suggestion(cleaned_suggestion), 0)
+
                     else:
-                        suggestion = response_data.get('response', '')
-                    # Strip markdown code fences like ```php and ```
-                    cleaned_suggestion = suggestion.strip()
-                    if cleaned_suggestion.startswith("```php"):
-                        cleaned_suggestion = cleaned_suggestion[6:].lstrip()
-                    if cleaned_suggestion.endswith("```"):
-                        cleaned_suggestion = cleaned_suggestion[:-3].rstrip()
+                        # Print the full response for debugging
+                        sublime.set_timeout(lambda: sublime.status_message("[DEBUG] Unexpected API response:\n{}".format(json.dumps(response_data, indent=2))), 0)
+                else:
+                    suggestion = response_data.get('response', None)
+                    if suggestion is not None:
+                        # Strip markdown code fences like ```php and ```
+                        cleaned_suggestion = suggestion.strip()
+                        if cleaned_suggestion.startswith("```php"):
+                            cleaned_suggestion = cleaned_suggestion[6:].lstrip()
+                        if cleaned_suggestion.endswith("```"):
+                            cleaned_suggestion = cleaned_suggestion[:-3].rstrip()
 
-                    if not cleaned_suggestion:
-                        sublime.status_message("Ollama: Received an empty suggestion.")
-                        return
+                        if not cleaned_suggestion:
+                            sublime.status_message("Ollama: Received an empty suggestion.")
+                            return
 
-                    sublime.set_timeout(lambda: self.show_inline_suggestion(cleaned_suggestion), 0)
+                        sublime.set_timeout(lambda: self.show_inline_suggestion(cleaned_suggestion), 0)
 
+                    else:
+                        sublime.set_timeout(lambda: sublime.status_message("[DEBUG] Unexpected API response:\n{}".format(json.dumps(response_data, indent=2))), 0)
             except Exception as e:
                 sublime.set_timeout(lambda: sublime.status_message("Ollama: Refactor error: {}".format(e)), 0)
 
@@ -791,8 +828,12 @@ class OllamaGenerateFeatureCommand(OllamaBaseCommand, sublime_plugin.WindowComma
         try:
             req = urllib.request.Request(full_url, data=json.dumps(payload).encode('utf-8'), headers={"Content-Type": "application/json"})
             response = urllib.request.urlopen(req)
-            response_data = json.loads(response.read().decode("utf-8"))
-
+            response_text = response.read().decode("utf-8")
+            try:
+                response_data = json.loads(response_text)
+            except Exception as e:
+                print("[DEBUG] Invalid JSON from API: {}\n{}".format(e, response_text))
+                return None
             if is_chat_api:
                 return response_data.get('message', {}).get('content', '')
             else:
