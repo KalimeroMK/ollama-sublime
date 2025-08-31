@@ -1,6 +1,0 @@
-[
-  {
-    "keys": ["super+ctrl+enter"],
-    "command": "ollama_prompt"
-  }
-]
