@@ -1,0 +1,73 @@
+{
+    "model": "qwen2.5-coder",
+    "url": "http://127.0.0.1:11434/api/chat",
+    "explain_prompt": "Explain the following code in a concise and clear way, assuming a professional Laravel PHP developer audience. Focus on the code's purpose, its role in the system, and any non-obvious logic.\n\n---\n\n{code}",
+    "optimize_prompt": "Optimize the following code, keeping in mind the conventions of modern Laravel PHP development. Return only the optimized code, without any extra explanations or markdown formatting.\n\n---\n\n{code}",
+    "analysis_prompt": "Analyze this Laravel PHP code and provide insights on structure, patterns, and potential improvements.",
+    "code_smell_prompt": "Analyze the following code for code smells, potential bugs, and optimization opportunities. Provide a bulleted list of your findings. If the code appears to be unused anywhere in the project based on the provided context, state that clearly as your primary finding.\n\nCode:\n---\n{code}\n\nUsage Context:\n---\n{context}",
+    "refactor_prompt": "You are an AI refactoring assistant. Your task is to refactor the given code to improve its clarity, performance, and adherence to best practices. Here is the code:\n\n---\n{code}\n\nHere is some context on how this code is used elsewhere in the project:\n---\n{context}\n\nIMPORTANT: Return ONLY the raw, updated code block. Do not include any explanation, markdown, or any text other than the code itself.",
+    "selection_prompt": "{text}\n\n---\n\n{code}",
+    "feature_architect_prompt": "You are a senior Laravel architect. Your task is to create a JSON plan to implement a new feature based on the user's request. The plan should be a JSON array of objects, where each object represents a file to be created. Each object must have 'path' and 'description' keys. The 'path' should be the full path from the project root. The 'description' should be a detailed instruction for a Coder AI to write the file's content. Analyze the request carefully and create all necessary files (controllers, models, migrations, DTOs, actions, services, tests, etc.).\n\nUser Request: {prompt}",
+    "feature_coder_prompt": "You are a senior Laravel programmer. Your task is to write the full content for a single file based on the provided path and description. Adhere to modern Laravel best practices. Return ONLY the raw code for the file, without any explanations or markdown.\n\nFile Path: {path}\nDescription: {description}",
+    "file_creation_prompt_template": "You are a professional Laravel PHP developer. Create a {language} file that: {description}",
+    "tab_title_prefix": "Ollama",
+    "tab_title": "Ollama: {selection}",
+    "syntax": "Packages/Markdown/Markdown.sublime-syntax",
+    "code_file_extensions": [ ".php", "blade.php",".js", ".html", ".css", ".json"],
+    "system_prompt": "You are a Laravel PHP expert. When asked about code analysis or test generation, always assume PHP Laravel unless specified otherwise.",
+    "continue_chat": true,
+    
+    // Advanced Multi-File Context Settings
+    "use_advanced_context": true,
+    "advanced_context_depth": 2,
+    "max_related_files": 15,
+    "enable_architectural_analysis": true,
+    "enable_dependency_tracking": true,
+    "enable_impact_analysis": true,
+    
+    // Architectural Pattern Detection
+    "detect_mvc_pattern": true,
+    "detect_repository_pattern": true,
+    "detect_service_pattern": true,
+    "detect_facade_pattern": true,
+    
+    // Context Analysis Performance Settings
+    "max_files_to_scan": 1000,
+    "file_size_limit": 1048576,
+    "cache_context_analysis": true,
+    "scan_timeout": 30,
+    "batch_processing_size": 50,
+    
+    // Advanced Context File Extensions (beyond basic code_file_extensions)
+    "advanced_context_extensions": [".php", ".blade.php", ".js", ".vue", ".ts", ".py", ".json", ".yaml", ".xml"],
+    
+    // Laravel-specific namespace mappings
+    "namespace_mappings": {
+        "App": "app",
+        "Tests": "tests",
+        "Database": "database"
+    },
+    
+    // Enhanced Error Handling Settings
+    "show_detailed_error_messages": true,
+    "connection_timeout": 30,
+    "retry_failed_requests": true,
+    "max_retry_attempts": 3,
+    
+    // UI/UX Enhancement Settings
+    "enhanced_refactoring_ui": true,
+    "show_refactoring_preview": true,
+    "auto_focus_input_panels": true,
+    "show_progress_indicators": true,
+    
+    // Caching Configuration
+    "enable_context_caching": true,
+    "cache_ttl": 3600,
+    "max_cache_size": 100,
+    "cache_directory": "~/.sublime_ollama_cache",
+    
+    // Performance Monitoring
+    "log_performance_metrics": true,
+    "show_scan_progress": true,
+    "enable_background_processing": true
+}

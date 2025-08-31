@@ -1,0 +1,54 @@
+[
+  {
+    "caption": "Ollama AI: Prompt",
+    "command": "ollama_prompt"
+  },
+  {
+    "caption": "Ollama AI: Explain Selection",
+    "command": "ollama_explain_selection"
+  },
+  {
+    "caption": "Ollama AI: Optimize Selection",
+    "command": "ollama_optimize_selection"
+  },
+  {
+    "caption": "Ollama AI: Find Code Smells...",
+    "command": "ollama_code_smell_finder"
+  },
+  {
+    "caption": "Ollama AI: Custom Prompt for Selection...",
+    "command": "ollama_selection_prompt"
+  },
+  {
+    "caption": "Ollama AI: Suggest Refactoring...",
+    "command": "ollama_inline_refactor"
+  },
+  {
+    "caption": "Ollama AI: Create File From Prompt...",
+    "command": "ollama_create_file"
+  },
+  {
+    "caption": "Ollama AI: Generate Feature...",
+    "command": "ollama_generate_feature"
+  },
+  {
+    "caption": "Ollama AI: Edit Settings",
+    "command": "ollama_edit_settings"
+  },
+  {
+    "caption": "Ollama AI: Analyze Project Architecture...",
+    "command": "ollama_architecture_analysis"
+  },
+  {
+    "caption": "Ollama AI: Show Related Files",
+    "command": "ollama_related_files"
+  },
+  {
+    "caption": "Ollama AI: Analyze Change Impact...",
+    "command": "ollama_impact_analysis"
+  },
+  {
+    "caption": "Ollama AI: Cache Management",
+    "command": "ollama_cache_manager"
+  }
+]

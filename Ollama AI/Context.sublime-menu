@@ -1,0 +1,43 @@
+[
+    {
+        "caption": "Ollama AI",
+        "id": "ollama-ai-context",
+        "children": [
+            {
+                "caption": "Explain Selection",
+                "command": "ollama_explain_selection"
+            },
+            {
+                "caption": "Optimize Selection",
+                "command": "ollama_optimize_selection"
+            },
+            {
+                "caption": "Find Code Smells...",
+                "command": "ollama_code_smell_finder"
+            },
+            {
+                "caption": "Suggest Refactoring...",
+                "command": "ollama_inline_refactor"
+            },
+            {
+                "caption": "Custom Prompt for Selection...",
+                "command": "ollama_selection_prompt"
+            },
+            {
+                "caption": "Show Related Files",
+                "command": "ollama_related_files"
+            },
+            {
+                "caption": "Analyze Change Impact...",
+                "command": "ollama_impact_analysis"
+            },
+            {
+                "caption": "-"
+            },
+            {
+                "caption": "Cache Management",
+                "command": "ollama_cache_manager"
+            }
+        ]
+    }
+]
