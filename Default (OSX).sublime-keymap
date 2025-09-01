@@ -1,0 +1,14 @@
+[
+    {
+        "keys": ["cmd+shift+c"],
+        "command": "ollama_cache_manager"
+    },
+    {
+        "keys": ["cmd+shift+i"],
+        "command": "ollama_ai_prompt"
+    },
+    {
+        "keys": ["cmd+shift+space"],
+        "command": "ollama_ai_smart_completion"
+    }
+]

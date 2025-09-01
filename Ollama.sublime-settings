@@ -1,0 +1,39 @@
+{
+    "enable_background_processing": true,
+    
+    // Cursor-like Features
+    "enable_inline_chat": true,
+    "enable_smart_completion": true,
+    "enable_real_time_suggestions": true,
+    
+    // Inline Chat Settings
+    "inline_chat_theme": "dark",
+    "inline_chat_position": "below_cursor",
+    "inline_chat_auto_focus": true,
+    "inline_chat_show_history": true,
+    "inline_chat_max_history": 10,
+    
+    // Smart Completion Settings
+    "smart_completion_trigger_chars": [".", "(", " ", "\n"],
+    "smart_completion_context_lines": 10,
+    "smart_completion_auto_trigger": false,
+    "smart_completion_show_preview": true,
+    
+    // Real-time Suggestions
+    "real_time_suggestions_enabled": true,
+    "real_time_suggestions_delay": 5,
+    "real_time_suggestions_max_per_session": 20,
+    "real_time_suggestions_file_types": ["php", "js", "py", "vue", "blade.php"],
+    
+    // Visual Enhancements
+    "cursor_like_theme": true,
+    "show_typing_indicators": true,
+    "enhanced_popup_styling": true,
+    "smooth_animations": true,
+    
+    // AI Behavior
+    "ai_suggestion_style": "cursor_like",
+    "ai_response_format": "markdown",
+    "ai_show_code_blocks": true,
+    "ai_auto_format_responses": true
+}
