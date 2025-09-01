@@ -5,67 +5,67 @@
         "children": [
             {
                 "caption": "Custom Prompt",
-                "command": "ollama_prompt_command"
+                "command": "ollama_prompt"
             },
             {
                 "caption": "Explain Selection",
-                "command": "ollama_explain_selection_command"
+                "command": "ollama_explain_selection"
             },
             {
                 "caption": "Optimize Selection",
-                "command": "ollama_optimize_selection_command"
+                "command": "ollama_optimize_selection"
             },
             {
                 "caption": "Find Code Smells...",
-                "command": "ollama_code_smell_finder_command"
+                "command": "ollama_code_smell_finder"
             },
             {
                 "caption": "Suggest Refactoring...",
-                "command": "ollama_inline_refactor_command"
+                "command": "ollama_inline_refactor"
             },
             {
                 "caption": "Custom Prompt for Selection...",
-                "command": "ollama_selection_prompt_command"
+                "command": "ollama_selection_prompt"
             },
             {
                 "caption": "Create File From Prompt...",
-                "command": "ollama_create_file_command"
+                "command": "ollama_create_file"
             },
             {
                 "caption": "Generate Feature...",
-                "command": "ollama_generate_feature_command"
+                "command": "ollama_generate_feature"
             },
             {
                 "caption": "Analyze Project Architecture...",
-                "command": "ollama_architecture_analysis_command"
+                "command": "ollama_architecture_analysis"
             },
             {
                 "caption": "Show Related Files",
-                "command": "ollama_related_files_command"
+                "command": "ollama_related_files"
             },
             {
                 "caption": "Analyze Change Impact...",
-                "command": "ollama_impact_analysis_command"
+                "command": "ollama_impact_analysis"
             },
             {
                 "caption": "Cache Management",
-                "command": "ollama_cache_manager_command"
+                "command": "ollama_cache_manager"
             },
             {
                 "caption": "Inline Chat",
-                "command": "ollama_ai_prompt_command"
+                "command": "ollama_ai_prompt"
             },
             {
                 "caption": "Smart Completion",
-                "command": "ollama_ai_smart_completion_command"
+                "command": "ollama_ai_smart_completion"
             },
             {
                 "caption": "PHP/Laravel Completion",
-                "command": "ollama_php_completion_command"
+                "command": "ollama_php_completion"
             },
             {
                 "caption": "Edit Settings",
-                "command": "ollama_edit_settings_command"
+                "command": "ollama_edit_settings"
             }
         ]
     }
