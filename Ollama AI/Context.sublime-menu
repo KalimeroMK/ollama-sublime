@@ -5,50 +5,50 @@
         "children": [
             {
                 "caption": "Explain Selection",
-                "command": "ollama_explain_selection"
+                "command": "ollama_explain_selection_command"
             },
             {
                 "caption": "Optimize Selection",
-                "command": "ollama_optimize_selection"
+                "command": "ollama_optimize_selection_command"
             },
             {
                 "caption": "Find Code Smells...",
-                "command": "ollama_code_smell_finder"
+                "command": "ollama_code_smell_finder_command"
             },
             {
                 "caption": "Suggest Refactoring...",
-                "command": "ollama_inline_refactor"
+                "command": "ollama_inline_refactor_command"
             },
             {
                 "caption": "Custom Prompt for Selection...",
-                "command": "ollama_selection_prompt"
+                "command": "ollama_selection_prompt_command"
             },
             {
                 "caption": "Show Related Files",
-                "command": "ollama_related_files"
+                "command": "ollama_related_files_command"
             },
             {
                 "caption": "Analyze Change Impact...",
-                "command": "ollama_impact_analysis"
+                "command": "ollama_impact_analysis_command"
             },
             {
                 "caption": "-"
             },
             {
                 "caption": "Cache Management",
-                "command": "ollama_cache_manager"
+                "command": "ollama_cache_manager_command"
             },
             {
                 "caption": "Inline Chat",
-                "command": "ollama_ai_prompt"
+                "command": "ollama_ai_prompt_command"
             },
             {
                 "caption": "Smart Completion",
-                "command": "ollama_ai_smart_completion"
+                "command": "ollama_ai_smart_completion_command"
             },
             {
                 "caption": "PHP/Laravel Completion",
-                "command": "ollama_php_completion"
+                "command": "ollama_php_completion_command"
             }
         ]
     }

@@ -24,7 +24,97 @@ class OllamaBaseCommand:
         """Get configured API client instance."""
         return create_api_client_from_settings()
 
-class OllamaPhpCompletionCommand(sublime_plugin.TextCommand):
+class OllamaContextCommandBase(sublime_plugin.TextCommand):
+    """Base class for commands that work with current cursor position or selection"""
+    def get_settings(self):
+        settings = sublime.load_settings("Ollama.sublime-settings")
+        continue_chat = settings.get("continue_chat", True)
+        return continue_chat
+    
+    def get_api_client(self):
+        """Get configured API client instance."""
+        return create_api_client_from_settings()
+    
+    def get_context_text(self):
+        """Get text from selection or current line/word"""
+        selected_text = UIHelpers.get_selected_text(self.view)
+        if selected_text.strip():
+            return selected_text
+        
+        # If no selection, get current line
+        cursor_pos = self.view.sel()[0].begin()
+        line_region = self.view.line(cursor_pos)
+        line_text = self.view.substr(line_region)
+        
+        # If line is empty, get current word
+        if not line_text.strip():
+            word_region = self.view.word(cursor_pos)
+            word_text = self.view.substr(word_region)
+            return word_text
+        
+        return line_text
+    
+    def run(self, edit):
+        # Get context text (selection, line, or word)
+        context_text = self.get_context_text()
+        if not context_text.strip():
+            UIHelpers.show_status_message("Ollama: No text to analyze.")
+            return
+
+        # Get settings and API client
+        settings = sublime.load_settings("Ollama.sublime-settings")
+        api_client = self.get_api_client()
+
+        # Get context-aware information with advanced multi-file analysis
+        context_analyzer = ContextAnalyzer.from_view(self.view)
+        
+        # Get current file path for advanced context
+        current_file_path = None
+        if self.view and self.view.file_name():
+            current_file_path = self.view.file_name()
+            if context_analyzer.project_root:
+                current_file_path = os.path.relpath(current_file_path, context_analyzer.project_root)
+        
+        symbol, usage_context = context_analyzer.analyze_text_for_context(context_text, current_file_path)
+
+        # Prepare prompt
+        prompt = self.get_prompt(settings).format(code=context_text)
+        full_prompt = "{}{}".format(prompt, usage_context)
+
+        # Create output tab
+        tab_title = UIHelpers.format_tab_title(
+            settings.get("tab_title", "Ollama {selection}"), 
+            context_text, 
+            max_length=20
+        )
+        
+        tab_manager = TabManager(self.view.window())
+        self.output_tab = tab_manager.create_output_tab(
+            "selection_output",
+            tab_title,
+            prompt,
+            api_client.model
+        )
+
+        # Handle streaming response
+        def content_callback(content):
+            UIHelpers.append_to_tab(self.output_tab, content)
+
+        def fetch():
+            try:
+                api_client.make_streaming_request(full_prompt, content_callback)
+            except Exception as e:
+                UIHelpers.append_to_tab(
+                    self.output_tab, 
+                    ResponseProcessor.format_error_message(e, "streaming request")
+                )
+
+        sublime.set_timeout_async(fetch, 0)
+
+    def get_prompt(self, settings):
+        return settings.get("prompt", "Please explain this code:\n{code}\n")
+
+class OllamaPhpCompletionCommand(OllamaContextCommandBase):
     """AI-powered PHP/Laravel code completion - works for both Laravel and native PHP"""
     
     def __init__(self):
@@ -566,78 +656,49 @@ class OllamaSelectionCommandBase(sublime_plugin.TextCommand):
     def get_api_client(self):
         """Get configured API client instance."""
         return create_api_client_from_settings()
-    def run(self, edit):
-        # Check if there's any selected text
+    
+    def get_context_text(self):
+        """Get text from selection or current line/word"""
         selected_text = UIHelpers.get_selected_text(self.view)
-        if not selected_text.strip():
-            UIHelpers.show_status_message("Ollama: No text selected.")
+        if selected_text.strip():
+            return selected_text
+        
+        # If no selection, get current line
+        cursor_pos = self.view.sel()[0].begin()
+        line_region = self.view.line(cursor_pos)
+        line_text = self.view.substr(line_region)
+        
+        # If line is empty, get current word
+        if not line_text.strip():
+            word_region = self.view.word(cursor_pos)
+            word_text = self.view.substr(word_region)
+            return word_text
+        
+        return line_text
+    
+    def run(self, edit):
+        # Get context text (selection, line, or word)
+        context_text = self.get_context_text()
+        if not context_text.strip():
+            UIHelpers.show_status_message("Ollama: No text to analyze.")
             return
 
         # Get settings and API client
         settings = sublime.load_settings("Ollama.sublime-settings")
         api_client = self.get_api_client()
 
-        # Get context-aware information with advanced multi-file analysis
-        context_analyzer = ContextAnalyzer.from_view(self.view)
-        
-        # Get current file path for advanced context
-        current_file_path = None
-        if self.view and self.view.file_name():
-            current_file_path = self.view.file_name()
-            if context_analyzer.project_root:
-                current_file_path = os.path.relpath(current_file_path, context_analyzer.project_root)
-        
-        symbol, usage_context = context_analyzer.analyze_text_for_context(selected_text, current_file_path)
 
-        # Prepare prompt
-        prompt = self.get_prompt(settings).format(code=selected_text)
-        full_prompt = "{}{}".format(prompt, usage_context)
-
-        # Create output tab
-        tab_title = UIHelpers.format_tab_title(
-            settings.get("tab_title", "Ollama {selection}"), 
-            selected_text, 
-            max_length=20
-        )
-        
-        tab_manager = TabManager(self.view.window())
-        self.output_tab = tab_manager.create_output_tab(
-            "selection_output",
-            tab_title,
-            prompt,
-            api_client.model
-        )
-
-        # Handle streaming response
-        def content_callback(content):
-            UIHelpers.append_to_tab(self.output_tab, content)
-
-        def fetch():
-            try:
-                api_client.make_streaming_request(full_prompt, content_callback)
-            except Exception as e:
-                UIHelpers.append_to_tab(
-                    self.output_tab, 
-                    ResponseProcessor.format_error_message(e, "streaming request")
-                )
-
-        sublime.set_timeout_async(fetch, 0)
-
-    def get_prompt(self, settings):
-        return settings.get("prompt", "Please explain this code:\n{code}\n")
-
-
-class OllamaExplainSelectionCommand(OllamaSelectionCommandBase):
+class OllamaExplainSelectionCommand(OllamaContextCommandBase):
     def get_prompt(self, settings):
         return settings.get("explain_prompt", "Explain the following code in a concise and clear way, assuming a professional Laravel PHP developer audience. Focus on the code's purpose, its role in the system, and any non-obvious logic.\n\n---\n\n{code}")
 
 
-class OllamaOptimizeSelectionCommand(OllamaSelectionCommandBase):
+class OllamaOptimizeSelectionCommand(OllamaContextCommandBase):
     def get_prompt(self, settings):
         return settings.get("optimize_prompt", "Optimize the following code, keeping in mind the conventions of modern Laravel PHP development. Return only the optimized code, without any extra explanations or markdown formatting.\n\n---\n\n{code}")
 
 
-class OllamaCodeSmellFinderCommand(OllamaSelectionCommandBase):
+class OllamaCodeSmellFinderCommand(OllamaContextCommandBase):
     """
     Analyzes the selected code for code smells, suggests optimizations,
     and identifies potentially unused code.
@@ -653,15 +714,15 @@ Code to analyze:
 """)
 
 
-class OllamaSelectionPromptCommand(OllamaSelectionCommandBase):
+class OllamaSelectionPromptCommand(OllamaContextCommandBase):
     """
     A command that prompts the user for input and combines it with the selected text
     """
     def run(self, edit):
-        # Check if there's any selected text
-        self.selected_text = UIHelpers.get_selected_text(self.view)
-        if not self.selected_text.strip():
-            UIHelpers.show_status_message("Ollama: No text selected.")
+        # Get context text (selection, line, or word)
+        self.context_text = self.get_context_text()
+        if not self.context_text.strip():
+            UIHelpers.show_status_message("Ollama: No text to analyze.")
             return
 
         # Show input panel for user prompt
@@ -689,10 +750,10 @@ class OllamaSelectionPromptCommand(OllamaSelectionCommandBase):
             if context_analyzer.project_root:
                 current_file_path = os.path.relpath(current_file_path, context_analyzer.project_root)
         
-        symbol, usage_context = context_analyzer.analyze_text_for_context(self.selected_text, current_file_path)
+        symbol, usage_context = context_analyzer.analyze_text_for_context(self.context_text, current_file_path)
 
-        # Combine user prompt with selected text and context
-        full_prompt = "{}\n\n---\n\n{}{}".format(user_prompt, self.selected_text, usage_context)
+        # Combine user prompt with context text and context
+        full_prompt = "{}\n\n---\n\n{}{}".format(user_prompt, self.context_text, usage_context)
 
         # Create output tab
         tab_manager = TabManager(self.view.window())
@@ -823,7 +884,7 @@ Generate only the file content, with no additional explanations or markdown form
         threading.Thread(target=fetch).start()
 
 
-class OllamaInlineRefactorCommand(sublime_plugin.TextCommand):
+class OllamaInlineRefactorCommand(OllamaContextCommandBase):
     def get_settings(self):
         settings = sublime.load_settings("Ollama.sublime-settings")
         continue_chat = settings.get("continue_chat", True)
@@ -838,7 +899,7 @@ class OllamaInlineRefactorCommand(sublime_plugin.TextCommand):
     """
     def run(self, edit):
         # Check if there's any selected text
-        self.selected_text = UIHelpers.get_selected_text(self.view)
+        self.context_text = self.get_context_text()
         self.selection_region = None
         
         # Persist the phantom set on the instance to prevent garbage collection
@@ -850,7 +911,7 @@ class OllamaInlineRefactorCommand(sublime_plugin.TextCommand):
                 self.selection_region = region
                 break
 
-        if not self.selected_text.strip():
+        if not self.context_text.strip():
             UIHelpers.show_status_message("Ollama: No text selected.")
             return
 
@@ -868,11 +929,11 @@ class OllamaInlineRefactorCommand(sublime_plugin.TextCommand):
             if context_analyzer.project_root:
                 current_file_path = os.path.relpath(current_file_path, context_analyzer.project_root)
         
-        symbol, usage_context = context_analyzer.analyze_text_for_context(self.selected_text, current_file_path)
+        symbol, usage_context = context_analyzer.analyze_text_for_context(self.context_text, current_file_path)
 
         # Prepare prompt
         prompt_template = settings.get("refactor_prompt", "Refactor this code: {code}")
-        full_prompt = prompt_template.format(code=self.selected_text, context=usage_context)
+        full_prompt = prompt_template.format(code=self.context_text, context=usage_context)
 
         def do_request():
             try:
@@ -978,7 +1039,7 @@ class OllamaInlineRefactorCommand(sublime_plugin.TextCommand):
         return False
 
 
-class OllamaReplaceTextCommand(sublime_plugin.TextCommand):
+class OllamaReplaceTextCommand(OllamaContextCommandBase):
     def run(self, edit, region_start, region_end, text):
         region = sublime.Region(region_start, region_end)
         self.view.replace(edit, region, text)
@@ -1248,7 +1309,7 @@ Be specific and actionable in your recommendations.""".format(report)
         return report
 
 
-class OllamaRelatedFilesCommand(sublime_plugin.TextCommand):
+class OllamaRelatedFilesCommand(OllamaContextCommandBase):
     def get_settings(self):
         settings = sublime.load_settings("Ollama.sublime-settings")
         continue_chat = settings.get("continue_chat", True)
@@ -1334,7 +1395,7 @@ class OllamaRelatedFilesCommand(sublime_plugin.TextCommand):
         return "[related]"
 
 
-class OllamaImpactAnalysisCommand(sublime_plugin.TextCommand):
+class OllamaImpactAnalysisCommand(OllamaContextCommandBase):
     def get_settings(self):
         settings = sublime.load_settings("Ollama.sublime-settings")
         continue_chat = settings.get("continue_chat", True)
@@ -1835,7 +1896,7 @@ class OllamaAiPromptCommand(sublime_plugin.WindowCommand):
             self.chat_view = None
 
 
-class OllamaAiSmartCompletionCommand(sublime_plugin.TextCommand):
+class OllamaAiSmartCompletionCommand(OllamaContextCommandBase):
     """Cursor-like smart code completion with AI suggestions."""
     
     def run(self, edit):

@@ -1,10 +1,10 @@
 [
   {
     "keys": ["super+ctrl+enter"],
-    "command": "ollama_prompt"
+    "command": "ollama_prompt_command"
   },
   {
     "keys": ["super+ctrl+space"],
-    "command": "ollama_php_completion"
+    "command": "ollama_php_completion_command"
   }
 ]
