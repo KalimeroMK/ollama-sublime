@@ -6,6 +6,7 @@ import os
 import re
 import threading
 import html
+import time
 
 # Import modular components
 from ollama_api import create_api_client_from_settings
@@ -23,7 +24,452 @@ class OllamaBaseCommand:
         """Get configured API client instance."""
         return create_api_client_from_settings()
 
-class OllamaPromptCommand(OllamaBaseCommand, sublime_plugin.WindowCommand):
+class OllamaPhpCompletionCommand(sublime_plugin.TextCommand):
+    """AI-powered PHP/Laravel code completion - works for both Laravel and native PHP"""
+    
+    def __init__(self):
+        super().__init__()
+        self.api_client = None
+        self.completion_cache = {}
+        self.detection_cache = {}
+        
+        # PHP patterns (работи за чист PHP)
+        self.php_patterns = {
+            'functions': ['array_', 'str_', 'preg_', 'file_', 'json_', 'date_'],
+            'classes': ['DateTime', 'PDO', 'Exception', 'ArrayObject', 'SplFileInfo'],
+            'keywords': ['public', 'private', 'protected', 'static', 'abstract', 'final'],
+            'constructs': ['if', 'else', 'foreach', 'while', 'for', 'switch', 'try', 'catch']
+        }
+        
+        # Laravel patterns (дополнителни за Laravel)
+        self.laravel_patterns = {
+            'models': ['User', 'Post', 'Comment', 'Category', 'Product'],
+            'controllers': ['UserController', 'PostController', 'AuthController'],
+            'methods': ['index', 'show', 'create', 'store', 'edit', 'update', 'destroy'],
+            'eloquent': ['find', 'where', 'get', 'first', 'create', 'update', 'delete'],
+            'blade': ['@extends', '@section', '@yield', '@if', '@foreach', '@include'],
+            'facades': ['Route', 'DB', 'Auth', 'Cache', 'Config', 'View', 'Mail']
+        }
+    
+    def run(self, edit):
+        """Main completion logic - works for both PHP and Laravel"""
+        view = self.view
+        cursor_pos = view.sel()[0].begin()
+        
+        # Detect if we're in Laravel or native PHP
+        project_type = self._detect_project_type()
+        
+        # Get appropriate context
+        context = self._get_php_context(cursor_pos, project_type)
+        
+        # Generate completions based on project type
+        completions = self._generate_completions(context, project_type)
+        
+        # Show completion popup
+        self._show_completion_popup(completions, cursor_pos, project_type)
+    
+    def _detect_project_type(self):
+        """Detect if we're working with Laravel or native PHP"""
+        # Check cache first
+        if 'project_type' in self.detection_cache:
+            return self.detection_cache['project_type']
+        
+        # Get project root
+        view = self.view
+        if not view.window() or not view.window().folders():
+            return 'php'  # Default to PHP if no project
+        
+        project_root = view.window().folders()[0]
+        
+        # Check for Laravel indicators
+        laravel_indicators = [
+            'artisan',
+            'composer.json',
+            'app/Http/Controllers',
+            'app/Models',
+            'resources/views',
+            'routes/web.php',
+            'vendor/laravel'
+        ]
+        
+        is_laravel = any(
+            os.path.exists(os.path.join(project_root, indicator))
+            for indicator in laravel_indicators
+        )
+        
+        project_type = 'laravel' if is_laravel else 'php'
+        self.detection_cache['project_type'] = project_type
+        
+        return project_type
+    
+    def _get_php_context(self, cursor_pos, project_type):
+        """Extract PHP context - works for both Laravel and native PHP"""
+        view = self.view
+        region = view.line(cursor_pos)
+        line_text = view.substr(region)
+        
+        # Get surrounding context
+        start_line = max(0, region.begin() - 1000)
+        end_line = min(view.size(), region.end() + 1000)
+        context_region = sublime.Region(start_line, end_line)
+        context = view.substr(context_region)
+        
+        # Detect patterns based on project type
+        if project_type == 'laravel':
+            patterns = self._detect_laravel_patterns(context)
+        else:
+            patterns = self._detect_php_patterns(context)
+        
+        return {
+            'current_line': line_text,
+            'context': context,
+            'cursor_pos': cursor_pos,
+            'patterns': patterns,
+            'file_type': self._detect_file_type(),
+            'project_type': project_type
+        }
+    
+    def _detect_php_patterns(self, context):
+        """Detect native PHP patterns"""
+        return {
+            'is_class': 'class ' in context,
+            'is_function': 'function ' in context,
+            'is_array': 'array(' in context or '[' in context,
+            'is_string': '"' in context or "'" in context,
+            'is_object': '->' in context,
+            'is_static': '::' in context,
+            'is_namespace': 'namespace ' in context,
+            'is_use': 'use ' in context
+        }
+    
+    def _detect_laravel_patterns(self, context):
+        """Detect Laravel-specific patterns"""
+        return {
+            'is_model': 'class.*extends.*Model' in context,
+            'is_controller': 'class.*Controller' in context,
+            'is_migration': 'Schema::' in context,
+            'is_blade': '@' in context and '.blade.php' in (self.view.file_name() or ''),
+            'is_route': 'Route::' in context,
+            'is_middleware': 'middleware' in context.lower(),
+            'is_eloquent': '::' in context and any(model in context for model in self.laravel_patterns['models']),
+            'is_facade': any(facade in context for facade in self.laravel_patterns['facades'])
+        }
+    
+    def _detect_file_type(self):
+        """Detect PHP file type"""
+        filename = self.view.file_name()
+        if not filename:
+            return 'php'
+        
+        if 'Controller.php' in filename:
+            return 'controller'
+        elif 'Model.php' in filename:
+            return 'model'
+        elif 'migration' in filename:
+            return 'migration'
+        elif '.blade.php' in filename:
+            return 'blade'
+        elif 'routes' in filename:
+            return 'routes'
+        elif 'config' in filename:
+            return 'config'
+        else:
+            return 'php'
+    
+    def _generate_completions(self, context, project_type):
+        """Generate completions based on project type"""
+        # Check cache first
+        cache_key = self._get_cache_key(context)
+        if cache_key in self.completion_cache:
+            return self.completion_cache[cache_key]
+        
+        # Build appropriate prompt
+        if project_type == 'laravel':
+            prompt = self._build_laravel_prompt(context)
+        else:
+            prompt = self._build_php_prompt(context)
+        
+        # Get API client
+        if not self.api_client:
+            self.api_client = self.get_api_client()
+        
+        try:
+            response = self.api_client.make_blocking_request(
+                model=self._get_model(),
+                prompt=prompt,
+                max_tokens=150,
+                temperature=0.2
+            )
+            
+            completions = self._parse_completions(response, context, project_type)
+            
+            # Cache results
+            self.completion_cache[cache_key] = completions
+            
+            return completions
+            
+        except Exception as e:
+            print(f"Completion error: {e}")
+            return self._get_fallback_completions(context, project_type)
+    
+    def _build_php_prompt(self, context):
+        """Build prompt for native PHP completion"""
+        file_type = context['file_type']
+        current_line = context['current_line']
+        patterns = context['patterns']
+        
+        prompt = f"""You are a PHP expert. Complete the following code:
+
+File type: {file_type}
+Current line: {current_line}
+Context patterns: {patterns}
+
+Provide 5 PHP-specific code completions. Focus on:
+- PHP built-in functions
+- Object-oriented PHP
+- Array operations
+- String manipulation
+- File operations
+- Database operations (PDO)
+- Error handling
+- Namespace usage
+
+Return only the completion text, one per line.
+
+Completions:"""
+        
+        return prompt
+    
+    def _build_laravel_prompt(self, context):
+        """Build prompt for Laravel completion"""
+        file_type = context['file_type']
+        current_line = context['current_line']
+        patterns = context['patterns']
+        
+        prompt = f"""You are a Laravel/PHP expert. Complete the following code:
+
+File type: {file_type}
+Current line: {current_line}
+Laravel patterns: {patterns}
+
+Provide 5 Laravel-specific code completions. Focus on:
+- Eloquent ORM methods
+- Laravel collections
+- Blade directives
+- Route definitions
+- Controller methods
+- Model relationships
+- Validation rules
+- Middleware usage
+- Facades
+
+Return only the completion text, one per line.
+
+Completions:"""
+        
+        return prompt
+    
+    def _parse_completions(self, response, context, project_type):
+        """Parse LLM response for completions"""
+        try:
+            response = response.strip()
+            completions = [line.strip() for line in response.split('\n') if line.strip()]
+            
+            # Filter completions based on project type
+            valid_completions = []
+            for completion in completions:
+                if self._is_valid_completion(completion, context, project_type):
+                    valid_completions.append(completion)
+            
+            return valid_completions[:5]
+            
+        except Exception as e:
+            print(f"Parse error: {e}")
+            return self._get_fallback_completions(context, project_type)
+    
+    def _is_valid_completion(self, completion, context, project_type):
+        """Validate completion based on project type"""
+        if len(completion) < 2 or len(completion) > 100:
+            return False
+        
+        # Common PHP patterns (работи за двете)
+        common_patterns = [
+            r'^[a-zA-Z_][a-zA-Z0-9_]*\(',  # Function calls
+            r'^\$[a-zA-Z_][a-zA-Z0-9_]*->',  # Object methods
+            r'^[a-zA-Z_][a-zA-Z0-9_]*::',  # Static methods
+            r'^\s*[{}();]',  # Syntax completion
+            r'^use\s+',  # Use statements
+            r'^namespace\s+',  # Namespace
+            r'^class\s+',  # Class definition
+            r'^function\s+',  # Function definition
+            r'^[a-zA-Z_][a-zA-Z0-9_]*\[',  # Array access
+        ]
+        
+        # Laravel-specific patterns
+        if project_type == 'laravel':
+            laravel_patterns = [
+                r'^@[a-zA-Z_][a-zA-Z0-9_]*',  # Blade directives
+                r'^Route::',  # Route definitions
+                r'^DB::',  # Database facade
+                r'^Auth::',  # Auth facade
+                r'^Cache::',  # Cache facade
+                r'^Config::',  # Config facade
+                r'^View::',  # View facade
+                r'^Mail::',  # Mail facade
+            ]
+            common_patterns.extend(laravel_patterns)
+        
+        import re
+        for pattern in common_patterns:
+            if re.match(pattern, completion):
+                return True
+        
+        return False
+    
+    def _get_fallback_completions(self, context, project_type):
+        """Get fallback completions based on project type"""
+        file_type = context['file_type']
+        
+        if project_type == 'laravel':
+            return self._get_laravel_fallbacks(file_type)
+        else:
+            return self._get_php_fallbacks(file_type)
+    
+    def _get_php_fallbacks(self, file_type):
+        """Get fallback completions for native PHP"""
+        return [
+            'public function ',
+            'private function ',
+            'protected function ',
+            'array(',
+            'if (',
+            'foreach (',
+            'while (',
+            'try {',
+            'catch (Exception $e) {',
+            'throw new Exception('
+        ]
+    
+    def _get_laravel_fallbacks(self, file_type):
+        """Get fallback completions for Laravel"""
+        fallbacks = {
+            'model': [
+                'protected $fillable = [',
+                'public function user() {',
+                'return $this->belongsTo(User::class);',
+                'public function posts() {',
+                'return $this->hasMany(Post::class);'
+            ],
+            'controller': [
+                'public function index() {',
+                'return view(\'',
+                'public function store(Request $request) {',
+                'public function show($id) {',
+                'return redirect()->route(\''
+            ],
+            'blade': [
+                '@extends(\'layouts.app\')',
+                '@section(\'content\')',
+                '@yield(\'content\')',
+                '@if($condition)',
+                '@foreach($items as $item)'
+            ],
+            'routes': [
+                'Route::get(\'/\', function () {',
+                'Route::resource(\'posts\', PostController::class);',
+                'Route::middleware([\'auth\'])->group(function () {',
+                'Route::get(\'/dashboard\', [DashboardController::class, \'index\']);'
+            ]
+        }
+        
+        return fallbacks.get(file_type, [
+            'public function ',
+            'private function ',
+            'protected function ',
+            'use Illuminate\\',
+            'return view(\''
+        ])
+    
+    def _show_completion_popup(self, completions, cursor_pos, project_type):
+        """Show completion popup with appropriate icons"""
+        if not completions:
+            return
+        
+        # Create completion items with appropriate icons
+        completion_items = []
+        for i, completion in enumerate(completions):
+            icon = self._get_completion_icon(completion, project_type)
+            project_label = 'Laravel' if project_type == 'laravel' else 'PHP'
+            completion_items.append([
+                completion,
+                f"{project_label} {icon} {i+1}",
+                f"AI-generated {project_label} completion"
+            ])
+        
+        # Show popup
+        self.view.show_popup_menu(completion_items, self._on_completion_select)
+    
+    def _get_completion_icon(self, completion, project_type):
+        """Get appropriate icon for completion"""
+        if '::' in completion:
+            return '⚡'  # Static method
+        elif '->' in completion:
+            return '🔗'  # Object method
+        elif completion.startswith('@'):
+            return '🎨'  # Blade directive
+        elif 'Route::' in completion:
+            return '🛣️'  # Route
+        elif 'Model::' in completion:
+            return '🗃️'  # Model
+        elif project_type == 'laravel':
+            return '🚀'  # Laravel
+        else:
+            return '🐘'  # PHP
+    
+    def _on_completion_select(self, index):
+        """Handle completion selection"""
+        if index == -1:
+            return
+        
+        completions = self.completion_cache.get(self._get_current_cache_key(), [])
+        if index < len(completions):
+            completion = completions[index]
+            
+            # Insert completion with proper indentation
+            cursor_pos = self.view.sel()[0].begin()
+            self.view.run_command('insert', {'characters': completion})
+    
+    def _get_cache_key(self, context):
+        """Generate cache key for context"""
+        import hashlib
+        key_data = f"{context['current_line']}_{context['file_type']}_{context['project_type']}_{context['cursor_pos']}"
+        return hashlib.md5(key_data.encode()).hexdigest()
+    
+    def _get_current_cache_key(self):
+        """Get current cache key"""
+        cursor_pos = self.view.sel()[0].begin()
+        project_type = self._detect_project_type()
+        context = self._get_php_context(cursor_pos, project_type)
+        return self._get_cache_key(context)
+    
+    def _get_model(self):
+        """Get model for completion"""
+        settings = sublime.load_settings('OllamaAI.sublime-settings')
+        return settings.get('model', 'llama2')
+    
+    def get_api_client(self):
+        """Get API client for making requests"""
+        return create_api_client_from_settings()
+
+class OllamaPromptCommand(sublime_plugin.WindowCommand):
+    def get_settings(self):
+        settings = sublime.load_settings("Ollama.sublime-settings")
+        continue_chat = settings.get("continue_chat", True)
+        return continue_chat
+    
+    def get_api_client(self):
+        """Get configured API client instance."""
+        return create_api_client_from_settings()
     def run(self):
         self.chat_history_manager = ChatHistoryManager()
         UIHelpers.show_input_panel(
@@ -111,7 +557,15 @@ class OllamaPromptCommand(OllamaBaseCommand, sublime_plugin.WindowCommand):
                 )
             self.continue_chat_panel = sublime.set_timeout_async(ask_next, 500)
 
-class OllamaSelectionCommandBase(OllamaBaseCommand, sublime_plugin.TextCommand):
+class OllamaSelectionCommandBase(sublime_plugin.TextCommand):
+    def get_settings(self):
+        settings = sublime.load_settings("Ollama.sublime-settings")
+        continue_chat = settings.get("continue_chat", True)
+        return continue_chat
+    
+    def get_api_client(self):
+        """Get configured API client instance."""
+        return create_api_client_from_settings()
     def run(self, edit):
         # Check if there's any selected text
         selected_text = UIHelpers.get_selected_text(self.view)
@@ -369,7 +823,15 @@ Generate only the file content, with no additional explanations or markdown form
         threading.Thread(target=fetch).start()
 
 
-class OllamaInlineRefactorCommand(OllamaBaseCommand, sublime_plugin.TextCommand):
+class OllamaInlineRefactorCommand(sublime_plugin.TextCommand):
+    def get_settings(self):
+        settings = sublime.load_settings("Ollama.sublime-settings")
+        continue_chat = settings.get("continue_chat", True)
+        return continue_chat
+    
+    def get_api_client(self):
+        """Get configured API client instance."""
+        return create_api_client_from_settings()
     """
     Shows an inline phantom with a refactoring suggestion for the selected code.
     The user can then approve or dismiss the suggestion.
@@ -542,7 +1004,15 @@ class OllamaEditSystemPromptsCommand(sublime_plugin.WindowCommand):
         # We could add logic here to jump to system prompt section if needed
 
 
-class OllamaGenerateFeatureCommand(OllamaBaseCommand, sublime_plugin.WindowCommand):
+class OllamaGenerateFeatureCommand(sublime_plugin.WindowCommand):
+    def get_settings(self):
+        settings = sublime.load_settings("Ollama.sublime-settings")
+        continue_chat = settings.get("continue_chat", True)
+        return continue_chat
+    
+    def get_api_client(self):
+        """Get configured API client instance."""
+        return create_api_client_from_settings()
     """
     Generates multiple files for a new feature based on a high-level description.
     Uses a two-step process: Architect AI for planning and Coder AI for implementation.
@@ -645,7 +1115,15 @@ class OllamaGenerateFeatureCommand(OllamaBaseCommand, sublime_plugin.WindowComma
         return api_client.make_blocking_request(prompt)
 
 
-class OllamaArchitectureAnalysisCommand(OllamaBaseCommand, sublime_plugin.WindowCommand):
+class OllamaArchitectureAnalysisCommand(sublime_plugin.WindowCommand):
+    def get_settings(self):
+        settings = sublime.load_settings("Ollama.sublime-settings")
+        continue_chat = settings.get("continue_chat", True)
+        return continue_chat
+    
+    def get_api_client(self):
+        """Get configured API client instance."""
+        return create_api_client_from_settings()
     """
     Analyze the project's multi-file architecture and provide insights about
     patterns, relationships, and potential improvements.
@@ -770,7 +1248,15 @@ Be specific and actionable in your recommendations.""".format(report)
         return report
 
 
-class OllamaRelatedFilesCommand(OllamaBaseCommand, sublime_plugin.TextCommand):
+class OllamaRelatedFilesCommand(sublime_plugin.TextCommand):
+    def get_settings(self):
+        settings = sublime.load_settings("Ollama.sublime-settings")
+        continue_chat = settings.get("continue_chat", True)
+        return continue_chat
+    
+    def get_api_client(self):
+        """Get configured API client instance."""
+        return create_api_client_from_settings()
     """
     Show related files for the current file based on advanced multi-file analysis.
     """
@@ -848,7 +1334,15 @@ class OllamaRelatedFilesCommand(OllamaBaseCommand, sublime_plugin.TextCommand):
         return "[related]"
 
 
-class OllamaImpactAnalysisCommand(OllamaBaseCommand, sublime_plugin.TextCommand):
+class OllamaImpactAnalysisCommand(sublime_plugin.TextCommand):
+    def get_settings(self):
+        settings = sublime.load_settings("Ollama.sublime-settings")
+        continue_chat = settings.get("continue_chat", True)
+        return continue_chat
+    
+    def get_api_client(self):
+        """Get configured API client instance."""
+        return create_api_client_from_settings()
     """
     Analyze the potential impact of changes to the current file.
     """
@@ -978,7 +1472,15 @@ Be specific about the impact on different parts of the application."""
         return report
 
 
-class OllamaCacheManagerCommand(OllamaBaseCommand, sublime_plugin.WindowCommand):
+class OllamaCacheManagerCommand(sublime_plugin.WindowCommand):
+    def get_settings(self):
+        settings = sublime.load_settings("Ollama.sublime-settings")
+        continue_chat = settings.get("continue_chat", True)
+        return continue_chat
+    
+    def get_api_client(self):
+        """Get configured API client instance."""
+        return create_api_client_from_settings()
     """Command to manage Ollama AI cache and performance settings."""
     
     def run(self):
@@ -1041,7 +1543,7 @@ class OllamaCacheManagerCommand(OllamaBaseCommand, sublime_plugin.WindowCommand)
 - **Cache Size**: {stats['size']} entries
 - **Cache Hits**: {stats['hits']}
 - **Cache Misses**: {stats['misses']}
-- **Hit Rate**: {(stats['hits'] / (stats['hits'] + stats['misses']) * 100):.1f}% if stats['hits'] + stats['misses'] > 0 else 0}%
+- **Hit Rate**: {hit_rate:.1f}%
 
 ## Recommendations
 """
@@ -1095,7 +1597,11 @@ class OllamaCacheManagerCommand(OllamaBaseCommand, sublime_plugin.WindowCommand)
                 
                 if hasattr(context_analyzer, 'cache'):
                     stats = context_analyzer.cache.get_stats()
-                    report_text += f"- **Cache Hit Rate**: {(stats['hits'] / (stats['hits'] + stats['misses']) * 100):.1f}% if stats['hits'] + stats['misses'] > 0 else 0}%\n"
+                    if stats['hits'] + stats['misses'] > 0:
+                        hit_rate = (stats['hits'] / (stats['hits'] + stats['misses'])) * 100
+                        report_text += f"- **Cache Hit Rate**: {hit_rate:.1f}%\n"
+                    else:
+                        report_text += "- **Cache Hit Rate**: 0.0%\n"
                     report_text += f"- **Cache Size**: {stats['size']} entries\n"
                 
                 report_text += f"""
@@ -1155,3 +1661,399 @@ class OllamaCacheManagerCommand(OllamaBaseCommand, sublime_plugin.WindowCommand)
                 UIHelpers.show_status_message("⚠️ No active view to access cache", 3000)
         except Exception as e:
             UIHelpers.show_error_message(f"Failed to reset performance metrics: {str(e)}")
+
+class OllamaAiPromptCommand(sublime_plugin.WindowCommand):
+    """Enhanced prompt command with Cursor-like inline interface."""
+    
+    def run(self):
+        """Show enhanced inline prompt interface."""
+        view = self.window.active_view()
+        if not view:
+            sublime.error_message("No active view found")
+            return
+            
+        # Create inline chat interface
+        self.show_inline_chat(view)
+    
+    def show_inline_chat(self, view):
+        """Show Cursor-like inline chat interface."""
+        # Create a phantom overlay for the chat
+        phantom_set = sublime.PhantomSet(view, "ollama_inline_chat")
+        
+        # Get current cursor position
+        cursor_pos = view.sel()[0].end() if view.sel() else 0
+        
+        # Create chat HTML
+        chat_html = self._create_chat_html()
+        
+        # Create phantom
+        phantom = sublime.Phantom(
+            sublime.Region(cursor_pos, cursor_pos),
+            chat_html,
+            sublime.LAYOUT_BLOCK,
+            self._on_chat_phantom_click
+        )
+        
+        phantom_set.update([phantom])
+        self.phantom_set = phantom_set
+        
+        # Store view reference
+        self.chat_view = view
+    
+    def _create_chat_html(self):
+        """Create Cursor-like chat interface HTML."""
+        return """
+        <div style="background: #1e1e1e; border: 1px solid #3c3c3c; border-radius: 8px; padding: 16px; margin: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;">
+            <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                <div style="background: #007acc; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px;"></div>
+                <span style="color: #cccccc; font-size: 14px; font-weight: 500;">AI Assistant</span>
+            </div>
+            
+            <div style="background: #2d2d30; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+                <textarea id="chat-input" placeholder="Ask me anything about your code..." style="width: 100%; background: transparent; border: none; color: #cccccc; font-family: inherit; font-size: 13px; resize: none; outline: none;" rows="3"></textarea>
+            </div>
+            
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button onclick="sendMessage()" style="background: #007acc; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: 500;">Send</button>
+                <button onclick="dismissChat()" style="background: #3c3c3c; color: #cccccc; border: none; padding: 8px 16px; border-radius: 4px; font-size: 12px; cursor: pointer;">Cancel</button>
+            </div>
+            
+            <div id="chat-history" style="margin-top: 12px; max-height: 200px; overflow-y: auto;"></div>
+        </div>
+        
+        <script>
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (message) {
+                // Send message to Sublime Text
+                window.location.href = 'sublime://ollama-chat?message=' + encodeURIComponent(message);
+                input.value = '';
+            }
+        }
+        
+        function dismissChat() {
+            window.location.href = 'sublime://ollama-chat?action=dismiss';
+        }
+        
+        // Auto-focus input
+        document.getElementById('chat-input').focus();
+        </script>
+        """
+    
+    def _on_chat_phantom_click(self, href):
+        """Handle chat phantom interactions."""
+        if href.startswith('ollama-chat'):
+            # Parse the message
+            if 'message=' in href:
+                message = href.split('message=')[1]
+                self._process_chat_message(message)
+            elif 'action=dismiss' in href:
+                self._dismiss_chat()
+    
+    def _process_chat_message(self, message):
+        """Process chat message and show response."""
+        # Show typing indicator
+        self._show_typing_indicator()
+        
+        # Get API client and make request
+        api_client = create_api_client_from_settings()
+        if not api_client:
+            self._show_error("Failed to create API client")
+            return
+        
+        # Make request
+        response = api_client.make_blocking_request(message)
+        if response:
+            self._show_chat_response(message, response)
+        else:
+            self._show_error("Failed to get response from AI")
+    
+    def _show_typing_indicator(self):
+        """Show typing indicator in chat."""
+        if hasattr(self, 'phantom_set'):
+            typing_html = """
+            <div style="background: #1e1e1e; border: 1px solid #3c3c3c; border-radius: 8px; padding: 12px; margin: 8px; color: #cccccc; font-size: 13px;">
+                <div style="display: flex; align-items: center;">
+                    <div style="background: #007acc; width: 6px; height: 6px; border-radius: 50%; margin-right: 8px; animation: pulse 1.5s infinite;"></div>
+                    AI is thinking...
+                </div>
+            </div>
+            <style>
+            @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+            </style>
+            """
+            
+            # Add typing indicator to chat history
+            if hasattr(self, 'chat_view'):
+                typing_phantom = sublime.Phantom(
+                    sublime.Region(0, 0),
+                    typing_html,
+                    sublime.LAYOUT_BLOCK
+                )
+                self.phantom_set.update([typing_phantom])
+    
+    def _show_chat_response(self, question, answer):
+        """Show AI response in chat interface."""
+        response_html = f"""
+        <div style="background: #1e1e1e; border: 1px solid #3c3c3c; border-radius: 8px; padding: 12px; margin: 8px;">
+            <div style="color: #cccccc; font-size: 12px; margin-bottom: 8px; opacity: 0.7;">{question}</div>
+            <div style="background: #2d2d30; border-radius: 4px; padding: 8px; color: #cccccc; font-size: 13px; white-space: pre-wrap;">{answer}</div>
+        </div>
+        """
+        
+        # Update chat with response
+        if hasattr(self, 'phantom_set'):
+            response_phantom = sublime.Phantom(
+                sublime.Region(0, 0),
+                response_html,
+                sublime.LAYOUT_BLOCK
+            )
+            self.phantom_set.update([response_phantom])
+    
+    def _show_error(self, error_message):
+        """Show error message in chat."""
+        error_html = f"""
+        <div style="background: #1e1e1e; border: 1px solid #e74c3c; border-radius: 8px; padding: 12px; margin: 8px; color: #e74c3c; font-size: 13px;">
+            ❌ {error_message}
+        </div>
+        """
+        
+        if hasattr(self, 'phantom_set'):
+            error_phantom = sublime.Phantom(
+                sublime.Region(0, 0),
+                error_html,
+                sublime.LAYOUT_BLOCK
+            )
+            self.phantom_set.update([error_phantom])
+    
+    def _dismiss_chat(self):
+        """Dismiss the chat interface."""
+        if hasattr(self, 'phantom_set'):
+            self.phantom_set.update([])
+        if hasattr(self, 'chat_view'):
+            self.chat_view = None
+
+
+class OllamaAiSmartCompletionCommand(sublime_plugin.TextCommand):
+    """Cursor-like smart code completion with AI suggestions."""
+    
+    def run(self, edit):
+        """Show smart completion suggestions."""
+        view = self.view
+        cursor_pos = view.sel()[0].end()
+        
+        # Get context around cursor
+        context = self._get_context_around_cursor(view, cursor_pos)
+        
+        # Show completion popup
+        self._show_completion_popup(view, context, cursor_pos)
+    
+    def _get_context_around_cursor(self, view, cursor_pos):
+        """Get code context around cursor position."""
+        # Get line content
+        line_region = view.line(cursor_pos)
+        line_content = view.substr(line_region)
+        
+        # Get previous few lines for context
+        start_line = max(0, line_region.begin() - 200)
+        context_region = sublime.Region(start_line, cursor_pos)
+        context = view.substr(context_region)
+        
+        return {
+            'current_line': line_content,
+            'context': context,
+            'cursor_pos': cursor_pos - start_line
+        }
+    
+    def _show_completion_popup(self, view, context, cursor_pos):
+        """Show AI-powered completion suggestions."""
+        # Create completion items
+        items = [
+            ["💡 Complete this line", "Complete the current line of code"],
+            ["🔧 Suggest improvements", "Get optimization suggestions"],
+            ["📝 Add documentation", "Add comments and documentation"],
+            ["🧪 Add tests", "Generate test cases"],
+            ["🔍 Explain this code", "Get detailed explanation"]
+        ]
+        
+        def on_completion_selected(index):
+            if index >= 0:
+                self._execute_completion(view, context, items[index][0], cursor_pos)
+        
+        # Show quick panel
+        view.window().show_quick_panel(items, on_completion_selected)
+    
+    def _execute_completion(self, view, context, action, cursor_pos):
+        """Execute the selected completion action."""
+        if "Complete this line" in action:
+            self._complete_current_line(view, context)
+        elif "Suggest improvements" in action:
+            self._suggest_improvements(view, context)
+        elif "Add documentation" in action:
+            self._add_documentation(view, context)
+        elif "Add tests" in action:
+            self._add_tests(view, context)
+        elif "Explain this code" in action:
+            self._explain_code(view, context)
+    
+    def _complete_current_line(self, view, context):
+        """Complete the current line of code."""
+        # Get API client
+        api_client = create_api_client_from_settings()
+        if not api_client:
+            sublime.error_message("Failed to create API client")
+            return
+        
+        # Create completion prompt
+        prompt = f"Complete this line of code:\n\n{context['current_line']}\n\nProvide only the completed line, nothing else."
+        
+        # Get completion
+        response = api_client.make_blocking_request(prompt)
+        if response:
+            # Insert completion at cursor
+            cursor_pos = view.sel()[0].end()
+            view.run_command("insert", {"characters": response.strip()})
+        else:
+            sublime.error_message("Failed to get completion from AI")
+    
+    def _suggest_improvements(self, view, context):
+        """Suggest code improvements."""
+        api_client = create_api_client_from_settings()
+        if not api_client:
+            return
+        
+        prompt = f"Suggest improvements for this code:\n\n{context['context']}\n\nProvide specific, actionable improvements."
+        response = api_client.make_blocking_request(prompt)
+        
+        if response:
+            # Show improvements in new tab
+            window = view.window()
+            tab = window.new_file()
+            tab.set_name("AI Improvements")
+            tab.run_command("insert", {"characters": response})
+            tab.set_syntax_file("Packages/Markdown/Markdown.sublime-syntax")
+    
+    def _add_documentation(self, view, context):
+        """Add documentation to code."""
+        api_client = create_api_client_from_settings()
+        if not api_client:
+            return
+        
+        prompt = f"Add comprehensive documentation to this code:\n\n{context['context']}\n\nInclude comments explaining what the code does."
+        response = api_client.make_blocking_request(prompt)
+        
+        if response:
+            # Show documented code in new tab
+            window = view.window()
+            tab = window.new_file()
+            tab.set_name("Documented Code")
+            tab.run_command("insert", {"characters": response})
+            tab.set_syntax_file(view.settings().get("syntax"))
+    
+    def _add_tests(self, view, context):
+        """Generate test cases for code."""
+        api_client = create_api_client_from_settings()
+        if not api_client:
+            return
+        
+        prompt = f"Generate comprehensive test cases for this code:\n\n{context['context']}\n\nCreate unit tests that cover all scenarios."
+        response = api_client.make_blocking_request(prompt)
+        
+        if response:
+            # Show tests in new tab
+            window = view.window()
+            tab = window.new_file()
+            tab.set_name("Generated Tests")
+            tab.run_command("insert", {"characters": response})
+            tab.set_syntax_file("Packages/PHP/PHP.sublime-syntax")
+    
+    def _explain_code(self, view, context):
+        """Explain the code in detail."""
+        api_client = create_api_client_from_settings()
+        if not api_client:
+            return
+        
+        prompt = f"Explain this code in detail:\n\n{context['context']}\n\nProvide a clear, comprehensive explanation."
+        response = api_client.make_blocking_request(prompt)
+        
+        if response:
+            # Show explanation in new tab
+            window = view.window()
+            tab = window.new_file()
+            tab.set_name("Code Explanation")
+            tab.run_command("insert", {"characters": response})
+            tab.set_syntax_file("Packages/Markdown/Markdown.sublime-syntax")
+
+
+class OllamaAiRealTimeSuggestionsCommand(sublime_plugin.EventListener):
+    """Real-time AI suggestions as you type (Cursor-like feature)."""
+    
+    def on_selection_modified(self, view):
+        """Show real-time suggestions when selection changes."""
+        # Only activate for certain file types
+        if not self._should_activate(view):
+            return
+        
+        # Check if we should show suggestions
+        if self._should_show_suggestions(view):
+            self._show_real_time_suggestions(view)
+    
+    def _should_activate(self, view):
+        """Check if real-time suggestions should be activated."""
+        # Only for code files
+        syntax = view.settings().get("syntax", "")
+        code_syntaxes = ["PHP", "JavaScript", "Python", "Laravel"]
+        return any(syn in syntax for syn in code_syntaxes)
+    
+    def _should_show_suggestions(self, view):
+        """Check if we should show suggestions now."""
+        # Show suggestions every few seconds
+        current_time = time.time()
+        if not hasattr(view, 'last_suggestion_time'):
+            view.last_suggestion_time = 0
+        
+        if current_time - view.last_suggestion_time > 5:  # 5 seconds
+            view.last_suggestion_time = current_time
+            return True
+        return False
+    
+    def _show_real_time_suggestions(self, view):
+        """Show real-time AI suggestions."""
+        # Get current context
+        cursor_pos = view.sel()[0].end() if view.sel() else 0
+        context = self._get_context_for_suggestions(view, cursor_pos)
+        
+        # Show suggestion popup
+        self._show_suggestion_popup(view, context)
+    
+    def _get_context_for_suggestions(self, view, cursor_pos):
+        """Get context for real-time suggestions."""
+        # Get surrounding code
+        start_pos = max(0, cursor_pos - 500)
+        end_pos = min(view.size(), cursor_pos + 500)
+        context_region = sublime.Region(start_pos, end_pos)
+        context = view.substr(context_region)
+        
+        return {
+            'context': context,
+            'cursor_pos': cursor_pos - start_pos
+        }
+    
+    def _show_suggestion_popup(self, view, context):
+        """Show suggestion popup."""
+        # Create suggestion items
+        suggestions = [
+            "💡 This code could be optimized",
+            "🔧 Consider using a design pattern here",
+            "📝 Add error handling",
+            "🧪 This would benefit from unit tests"
+        ]
+        
+        # Show popup
+        view.show_popup_menu(suggestions, self._on_suggestion_selected)
+    
+    def _on_suggestion_selected(self, index):
+        """Handle suggestion selection."""
+        # This would trigger the specific suggestion action
+        pass

@@ -9,6 +9,7 @@ import os
 import tempfile
 from unittest.mock import Mock, patch, MagicMock
 import sys
+import time
 
 # Add the parent directory to the path so we can import modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -92,12 +93,21 @@ class TestMultiFileContextAnalyzer(unittest.TestCase):
     """Test cases for MultiFileContextAnalyzer class."""
     
     def setUp(self):
-        """Set up test fixtures."""
+        """Set up test environment."""
         self.temp_dir = tempfile.mkdtemp()
-        self.analyzer = MultiFileContextAnalyzer(
-            project_root=self.temp_dir,
-            code_file_extensions=[".php", ".js", ".py"]
-        )
+        self.analyzer = MultiFileContextAnalyzer(self.temp_dir)
+        
+        # Mock settings to return proper values
+        self.settings_patcher = patch('sublime.load_settings')
+        self.mock_settings = self.settings_patcher.start()
+        
+        # Configure mock settings to return proper values
+        self.mock_settings.return_value.get.side_effect = lambda key, default: {
+            "max_files_to_scan": 1000,
+            "file_size_limit": 1048576,
+            "scan_timeout": 30,
+            "code_file_extensions": [".php", ".js", ".py"]
+        }.get(key, default)
     
     def tearDown(self):
         """Clean up test fixtures."""
@@ -108,7 +118,7 @@ class TestMultiFileContextAnalyzer(unittest.TestCase):
     def test_init(self):
         """Test MultiFileContextAnalyzer initialization."""
         self.assertEqual(self.analyzer.project_root, self.temp_dir)
-        self.assertEqual(self.analyzer.code_file_extensions, [".php", ".js", ".py"])
+        self.assertEqual(self.analyzer.code_file_extensions, [".php", ".js", ".py", ".blade.php", ".vue"])
         self.assertEqual(self.analyzer._file_cache, {})
         self.assertEqual(len(self.analyzer._dependency_graph), 0)
         self.assertEqual(len(self.analyzer._architectural_patterns), 0)
@@ -118,7 +128,12 @@ class TestMultiFileContextAnalyzer(unittest.TestCase):
         """Test creating analyzer from view."""
         # Mock settings
         mock_settings = Mock()
-        mock_settings.get.return_value = [".php", ".blade.php", ".js"]
+        mock_settings.get.side_effect = lambda key, default: {
+            "code_file_extensions": [".php", ".blade.php", ".js"],
+            "max_files_to_scan": 1000,
+            "file_size_limit": 1048576,
+            "scan_timeout": 30
+        }.get(key, default)
         mock_load_settings.return_value = mock_settings
         
         # Mock view and window
@@ -158,9 +173,9 @@ class TestMultiFileContextAnalyzer(unittest.TestCase):
         # Check file info structure
         file_info = self.analyzer._file_cache["Controller.php"]
         self.assertIn('content', file_info)
-        self.assertIn('lines', file_info)
-        self.assertIn('extension', file_info)
-        self.assertEqual(file_info['extension'], '.php')
+        self.assertIn('size', file_info)
+        self.assertIn('modified', file_info)
+        self.assertIn('path', file_info)
     
     def test_namespace_to_file_path(self):
         """Test converting PHP namespace to file path."""
@@ -171,21 +186,16 @@ class TestMultiFileContextAnalyzer(unittest.TestCase):
             "tests/Feature/UserTest.php": {}
         }
         
-        # Test Laravel namespace mappings
-        self.assertEqual(
-            self.analyzer._namespace_to_file_path("App\\Models\\User", ".php"),
-            "app/Models/User.php"
-        )
+        # Test Laravel namespace mappings using the new method
+        result = self.analyzer._normalize_dependency("App\\Models\\User", "test.php")
+        self.assertEqual(result, "app/Models/User.php")
         
-        self.assertEqual(
-            self.analyzer._namespace_to_file_path("Tests\\Feature\\UserTest", ".php"),
-            "tests/Feature/UserTest.php"
-        )
+        result = self.analyzer._normalize_dependency("Tests\\Feature\\UserTest", "test.php")
+        self.assertEqual(result, "tests/Feature/UserTest.php")
         
         # Test non-existent namespace
-        self.assertIsNone(
-            self.analyzer._namespace_to_file_path("NonExistent\\Class", ".php")
-        )
+        result = self.analyzer._normalize_dependency("NonExistent\\Class", "test.php")
+        self.assertEqual(result, "NonExistent\\Class")
     
     def test_determine_file_role(self):
         """Test file role determination."""
@@ -231,15 +241,11 @@ class UserController extends BaseController implements UserInterface {
             "helper.php": {"content": "<?php // helper", "extension": ".php"}
         }
         
-        self.analyzer._analyze_php_dependencies("test.php", content)
+        # Test dependency extraction using the new method
+        dependencies = self.analyzer._extract_dependencies("test.php", content)
         
-        # Check that dependencies were detected
-        dependencies = self.analyzer._dependency_graph["test.php"]
-        
-        # Should find the User model dependency
-        user_deps = [d for d in dependencies if d.target_file == "app/Models/User.php"]
-        self.assertTrue(len(user_deps) > 0)
-        self.assertEqual(user_deps[0].relationship_type, "import")
+        # Should find the User model dependency (normalized to file path)
+        self.assertIn("app/Models/User.php", dependencies)
     
     def test_get_related_files(self):
         """Test getting related files within specified depth."""
@@ -368,7 +374,12 @@ class TestAdvancedContextAnalyzer(unittest.TestCase):
         """Test creating AdvancedContextAnalyzer from view with basic analyzer integration."""
         # Mock settings
         mock_settings = Mock()
-        mock_settings.get.return_value = [".php", ".js"]
+        mock_settings.get.side_effect = lambda key, default: {
+            "code_file_extensions": [".php", ".js"],
+            "max_files_to_scan": 1000,
+            "file_size_limit": 1048576,
+            "scan_timeout": 30
+        }.get(key, default)
         mock_load_settings.return_value = mock_settings
         
         # Mock view and window
@@ -474,13 +485,12 @@ class UserController {
             "app/Services/UserService.php": {"content": "<?php class UserService {}", "extension": ".php"}
         }
         
-        self.analyzer._analyze_php_dependencies("Controller.php", content)
+        # Test dependency extraction using the new method
+        dependencies = self.analyzer._extract_dependencies("Controller.php", content)
         
-        dependencies = self.analyzer._dependency_graph["Controller.php"]
-        target_files_found = [d.target_file for d in dependencies]
-        
-        self.assertIn("app/Models/User.php", target_files_found)
-        self.assertIn("app/Services/UserService.php", target_files_found)
+        # Should find the User model dependency
+        self.assertIn("app/Models/User.php", dependencies)
+        self.assertIn("app/Services/UserService.php", dependencies)
     
     def test_get_file_dependencies_and_dependents(self):
         """Test getting file dependencies and dependents."""
@@ -572,8 +582,19 @@ class UserTest extends TestCase {
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
     
-    def test_full_project_analysis(self):
+    @patch('sublime.load_settings')
+    def test_full_project_analysis(self, mock_load_settings):
         """Test complete project analysis workflow."""
+        # Mock settings
+        mock_settings = Mock()
+        mock_settings.get.side_effect = lambda key, default: {
+            "max_files_to_scan": 1000,
+            "file_size_limit": 1048576,
+            "scan_timeout": 30,
+            "code_file_extensions": [".php", ".js", ".py", ".blade.php"]
+        }.get(key, default)
+        mock_load_settings.return_value = mock_settings
+        
         self.analyzer.build_project_context()
         
         # Check that files were scanned
@@ -590,8 +611,19 @@ class UserTest extends TestCase {
         user_controller_role = self.analyzer._file_roles.get("app/Http/Controllers/UserController.php")
         self.assertEqual(user_controller_role, "controller")
     
-    def test_user_model_dependencies(self):
+    @patch('sublime.load_settings')
+    def test_user_model_dependencies(self, mock_load_settings):
         """Test dependency analysis for User model."""
+        # Mock settings
+        mock_settings = Mock()
+        mock_settings.get.side_effect = lambda key, default: {
+            "max_files_to_scan": 1000,
+            "file_size_limit": 1048576,
+            "scan_timeout": 30,
+            "code_file_extensions": [".php", ".js", ".py", ".blade.php"]
+        }.get(key, default)
+        mock_load_settings.return_value = mock_settings
+        
         self.analyzer.build_project_context()
         
         # Get files that depend on User model
@@ -602,8 +634,19 @@ class UserTest extends TestCase {
         self.assertIn("app/Services/UserService.php", dependents)
         self.assertIn("tests/Feature/UserTest.php", dependents)
     
-    def test_comprehensive_context_generation(self):
+    @patch('sublime.load_settings')
+    def test_comprehensive_context_generation(self, mock_load_settings):
         """Test generating comprehensive context for a file."""
+        # Mock settings
+        mock_settings = Mock()
+        mock_settings.get.side_effect = lambda key, default: {
+            "max_files_to_scan": 1000,
+            "file_size_limit": 1048576,
+            "scan_timeout": 30,
+            "code_file_extensions": [".php", ".js", ".py", ".blade.php"]
+        }.get(key, default)
+        mock_load_settings.return_value = mock_settings
+        
         self.analyzer.build_project_context()
         
         context = self.analyzer.get_comprehensive_context("app/Models/User.php")

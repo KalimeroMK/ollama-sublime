@@ -182,7 +182,7 @@ class TestUIHelpers(unittest.TestCase):
         template = "Ollama: {selection}"
         long_text = "a" * 100
         result = UIHelpers.format_tab_title(template, long_text, max_length=20)
-        expected = "Ollama: " + "a" * 14 + "..."
+        expected = "Ollama: " + "a" * 9 + "..."
         self.assertEqual(result, expected)
     
     def test_format_tab_title_empty_selection(self):

@@ -145,10 +145,15 @@ class TestOllamaApiClient(unittest.TestCase):
     @patch('urllib.request.urlopen')
     def test_make_blocking_request_network_error(self, mock_urlopen):
         """Test blocking request with network error."""
+        # Mock network error
         mock_urlopen.side_effect = Exception("Network error")
         
-        result = self.client_chat.make_blocking_request("Test prompt")
-        self.assertIsNone(result)
+        result = self.client_chat.make_blocking_request("test prompt")
+        
+        # Should return error message instead of None
+        self.assertIsNotNone(result)
+        self.assertIn("Ollama Connection Error", result)
+        self.assertIn("Network error", result)
     
     @patch('urllib.request.urlopen')
     def test_make_streaming_request_chat(self, mock_urlopen):
@@ -197,16 +202,18 @@ class TestOllamaApiClient(unittest.TestCase):
     @patch('urllib.request.urlopen')
     def test_make_streaming_request_error(self, mock_urlopen):
         """Test streaming request with error."""
+        # Mock network error
         mock_urlopen.side_effect = Exception("Network error")
         
-        # Collect callback results
         callback_results = []
-        def test_callback(content):
-            callback_results.append(content)
+        def mock_callback(chunk):
+            callback_results.append(chunk)
         
-        self.client_chat.make_streaming_request("Test prompt", test_callback)
-        self.assertEqual(len(callback_results), 1)
-        self.assertIn("ERROR", callback_results[0])
+        self.client_chat.make_streaming_request("test prompt", mock_callback)
+        
+        # Should return error message instead of "ERROR"
+        self.assertTrue(len(callback_results) > 0)
+        self.assertIn("Ollama Connection Error", callback_results[0])
         self.assertIn("Network error", callback_results[0])
 
 

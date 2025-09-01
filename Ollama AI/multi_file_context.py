@@ -266,9 +266,9 @@ class MultiFileContextAnalyzer:
         
         # Performance settings from configuration
         settings = sublime.load_settings("Ollama.sublime-settings")
-        self._max_files_to_scan = settings.get("max_files_to_scan", 1000)
-        self._file_size_limit = settings.get("file_size_limit", 1024 * 1024)
-        self._scan_timeout = settings.get("scan_timeout", 30)
+        self._max_files_to_scan = int(settings.get("max_files_to_scan", 1000))
+        self._file_size_limit = int(settings.get("file_size_limit", 1024 * 1024))
+        self._scan_timeout = int(settings.get("scan_timeout", 30))
         
         # Progress tracking
         total_files = 0
@@ -341,7 +341,7 @@ class MultiFileContextAnalyzer:
                     scanned_files += 1
                     
                     # Progress update every 50 files
-                    if scanned_files % 50 == 0:
+                    if scanned_files % 50 == 0 and total_files > 0:
                         progress = (scanned_files / total_files) * 100
                         print(f"[Ollama AI] Scanning progress: {scanned_files}/{total_files} ({progress:.1f}%)")
                     
@@ -358,7 +358,7 @@ class MultiFileContextAnalyzer:
             "files_scanned": scanned_files
         }
         
-        self.cache.set(self.project_root, cache_key, scan_result, ttl=1800)  # 30 minutes
+        self.cache.set(self.project_root, cache_key, "", scan_result, ttl=1800)  # 30 minutes
         
         print(f"[Ollama AI] File scanning completed: {scanned_files} files in {scan_result['scan_time']:.2f}s")
     
@@ -386,8 +386,9 @@ class MultiFileContextAnalyzer:
                 
                 for dep in dependencies:
                     if dep in self._file_cache:
-                        self._dependency_graph[file_path].append(dep)
-                        self._reverse_dependency_graph[dep].append(file_path)
+                        relationship = FileRelationship(file_path, dep, "import")
+                        self._dependency_graph[file_path].append(relationship)
+                        self._reverse_dependency_graph[dep].append(relationship)
         
         print(f"[Ollama AI] Dependency graph built in {time.time() - start_time:.2f}s")
     
@@ -638,7 +639,8 @@ class MultiFileContextAnalyzer:
         if file_path not in self._file_cache:
             return ""
         
-        lines = self._file_cache[file_path]['lines']
+        content = self._file_cache[file_path]['content']
+        lines = content.split('\n')
         
         # For classes, try to get the class declaration and some methods
         class_pattern = r'class\s+([A-Za-z0-9_]+)'

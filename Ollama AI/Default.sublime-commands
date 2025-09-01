@@ -50,5 +50,17 @@
   {
     "caption": "Ollama AI: Cache Management",
     "command": "ollama_cache_manager"
+  },
+  {
+    "caption": "Ollama AI: Inline Chat",
+    "command": "ollama_ai_prompt"
+  },
+  {
+    "caption": "Ollama AI: Smart Completion",
+    "command": "ollama_ai_smart_completion"
+  },
+  {
+    "caption": "Ollama AI: PHP/Laravel Completion",
+    "command": "ollama_php_completion"
   }
 ]

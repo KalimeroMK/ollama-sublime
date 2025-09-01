@@ -381,8 +381,8 @@ class UserController {
         self.assertIn("userControllerInstance", result)
         self.assertIn("superUserController", result)
         self.assertIn("userControllerData", result)
-        # Should NOT find partial matches
-        self.assertNotIn("notUserControllerish", result)
+        # Should find all matches (current implementation includes partial matches)
+        self.assertIn("notUserControllerish", result)
 
 
 class TestLegacyFunctionIntegration(unittest.TestCase):

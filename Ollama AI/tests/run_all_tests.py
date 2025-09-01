@@ -128,6 +128,7 @@ def main():
         ("test_multi_file_context", "Multi-File Context Tests"),
         ("test_ui_helpers", "UI Helpers Tests"),
         ("test_response_processor", "Response Processor Tests"),
+        ("test_php_completion", "PHP/Laravel Completion Tests"),
         ("test_ollama_ai_integration", "Ollama AI Integration Tests")
     ]
     
@@ -224,6 +225,7 @@ def main():
         print("• ✅ Context Analyzer (symbol extraction, project scanning)")
         print("• ✅ UI Helpers (tab management, file operations)")
         print("• ✅ Response Processor (content cleaning, validation)")
+        print("• ✅ PHP/Laravel Completion (AI-powered code completion)")
         print("• ✅ Main Commands (all 9 plugin commands)")
         print("• ✅ Ollama Server Connectivity")
         
@@ -248,6 +250,7 @@ def run_specific_test(test_name):
         "context": ("test_context_analyzer", "Context Analyzer Tests"),
         "ui": ("test_ui_helpers", "UI Helpers Tests"),
         "response": ("test_response_processor", "Response Processor Tests"),
+        "completion": ("test_php_completion", "PHP/Laravel Completion Tests"),
         "integration": ("test_ollama_ai_integration", "Ollama AI Integration Tests"),
         "connectivity": ("test_ollama_connection", "Connectivity Test")
     }

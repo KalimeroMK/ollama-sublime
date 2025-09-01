@@ -2,5 +2,9 @@
   {
     "keys": ["super+ctrl+enter"],
     "command": "ollama_prompt"
+  },
+  {
+    "keys": ["super+ctrl+space"],
+    "command": "ollama_php_completion"
   }
 ]
