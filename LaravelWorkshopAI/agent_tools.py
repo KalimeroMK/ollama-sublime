@@ -26,7 +26,7 @@ class FileSystemTools:
             with open(file_path, 'r', encoding='utf-8') as f:
                 return f.read()
         except Exception as e:
-            return f"Error reading file: {str(e)}"
+            return "Error reading file: {0}".format(str(e))
     
     @staticmethod
     def write_file(file_path, content):
@@ -43,9 +43,9 @@ class FileSystemTools:
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(content)
             
-            return f"Successfully wrote to {file_path}"
+            return "Successfully wrote to {0}".format(file_path)
         except Exception as e:
-            return f"Error writing file: {str(e)}"
+            return "Error writing file: {0}".format(str(e))
     
     @staticmethod
     def list_files(directory, pattern = "*"):
@@ -60,7 +60,7 @@ class FileSystemTools:
             files = glob.glob(os.path.join(directory, pattern))
             return "\n".join(files)
         except Exception as e:
-            return f"Error listing files: {str(e)}"
+            return "Error listing files: {0}".format(str(e))
     
     @staticmethod
     def file_exists(file_path):
@@ -72,9 +72,9 @@ class FileSystemTools:
                     file_path = os.path.join(window.folders()[0], file_path)
             
             exists = os.path.exists(file_path)
-            return f"File {'exists' if exists else 'does not exist'}: {file_path}"
+            return "File {0}: {1}".format('exists' if exists else 'does not exist', file_path)
         except Exception as e:
-            return f"Error checking file: {str(e)}"
+            return "Error checking file: {0}".format(str(e))
 
 
 class CodeAnalysisTools:
@@ -87,15 +87,15 @@ class CodeAnalysisTools:
             lines = content.split('\n')
             
             for i, line in enumerate(lines):
-                if f"function {function_name}" in line or f"def {function_name}" in line:
+                if "function {0}".format(function_name) in line or "def {0}".format(function_name) in line:
                     # Get function and some context
                     start = max(0, i - 2)
                     end = min(len(lines), i + 20)
                     return "\n".join(lines[start)
             
-            return f"Function '{function_name}' not found in {file_path}"
+            return "Function '{0}' not found in {1}".format(function_name, file_path)
         except Exception as e:
-            return f"Error finding function: {str(e)}"
+            return "Error finding function: {0}".format(str(e))
     
     @staticmethod
     def find_class(file_path, class_name):
@@ -104,15 +104,15 @@ class CodeAnalysisTools:
             lines = content.split('\n')
             
             for i, line in enumerate(lines):
-                if f"class {class_name}" in line:
+                if "class {0}".format(class_name) in line:
                     # Get class and some context
                     start = max(0, i - 2)
                     end = min(len(lines), i + 30)
                     return "\n".join(lines[start)
             
-            return f"Class '{class_name}' not found in {file_path}"
+            return "Class '{0}' not found in {1}".format(class_name, file_path)
         except Exception as e:
-            return f"Error finding class: {str(e)}"
+            return "Error finding class: {0}".format(str(e))
     
     @staticmethod
     def get_imports(file_path):
@@ -127,7 +127,7 @@ class CodeAnalysisTools:
             
             return "\n".join(imports) if imports else "No imports found"
         except Exception as e:
-            return f"Error getting imports: {str(e)}"
+            return "Error getting imports: {0}".format(str(e))
 
 
 class ProjectTools:
@@ -149,11 +149,11 @@ class ProjectTools:
                 
                 level = root.replace(project_root, '').count(os.sep)
                 indent = ' ' * 2 * level
-                structure.append(f"{indent}{os.path.basename(root)}/")
+                structure.append("{0}{1}/".format(indent, os.path.basename(root)))
                 
                 subindent = ' ' * 2 * (level + 1)
                 for file in files[:10]:  # Limit files per directory
-                    structure.append(f"{subindent}{file}")
+                    structure.append("{0}{1}".format(subindent, file))
                 
                 if len(structure) > 100:  # Limit total output
                     structure.append("... (truncated)")
@@ -161,7 +161,7 @@ class ProjectTools:
             
             return "\n".join(structure)
         except Exception as e:
-            return f"Error getting project structure: {str(e)}"
+            return "Error getting project structure: {0}".format(str(e))
     
     @staticmethod
     def find_files_by_name(name_pattern):
@@ -179,9 +179,9 @@ class ProjectTools:
             # Limit results
             files = files[:20]
             
-            return "\n".join(files) if files else f"No files found matching '{name_pattern}'"
+            return "\n".join(files) if files else "No files found matching '{0}'".format(name_pattern)
         except Exception as e:
-            return f"Error finding files: {str(e)}"
+            return "Error finding files: {0}".format(str(e))
     
     @staticmethod
     def get_git_status():
@@ -205,7 +205,7 @@ class ProjectTools:
             else:
                 return "Not a git repository or git not available"
         except Exception as e:
-            return f"Error getting git status: {str(e)}"
+            return "Error getting git status: {0}".format(str(e))
 
 
 class LaravelTools:
@@ -235,7 +235,7 @@ class LaravelTools:
             
             return result.stdout if result.stdout else result.stderr
         except Exception as e:
-            return f"Error running artisan command: {str(e)}"
+            return "Error running artisan command: {0}".format(str(e))
     
     @staticmethod
     def get_routes():
@@ -258,7 +258,7 @@ class LaravelTools:
             models = [f for f in os.listdir(models_dir) if f.endswith('.php')]
             return "\n".join(models) if models else "No models found"
         except Exception as e:
-            return f"Error getting models: {str(e)}"
+            return "Error getting models: {0}".format(str(e))
 
 
 class TestingTools:
@@ -287,7 +287,7 @@ class TestingTools:
             
             return result.stdout if result.stdout else result.stderr
         except Exception as e:
-            return f"Error running tests: {str(e)}"
+            return "Error running tests: {0}".format(str(e))
     
     @staticmethod
     def run_pest(test_path = ""):
@@ -312,7 +312,7 @@ class TestingTools:
             
             return result.stdout if result.stdout else result.stderr
         except Exception as e:
-            return f"Error running tests: {str(e)}"
+            return "Error running tests: {0}".format(str(e))
 
 
 def create_default_tools():

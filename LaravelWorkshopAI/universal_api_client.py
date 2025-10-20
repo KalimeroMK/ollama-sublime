@@ -47,7 +47,7 @@ class UniversalAPIClient:
             
             self.headers = {
                 "Content-Type": "application/json",
-                "Authorization": f"Bearer {self.api_key}"
+                "Authorization": "Bearer {0}".format(self.api_key)
             }
             
         elif self.provider == "gemini":
@@ -62,7 +62,7 @@ class UniversalAPIClient:
                 raise ValueError("Gemini API key is required. Set it in LaravelWorkshopAI.sublime-settings")
             
             # Gemini uses API key in URL, not headers
-            self.base_url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}"
+            self.base_url = "https://generativelanguage.googleapis.com/v1beta/models/{0}".format(self.model)
             self.headers = {
                 "Content-Type": "application/json"
             }
@@ -82,14 +82,14 @@ class UniversalAPIClient:
             self.headers = {"Content-Type": "application/json"}
             
             if self.api_key:
-                self.headers["Authorization"] = f"Bearer {self.api_key}"
+                self.headers["Authorization"] = "Bearer {0}".format(self.api_key)
             
             # Add custom headers
             custom_headers = provider_config.get("headers", {})
             self.headers.update(custom_headers)
         
         else:
-            raise ValueError(f"Unknown provider: {self.provider}")
+            raise ValueError("Unknown provider: {0}".format(self.provider))
     
     def _build_request_payload(self, prompt):
         """Build request payload based on provider"""
@@ -118,7 +118,7 @@ class UniversalAPIClient:
                 "contents": [
                     {
                         "parts": [
-                            {"text": f"You are a helpful coding assistant specialized in Laravel PHP development.\n\n{prompt}"}
+                            {"text": "You are a helpful coding assistant specialized in Laravel PHP development.\n\n{0}".format(prompt)}
                         ]
                     }
                 ],
@@ -150,23 +150,23 @@ class UniversalAPIClient:
         """Get API endpoint based on provider"""
         
         if self.provider == "ollama":
-            return f"{self.base_url}/api/generate"
+            return "{0}/api/generate".format(self.base_url)
         
         elif self.provider == "openai":
-            return f"{self.base_url}/chat/completions"
+            return "{0}/chat/completions".format(self.base_url)
         
         elif self.provider == "gemini":
             # Gemini uses streaming endpoint with API key in URL
             if self.stream:
-                return f"{self.base_url}:streamGenerateContent?key={self.api_key}&alt=sse"
+                return "{0}:streamGenerateContent?key={1}&alt=sse".format(self.base_url, self.api_key)
             else:
-                return f"{self.base_url}:generateContent?key={self.api_key}"
+                return "{0}:generateContent?key={1}".format(self.base_url, self.api_key)
         
         elif self.provider == "custom":
             if self.api_format == "openai":
-                return f"{self.base_url}/chat/completions"
+                return "{0}/chat/completions".format(self.base_url)
             else:
-                return f"{self.base_url}/api/generate"
+                return "{0}/api/generate".format(self.base_url)
     
     def _parse_response_chunk(self, line):
         """Parse response chunk based on provider"""
@@ -232,13 +232,13 @@ class UniversalAPIClient:
                         callback(content)
         
         except urllib.error.HTTPError as e = e.read().decode('utf-8')
-            raise Exception(f"HTTP {e.code}: {error_body}")
+            raise Exception("HTTP {0}: {1}".format(e.code, error_body))
         
         except urllib.error.URLError as e:
-            raise Exception(f"Connection error: {str(e)}")
+            raise Exception("Connection error: {0}".format(str(e)))
         
         except Exception as e:
-            raise Exception(f"Request failed: {str(e)}")
+            raise Exception("Request failed: {0}".format(str(e)))
     
     def make_blocking_request(self, prompt):
         """Make blocking request to AI provider"""
@@ -278,13 +278,13 @@ class UniversalAPIClient:
                     return ""
         
         except urllib.error.HTTPError as e = e.read().decode('utf-8')
-            raise Exception(f"HTTP {e.code}: {error_body}")
+            raise Exception("HTTP {0}: {1}".format(e.code, error_body))
         
         except urllib.error.URLError as e:
-            raise Exception(f"Connection error: {str(e)}")
+            raise Exception("Connection error: {0}".format(str(e)))
         
         except Exception as e:
-            raise Exception(f"Request failed: {str(e)}")
+            raise Exception("Request failed: {0}".format(str(e)))
 
 
 def create_universal_api_client():
@@ -295,7 +295,7 @@ def create_universal_api_client():
     try:
         return UniversalAPIClient(provider)
     except Exception as e:
-        sublime.error_message(f"Failed to initialize AI provider '{provider}':\n\n{str(e)}")
+        sublime.error_message("Failed to initialize AI provider '{0}':\n\n{1}".format(provider, str(e)))
         raise
 
 

@@ -90,11 +90,11 @@ class Agent:
     def get_system_prompt(self):
         """Generate system prompt based on agent role and capabilities"""
         tools_desc = "\n".join([
-            f"- {tool.name}: {tool.description}" 
+            "- {0}: {1}".format(tool.name, tool.description) 
             for tool in self.tools
         ]) if self.tools else "No tools available"
         
-        return f"""You are a {self.role.value} agent.
+        return """You are a {self.role.value} agent.
 
 Role: {self.role.value.upper()}
 Goal: {self.goal}
@@ -159,7 +159,7 @@ Always think step-by-step and explain your reasoning.
             if tool_call = self._execute_tool(tool_call)
                 self.memory.append(AgentMessage(
                     role="user",
-                    content=f"Tool result: {tool_result}"
+                    content="Tool result: {0}".format(tool_result)
                 ))
                 continue
             
@@ -175,14 +175,14 @@ Always think step-by-step and explain your reasoning.
     def _build_task_prompt(self, task):
         """Build comprehensive prompt for task"""
         context_str = "\n".join([
-            f"- {key}: {value}" 
+            "- {0}: {1}".format(key, value) 
             for key, value in task.context.items()
         ]) if task.context else "No additional context"
         
         # Add project structure context
         structure_context = self._get_structure_context()
         
-        return f"""Task: {task.description}
+        return """Task: {task.description}
 
 Context:
 {context_str}
@@ -216,16 +216,16 @@ IMPORTANT: Respect the detected project structure and patterns!
                 try = tool.execute(**parameters)
                     return str(result)
                 except Exception as e:
-                    return f"Error executing tool {tool_name}: {str(e)}"
+                    return "Error executing tool {0}: {1}".format(tool_name, str(e))
         
-        return f"Error: Tool '{tool_name}' not found"
+        return "Error: Tool '{0}' not found".format(tool_name)
     
     def _analyze_project_structure(self):
         """Analyze project structure and store recommendations"""
         try:
             self.project_structure = analyze_project_structure(self.project_root)
         except Exception as e:
-            print(f"Error analyzing project structure: {e}")
+            print("Error analyzing project structure: {0}".format(e))
             self.project_structure = None
     
     def _get_structure_context(self):
@@ -239,22 +239,22 @@ IMPORTANT: Respect the detected project structure and patterns!
         
         recommendations = self.project_structure.get('recommendations', {})
         
-        context_parts = [f"\nProject Structure: {primary.name}"]
-        context_parts.append(f"Confidence: {primary.confidence:.0%}")
-        context_parts.append(f"\nEvidence:")
+        context_parts = ["\nProject Structure: {0}".format(primary.name)]
+        context_parts.append("Confidence: {0}".format(primary.confidence:.0%))
+        context_parts.append("\nEvidence:")
         for evidence in primary.evidence[:3]:
-            context_parts.append(f"  - {evidence}")
+            context_parts.append("  - {0}".format(evidence))
         
-        context_parts.append(f"\nIMPORTANT: Follow this structure when generating code!")
+        context_parts.append("\nIMPORTANT: Follow this structure when generating code!")
         
         if recommendations.get('use_modules'):
             modules = recommendations.get('available_modules', [])
-            context_parts.append(f"\nModules: {', '.join(modules[:5])}")
+            context_parts.append("\nModules: {0}".format(', '.join(modules[:5])))
             context_parts.append("Generate code in appropriate module directory")
         
         if recommendations.get('use_domains'):
             domains = recommendations.get('available_domains', [])
-            context_parts.append(f"\nDomains: {', '.join(domains[:5])}")
+            context_parts.append("\nDomains: {0}".format(', '.join(domains[:5])))
             context_parts.append("Use Domain-Driven Design patterns")
         
         if recommendations.get('use_actions'):
@@ -329,10 +329,10 @@ class AgentCrew:
                 continue
             
             # Execute task
-            self.execution_log.append(f"Starting task: {task.description} with {agent.role.value}")
+            self.execution_log.append("Starting task: {0} with {1}".format(task.description, agent.role.value))
             result = agent.execute_task(task)
             results[task.description] = result
-            self.execution_log.append(f"Completed task: {task.description}")
+            self.execution_log.append("Completed task: {0}".format(task.description))
         
         return {
             "results": results,
@@ -396,18 +396,18 @@ class AgentWorkflow:
         # Create tasks
         tasks = [
             Task(
-                description=f"Design architecture for: {description}",
+                description="Design architecture for: {0}".format(description),
                 agent_role=AgentRole.ARCHITECT,
                 context=project_context
             ),
             Task(
-                description=f"Implement the feature: {description}",
+                description="Implement the feature: {0}".format(description),
                 agent_role=AgentRole.CODER,
                 context=project_context,
                 dependencies=["architecture"]
             ),
             Task(
-                description=f"Review the implementation for: {description}",
+                description="Review the implementation for: {0}".format(description),
                 agent_role=AgentRole.REVIEWER,
                 context=project_context,
                 dependencies=["implementation"]
@@ -440,7 +440,7 @@ class AgentWorkflow:
         )
         
         task = Task(
-            description=f"Debug this code:\n\n{code}\n\nError: {error_message}",
+            description="Debug this code:\n\n{0}\n\nError: {1}".format(code, error_message),
             agent_role=AgentRole.DEBUGGER,
             context=context
         )
@@ -465,7 +465,7 @@ class AgentWorkflow:
         )
         
         task = Task(
-            description=f"Refactor this code:\n\n{code}",
+            description="Refactor this code:\n\n{0}".format(code),
             agent_role=AgentRole.REFACTORER,
             context=context
         )

@@ -64,7 +64,7 @@ class LaravelWorkshopPhpCompletionCommand(LaravelWorkshopContextCommandBase):
             'functions': ['array_', 'str_', 'preg_', 'file_', 'json_', 'date_'],
             'classes': ['DateTime', 'PDO', 'Exception', 'ArrayObject', 'SplFileInfo'],
             'keywords': ['public', 'private', 'protected', 'static', 'abstract', 'final'],
-            'constructs': ['if', 'else', 'foreach', 'while', 'for', 'switch', 'try', 'catch']
+            'constructs': ['i', 'else', 'foreach', 'while', 'for', 'switch', 'try', 'catch']
         }
         
         # Laravel patterns
@@ -73,7 +73,7 @@ class LaravelWorkshopPhpCompletionCommand(LaravelWorkshopContextCommandBase):
             'controllers': ['UserController', 'PostController', 'AuthController'],
             'methods': ['index', 'show', 'create', 'store', 'edit', 'update', 'destroy'],
             'eloquent': ['find', 'where', 'get', 'first', 'create', 'update', 'delete'],
-            'blade': ['@extends', '@section', '@yield', '@if', '@foreach', '@include'],
+            'blade': ['@extends', '@section', '@yield', '@i', '@foreach', '@include'],
             'facades': ['Route', 'DB', 'Auth', 'Cache', 'Config', 'View', 'Mail']
         }
     
@@ -192,7 +192,7 @@ class LaravelWorkshopPhpCompletionCommand(LaravelWorkshopContextCommandBase):
             self.completion_cache[cache_key] = completions
             return completions
         except Exception as e:
-            print(f"Completion error: {e}")
+            print("Completion error: {0}".format(e))
             return self._get_fallback_completions(context, project_type)
     
     def _build_prompt(self, context, project_type):
@@ -202,7 +202,7 @@ class LaravelWorkshopPhpCompletionCommand(LaravelWorkshopContextCommandBase):
         
         framework = "Laravel" if project_type == 'laravel' else "PHP"
         
-        return f"""You are a {framework} expert. Complete this code:
+        return """You are a {framework} expert. Complete this code:
 
 File type: {file_type}
 Current line: {current_line}
@@ -241,7 +241,7 @@ Provide 5 {framework}-specific completions. Return only code, one per line."""
         completion_items = []
         for i, completion in enumerate(completions):
             label = 'Laravel' if project_type == 'laravel' else 'PHP'
-            completion_items.append([completion, f"{label} {i+1}"])
+            completion_items.append([completion, "{0} {1}".format(label, i+1)])
         
         self.view.show_popup_menu(completion_items, lambda idx: self._on_select(idx, completions))
     
@@ -254,7 +254,7 @@ Provide 5 {framework}-specific completions. Return only code, one per line."""
     def _get_cache_key(self, context):
         """Generate cache key"""
         import hashlib
-        key_data = f"{context['current_line']}_{context['file_type']}_{context['project_type']}"
+        key_data = "{0}_{1}_{2}".format(context['current_line'], context['file_type'], context['project_type'])
         return hashlib.md5(key_data.encode()).hexdigest()
 
 
@@ -298,10 +298,10 @@ class LaravelWorkshopCreateFileCommand(sublime_plugin.WindowCommand):
         progress_view = UIHelpers.create_progress_tab(
             self.window,
             "Creating File", 
-            f"Creating file at {full_path}\n"
+            "Creating file at {0}\n".format(full_path)
         )
 
-        prompt = f"""Create a new {language} file based on this description:
+        prompt = """Create a new {language} file based on this description:
 {self.description}
 
 Generate only the file content, no explanations."""
@@ -315,7 +315,7 @@ Generate only the file content, no explanations."""
             if context_analyzer.project_root = os.path.relpath(current_file_path, context_analyzer.project_root)
         
         symbol, usage_context = context_analyzer.analyze_text_for_context(self.description, current_file_path)
-        full_prompt = f"{prompt}{usage_context}"
+        full_prompt = "{0}{1}".format(prompt, usage_context)
 
         handler = StreamingResponseHandler()
         
@@ -380,7 +380,7 @@ class LaravelWorkshopCacheManagerCommand(sublime_plugin.WindowCommand):
                 os.makedirs(cache_dir)
             sublime.status_message("✅ All cache cleared")
         except Exception as e:
-            sublime.error_message(f"Failed to clear cache: {str(e)}")
+            sublime.error_message("Failed to clear cache: {0}".format(str(e)))
     
     def clear_context_cache(self):
         sublime.status_message("✅ Context cache cleared")
@@ -434,12 +434,12 @@ class LaravelWorkshopAiPromptCommand(sublime_plugin.WindowCommand):
             if context_analyzer.project_root = os.path.relpath(current_file_path, context_analyzer.project_root)
         
         symbol, usage_context = context_analyzer.analyze_text_for_context(user_input, current_file_path)
-        full_prompt = f"{user_input}{usage_context}"
+        full_prompt = "{0}{1}".format(user_input, usage_context)
 
         tab = UIHelpers.create_output_tab(
             self.window, 
             "AI Chat",
-            f"\n> {user_input}\n\n"
+            "\n> {0}\n\n".format(user_input)
         )
 
         def fetch():
@@ -449,7 +449,7 @@ class LaravelWorkshopAiPromptCommand(sublime_plugin.WindowCommand):
                 else:
                     UIHelpers.append_to_tab(tab, "No response received")
             except Exception as e:
-                UIHelpers.append_to_tab(tab, f"Error: {str(e)}")
+                UIHelpers.append_to_tab(tab, "Error: {0}".format(str(e)))
 
         sublime.set_timeout_async(fetch, 0)
 
@@ -469,7 +469,7 @@ class LaravelWorkshopAiSmartCompletionCommand(LaravelWorkshopContextCommandBase)
 
         api_client = self.get_api_client()
         
-        prompt = f"""Complete this code intelligently:
+        prompt = """Complete this code intelligently:
 
 {context_text}
 
@@ -480,11 +480,11 @@ Provide a smart completion that makes sense in context. Return only the completi
                 if completion:
                     # Show completion in popup
                     self.view.show_popup(
-                        f"<div style='padding: 10px;'><pre>{completion}</pre></div>",
+                        "<div style='padding: 10px;'><pre>{0}</pre></div>".format(completion),
                         max_width=600,
                         max_height=400
                     )
             except Exception as e:
-                sublime.status_message(f"Completion failed: {str(e)}")
+                sublime.status_message("Completion failed: {0}".format(str(e)))
 
         sublime.set_timeout_async(fetch, 0)

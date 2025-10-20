@@ -55,7 +55,7 @@ class LaravelWorkshopAgentGenerateFeatureCommand(sublime_plugin.WindowCommand):
         output_tab = tab_manager.create_output_tab(
             "agent_feature",
             "AI Agent: Feature Generation",
-            f"🤖 Generating feature: {description}\n\n",
+            "🤖 Generating feature: {0}\n\n".format(description),
             api_client.model
         )
         
@@ -84,20 +84,20 @@ class LaravelWorkshopAgentGenerateFeatureCommand(sublime_plugin.WindowCommand):
                 append_log("✅ Agent workflow completed!\n\n")
                 
                 for task_desc, task_result in result["results"].items():
-                    append_log(f"📌 {task_desc}\n")
-                    append_log(f"{task_result}\n\n")
+                    append_log("📌 {0}\n".format(task_desc))
+                    append_log("{0}\n\n".format(task_result))
                 
                 append_log("\n" + "="*50 + "\n")
                 append_log("📝 Execution Log:\n")
                 for log_entry in result["log"]:
-                    append_log(f"  • {log_entry}\n")
+                    append_log("  • {0}\n".format(log_entry))
                 
                 # Show completion message
                 sublime.status_message("✅ AI Agent feature generation completed!")
                 
             except Exception as e:
-                append_log(f"\n❌ Error: {str(e)}\n")
-                sublime.status_message(f"❌ Agent workflow failed: {str(e)}")
+                append_log("\n❌ Error: {0}\n".format(str(e)))
+                sublime.status_message("❌ Agent workflow failed: {0}".format(str(e)))
         
         sublime.set_timeout_async(run_workflow, 0)
 
@@ -140,7 +140,7 @@ class LaravelWorkshopAgentDebugCommand(sublime_plugin.TextCommand):
         output_tab = tab_manager.create_output_tab(
             "agent_debug",
             "AI Agent: Debug",
-            f"🐛 Debugging code...\n\nError: {error_message or 'Not specified'}\n\n",
+            "🐛 Debugging code...\n\nError: {0}\n\n".format(error_message or 'Not specified'),
             api_client.model
         )
         
@@ -161,13 +161,13 @@ class LaravelWorkshopAgentDebugCommand(sublime_plugin.TextCommand):
                 append_log("✅ Debug analysis completed!\n\n")
                 
                 for task_desc, task_result in result["results"].items():
-                    append_log(f"{task_result}\n\n")
+                    append_log("{0}\n\n".format(task_result))
                 
                 sublime.status_message("✅ Debug analysis completed!")
                 
             except Exception as e:
-                append_log(f"\n❌ Error: {str(e)}\n")
-                sublime.status_message(f"❌ Debug failed: {str(e)}")
+                append_log("\n❌ Error: {0}\n".format(str(e)))
+                sublime.status_message("❌ Debug failed: {0}".format(str(e)))
         
         sublime.set_timeout_async(run_debug, 0)
     
@@ -204,7 +204,7 @@ class LaravelWorkshopAgentRefactorCommand(sublime_plugin.TextCommand):
         output_tab = tab_manager.create_output_tab(
             "agent_refactor",
             "AI Agent: Refactor",
-            f"♻️ Refactoring code...\n\n",
+            "♻️ Refactoring code...\n\n",
             api_client.model
         )
         
@@ -225,13 +225,13 @@ class LaravelWorkshopAgentRefactorCommand(sublime_plugin.TextCommand):
                 append_log("✅ Refactoring completed!\n\n")
                 
                 for task_desc, task_result in result["results"].items():
-                    append_log(f"{task_result}\n\n")
+                    append_log("{0}\n\n".format(task_result))
                 
                 sublime.status_message("✅ Refactoring completed!")
                 
             except Exception as e:
-                append_log(f"\n❌ Error: {str(e)}\n")
-                sublime.status_message(f"❌ Refactoring failed: {str(e)}")
+                append_log("\n❌ Error: {0}\n".format(str(e)))
+                sublime.status_message("❌ Refactoring failed: {0}".format(str(e)))
         
         sublime.set_timeout_async(run_refactor, 0)
     
@@ -303,8 +303,8 @@ class LaravelWorkshopAgentCustomTaskCommand(sublime_plugin.WindowCommand):
         tab_manager = TabManager(self.window)
         output_tab = tab_manager.create_output_tab(
             "agent_custom",
-            f"AI Agent: {agent_role.value.title()}",
-            f"🤖 Executing task: {task_description}\n\n",
+            "AI Agent: {0}".format(agent_role.value.title()),
+            "🤖 Executing task: {0}\n\n".format(task_description),
             api_client.model
         )
         
@@ -314,14 +314,14 @@ class LaravelWorkshopAgentCustomTaskCommand(sublime_plugin.WindowCommand):
         # Run custom task
         def run_task():
             try:
-                append_log(f"🚀 Starting {agent_role.value} agent...\n")
+                append_log("🚀 Starting {0} agent...\n".format(agent_role.value))
                 
                 # Create agent
                 tools = create_default_tools()
                 agent = Agent(
                     role=agent_role,
-                    goal=f"Complete the task: {task_description}",
-                    backstory=f"You are an expert {agent_role.value} who excels at this type of work",
+                    goal="Complete the task: {0}".format(task_description),
+                    backstory="You are an expert {0} who excels at this type of work".format(agent_role.value),
                     api_client=api_client,
                     tools=tools
                 )
@@ -341,13 +341,13 @@ class LaravelWorkshopAgentCustomTaskCommand(sublime_plugin.WindowCommand):
                 append_log("✅ Task completed!\n\n")
                 
                 for task_desc, task_result in result["results"].items():
-                    append_log(f"{task_result}\n\n")
+                    append_log("{0}\n\n".format(task_result))
                 
                 sublime.status_message("✅ Agent task completed!")
                 
             except Exception as e:
-                append_log(f"\n❌ Error: {str(e)}\n")
-                sublime.status_message(f"❌ Task failed: {str(e)}")
+                append_log("\n❌ Error: {0}\n".format(str(e)))
+                sublime.status_message("❌ Task failed: {0}".format(str(e)))
         
         sublime.set_timeout_async(run_task, 0)
 
@@ -403,7 +403,7 @@ class LaravelWorkshopAgentChatCommand(sublime_plugin.WindowCommand):
         self.agent = Agent(
             role=role,
             goal="Assist the user with their coding tasks",
-            backstory=f"You are a helpful {role.value} assistant",
+            backstory="You are a helpful {0} assistant".format(role.value),
             api_client=api_client,
             tools=tools
         )
@@ -412,8 +412,8 @@ class LaravelWorkshopAgentChatCommand(sublime_plugin.WindowCommand):
         tab_manager = TabManager(self.window)
         self.output_tab = tab_manager.create_output_tab(
             "agent_chat",
-            f"AI Agent Chat: {role.value.title()}",
-            f"🤖 Chat with {role.value} agent\n\n",
+            "AI Agent Chat: {0}".format(role.value.title()),
+            "🤖 Chat with {0} agent\n\n".format(role.value),
             api_client.model
         )
     
@@ -433,12 +433,12 @@ class LaravelWorkshopAgentChatCommand(sublime_plugin.WindowCommand):
         self.conversation_history.append({"role": "user", "content": message})
         
         # Display user message
-        UIHelpers.append_to_tab(self.output_tab, f"\n👤 You: {message}\n\n")
+        UIHelpers.append_to_tab(self.output_tab, "\n👤 You: {0}\n\n".format(message))
         
         # Get agent response
         def get_response():
             try:
-                UIHelpers.append_to_tab(self.output_tab, f"🤖 Agent: ")
+                UIHelpers.append_to_tab(self.output_tab, "🤖 Agent: ")
                 
                 # Create task
                 task = Task(
@@ -454,13 +454,13 @@ class LaravelWorkshopAgentChatCommand(sublime_plugin.WindowCommand):
                 self.conversation_history.append({"role": "assistant", "content": response})
                 
                 # Display response
-                UIHelpers.append_to_tab(self.output_tab, f"{response}\n\n")
+                UIHelpers.append_to_tab(self.output_tab, "{0}\n\n".format(response))
                 UIHelpers.append_to_tab(self.output_tab, "-" * 50 + "\n")
                 
                 # Continue conversation
                 sublime.set_timeout(self.continue_conversation, 100)
                 
             except Exception as e:
-                UIHelpers.append_to_tab(self.output_tab, f"\n❌ Error: {str(e)}\n")
+                UIHelpers.append_to_tab(self.output_tab, "\n❌ Error: {0}\n".format(str(e)))
         
         sublime.set_timeout_async(get_response, 0)

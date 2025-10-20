@@ -9,7 +9,7 @@ class RefactoringOverlay:
         self.view = view
         self.original_text = original_text
         self.suggested_text = suggested_text
-        self.overlay_key = f"laravel_workshop_refactor_{id(self)}"
+        self.overlay_key = "laravel_workshop_refactor_{0}".format(id(self))
         self.is_active = False
         
     def show(self):
@@ -44,7 +44,7 @@ class RefactoringOverlay:
         
     def _create_overlay_html(self):
         """Create enhanced HTML for the refactoring overlay."""
-        return f"""
+        return """
         <div style="background: #2d3748; border: 2px solid #4299e1; border-radius: 8px; padding: 16px; margin: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
             <div style="color: #e2e8f0; font-size: 14px; margin-bottom: 12px;">
                 <strong>🤖 AI Refactoring Suggestion</strong>
@@ -101,7 +101,7 @@ class RefactoringOverlay:
             self._dismiss()
             
         except Exception as e:
-            UIHelpers.show_error_message(f"Failed to apply refactoring: {str(e)}")
+            UIHelpers.show_error_message("Failed to apply refactoring: {0}".format(str(e)))
     
     def _edit_suggestion(self):
         """Open suggestion in a new tab for editing."""
@@ -130,7 +130,7 @@ class RefactoringOverlay:
             UIHelpers.show_status_message("✏️ Suggestion opened for editing", 3000)
             
         except Exception as e:
-            UIHelpers.show_error_message(f"Failed to open suggestion for editing: {str(e)}")
+            UIHelpers.show_error_message("Failed to open suggestion for editing: {0}".format(str(e)))
     
     def _dismiss(self):
         """Dismiss the refactoring overlay."""

@@ -86,14 +86,14 @@ class ProjectStructureAnalyzer:
         
         for indicator in ddd_indicators:
             if self._directory_exists(indicator):
-                evidence.append(f"Found {indicator} directory")
+                evidence.append("Found {0} directory".format(indicator))
                 confidence += 0.15
         
         # Check for domain subdirectories
         domain_path = self._find_directory(['Domain', 'Domains'])
         if domain_path = self._get_subdirectories(domain_path)
             if len(subdirs) > 0:
-                evidence.append(f"Found {len(subdirs)} domain modules")
+                evidence.append("Found {0} domain modules".format(len(subdirs)))
                 confidence += 0.2
                 structure['domains'] = subdirs
         
@@ -131,7 +131,7 @@ class ProjectStructureAnalyzer:
                       if os.path.isdir(os.path.join(modules_path, d))]
             
             if modules:
-                evidence.append(f"Found {len(modules)} modules: {', '.join(modules[:3])}")
+                evidence.append("Found {0} modules: {1}".format(len(modules), ', '.join(modules[:3])))
                 confidence += 0.3
                 structure['modules'] = modules
                 
@@ -171,14 +171,14 @@ class ProjectStructureAnalyzer:
             actions_found.extend(matches)
         
         if actions_found:
-            evidence.append(f"Found {len(actions_found)} Actions directories")
+            evidence.append("Found {0} Actions directories".format(len(actions_found)))
             confidence += 0.4
             structure['actions_paths'] = actions_found
             
             # Check for action files
             action_files = self._find_files_by_pattern('*Action.php')
             if action_files:
-                evidence.append(f"Found {len(action_files)} Action classes")
+                evidence.append("Found {0} Action classes".format(len(action_files)))
                 confidence += 0.3
                 structure['action_count'] = len(action_files)
         
@@ -210,14 +210,14 @@ class ProjectStructureAnalyzer:
             dto_found.extend(matches)
         
         if dto_found:
-            evidence.append(f"Found {len(dto_found)} DTO directories")
+            evidence.append("Found {0} DTO directories".format(len(dto_found)))
             confidence += 0.4
             structure['dto_paths'] = dto_found
             
             # Check for DTO files
             dto_files = self._find_files_by_pattern('*DTO.php')
             if dto_files:
-                evidence.append(f"Found {len(dto_files)} DTO classes")
+                evidence.append("Found {0} DTO classes".format(len(dto_files)))
                 confidence += 0.3
                 structure['dto_count'] = len(dto_files)
         
@@ -238,7 +238,7 @@ class ProjectStructureAnalyzer:
         # Check for Repository files
         repo_files = self._find_files_by_pattern('*Repository.php')
         if repo_files:
-            evidence.append(f"Found {len(repo_files)} Repository classes")
+            evidence.append("Found {0} Repository classes".format(len(repo_files)))
             confidence += 0.4
             structure['repository_count'] = len(repo_files)
             
@@ -271,7 +271,7 @@ class ProjectStructureAnalyzer:
             # Check for Service files
             service_files = self._find_files_by_pattern('*Service.php')
             if service_files:
-                evidence.append(f"Found {len(service_files)} Service classes")
+                evidence.append("Found {0} Service classes".format(len(service_files)))
                 confidence += 0.3
                 structure['service_count'] = len(service_files)
         
@@ -345,31 +345,31 @@ class ProjectStructureAnalyzer:
             module = context.get('module') or primary.structure.get('modules', [''])[0]
             
             paths = {
-                'controller': f'Modules/{module}/Http/Controllers',
-                'model': f'Modules/{module}/Entities',
-                'action': f'Modules/{module}/Actions',
-                'dto': f'Modules/{module}/DTO',
-                'repository': f'Modules/{module}/Repositories',
-                'service': f'Modules/{module}/Services'
+                'controller': 'Modules/{0}/Http/Controllers'.format(module),
+                'model': 'Modules/{0}/Entities'.format(module),
+                'action': 'Modules/{0}/Actions'.format(module),
+                'dto': 'Modules/{0}/DTO'.format(module),
+                'repository': 'Modules/{0}/Repositories'.format(module),
+                'service': 'Modules/{0}/Services'.format(module)
             }
             
-            return paths.get(file_type, f'Modules/{module}')
+            return paths.get(file_type, 'Modules/{0}'.format(module))
         
         elif primary and primary.name == 'DDD':
             domain = context.get('domain', 'Core')
             
             paths = {
-                'controller': f'app/Application/Controllers',
-                'model': f'app/Domain/{domain}/Models',
-                'entity': f'app/Domain/{domain}/Entities',
-                'action': f'app/Domain/{domain}/Actions',
-                'dto': f'app/Domain/{domain}/DTO',
-                'repository': f'app/Domain/{domain}/Repositories',
-                'service': f'app/Domain/{domain}/Services',
-                'value_object': f'app/Domain/{domain}/ValueObjects'
+                'controller': 'app/Application/Controllers',
+                'model': 'app/Domain/{0}/Models'.format(domain),
+                'entity': 'app/Domain/{0}/Entities'.format(domain),
+                'action': 'app/Domain/{0}/Actions'.format(domain),
+                'dto': 'app/Domain/{0}/DTO'.format(domain),
+                'repository': 'app/Domain/{0}/Repositories'.format(domain),
+                'service': 'app/Domain/{0}/Services'.format(domain),
+                'value_object': 'app/Domain/{0}/ValueObjects'.format(domain)
             }
             
-            return paths.get(file_type, f'app/Domain/{domain}')
+            return paths.get(file_type, 'app/Domain/{0}'.format(domain))
         
         else:
             # Standard Laravel

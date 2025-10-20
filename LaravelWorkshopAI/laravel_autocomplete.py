@@ -87,25 +87,25 @@ class LaravelWorkshopLaravelAutocompleteCommand(sublime_plugin.EventListener):
         search_text = view.substr(search_region)
         
         # Pattern: $var = Model::...
-        pattern = rf'\${var_name}\s*=\s*(\w+)::'
+        pattern = r'\${0}\s*=\s*(\w+)::'.format(var_name)
         match = re.search(pattern, search_text)
         if match:
             return match.group(1)
         
         # Pattern: $var = new Model(
-        pattern = rf'\${var_name}\s*=\s*new\s+(\w+)\('
+        pattern = r'\${0}\s*=\s*new\s+(\w+)\('.format(var_name)
         match = re.search(pattern, search_text)
         if match:
             return match.group(1)
         
         # Pattern: function method(Model $var)
-        pattern = rf'(\w+)\s+\${var_name}\)'
+        pattern = r'(\w+)\s+\${0}\)'.format(var_name)
         match = re.search(pattern, search_text)
         if match:
             return match.group(1)
         
         # Pattern: @var Model $var (PHPDoc)
-        pattern = rf'@var\s+(\w+)\s+\${var_name}'
+        pattern = r'@var\s+(\w+)\s+\${0}'.format(var_name)
         match = re.search(pattern, search_text)
         if match:
             return match.group(1)
@@ -114,7 +114,7 @@ class LaravelWorkshopLaravelAutocompleteCommand(sublime_plugin.EventListener):
     
     def _get_model_completions(self, analyzer, model_name, prefix):
         """Get completions for a model"""
-        cache_key = f"{model_name}_{prefix}"
+        cache_key = "{0}_{1}".format(model_name, prefix)
         
         # Check cache
         if cache_key in self.completions_cache:
@@ -151,7 +151,7 @@ class LaravelWorkshopShowModelInfoCommand(sublime_plugin.TextCommand):
         # Get model info
         model_path = analyzer._find_model_file(model_name)
         if not model_path:
-            sublime.status_message(f"Model {model_name} not found")
+            sublime.status_message("Model {0} not found".format(model_name))
             return
         
         model_info = analyzer.analyze_model(model_path)
@@ -171,17 +171,17 @@ class LaravelWorkshopShowModelInfoCommand(sublime_plugin.TextCommand):
     def _build_model_info_html(self, model_name, model_info, properties):
         """Build HTML for model info"""
         html_parts = [
-            f"<h2>📦 {model_name}</h2>",
-            f"<p><b>Table:</b> {model_info.get('table', 'N/A')}</p>"
+            "<h2>📦 {0}</h2>".format(model_name),
+            "<p><b>Table:</b> {0}</p>".format(model_info.get('table', 'N/A'))
         ]
         
         # Properties
         if properties:
             html_parts.append("<h3>Properties:</h3><ul>")
             for prop in properties[:15]:  # Limit to 15
-                html_parts.append(f"<li><code>{prop['name']}</code> : {prop['type']} <i>({prop['source']})</i></li>")
+                html_parts.append("<li><code>{0}</code> : {1} <i>({2})</i></li>".format(prop['name'], prop['type'], prop['source']))
             if len(properties) > 15:
-                html_parts.append(f"<li><i>... and {len(properties) - 15} more</i></li>")
+                html_parts.append("<li><i>... and {0} more</i></li>".format(len(properties) - 15))
             html_parts.append("</ul>")
         
         # Relationships
@@ -189,7 +189,7 @@ class LaravelWorkshopShowModelInfoCommand(sublime_plugin.TextCommand):
         if relationships:
             html_parts.append("<h3>Relationships:</h3><ul>")
             for rel in relationships[:10]:
-                html_parts.append(f"<li><code>{rel['name']}()</code> : {rel['type']} → {rel['related']}</li>")
+                html_parts.append("<li><code>{0}()</code> : {1} → {2}</li>".format(rel['name'], rel['type'], rel['related']))
             html_parts.append("</ul>")
         
         # Scopes
@@ -197,10 +197,10 @@ class LaravelWorkshopShowModelInfoCommand(sublime_plugin.TextCommand):
         if scopes:
             html_parts.append("<h3>Scopes:</h3><ul>")
             for scope in scopes[:10]:
-                html_parts.append(f"<li><code>scope{scope}()</code></li>")
+                html_parts.append("<li><code>scope{0}()</code></li>".format(scope))
             html_parts.append("</ul>")
         
-        return f"""
+        return """
         <body id="model-info">
             <style>
                 body {{
@@ -262,10 +262,10 @@ class LaravelWorkshopGenerateIdeHelperCommand(sublime_plugin.WindowCommand):
                 # Clear cache
                 analyzer.ide_helper_cache = None
             else:
-                sublime.error_message(f"Failed to generate IDE Helper:\n\n{result.stderr}")
+                sublime.error_message("Failed to generate IDE Helper:\n\n{0}".format(result.stderr))
                 
         except Exception as e:
-            sublime.error_message(f"Error: {str(e)}")
+            sublime.error_message("Error: {0}".format(str(e)))
     
     def is_visible(self):
         """Show only in Laravel projects"""

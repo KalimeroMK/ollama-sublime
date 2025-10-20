@@ -61,7 +61,7 @@ class AgentMemoryStore:
                 with open(self.storage_path, 'r', encoding='utf-8') as f = json.load(f)
                     self.memories = [MemoryEntry.from_dict(m) for m in data]
         except Exception as e:
-            print(f"Error loading agent memory: {e}")
+            print("Error loading agent memory: {0}".format(e))
             self.memories = []
     
     def save(self):
@@ -71,7 +71,7 @@ class AgentMemoryStore:
             with open(self.storage_path, 'w', encoding='utf-8') as f = [m.to_dict() for m in self.memories]
                 json.dump(data, f, indent=2)
         except Exception as e:
-            print(f"Error saving agent memory: {e}")
+            print("Error saving agent memory: {0}".format(e))
     
     def add(
         self,
@@ -83,7 +83,7 @@ class AgentMemoryStore:
         """Add a new memory"""
         import hashlib
         memory_id = hashlib.md5(
-            f"{content}{time.time()}".encode()
+            "{0}{1}".format(content, time.time()).encode()
         ).hexdigest()
         
         memory = MemoryEntry(
@@ -296,7 +296,7 @@ class ProjectMemory:
             'User',
             'LaravelWorkshopAI',
             'projects',
-            f'{project_hash}.json'
+            '{0}.json'.format(project_hash)
         )
     
     def load(self):
@@ -306,7 +306,7 @@ class ProjectMemory:
                 with open(storage_path, 'r', encoding='utf-8') as f:
                     self.knowledge = json.load(f)
         except Exception as e:
-            print(f"Error loading project memory: {e}")
+            print("Error loading project memory: {0}".format(e))
     
     def save(self):
         """Save project knowledge"""
@@ -315,7 +315,7 @@ class ProjectMemory:
             with open(storage_path, 'w', encoding='utf-8') as f:
                 json.dump(self.knowledge, f, indent=2)
         except Exception as e:
-            print(f"Error saving project memory: {e}")
+            print("Error saving project memory: {0}".format(e))
     
     def learn_pattern(self, pattern, description):
         """Learn a new pattern"""
@@ -339,14 +339,14 @@ class ProjectMemory:
         if self.knowledge["coding_conventions"]:
             summary_parts.append(
                 "Coding conventions:\n" +
-                "\n".join(f"- {c}" for c in self.knowledge["coding_conventions"][:5])
+                "\n".join("- {0}".format(c) for c in self.knowledge["coding_conventions"][:5])
             )
         
         if self.knowledge["learned_patterns"]:
             summary_parts.append(
                 "Common patterns:\n" +
                 "\n".join(
-                    f"- {p['description']}"
+                    "- {0}".format(p['description'])
                     for p in self.knowledge["learned_patterns"][-5:]
                 )
             )

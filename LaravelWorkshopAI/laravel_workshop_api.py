@@ -59,17 +59,17 @@ class LaravelWorkshopApiClient:
             
         except urllib.error.URLError as e:
             if isinstance(e.reason, socket.timeout):
-                raise ConnectionError(f"Connection timeout to Ollama server at {full_url}")
+                raise ConnectionError("Connection timeout to Ollama server at {0}".format(full_url))
             elif "Connection refused" in str(e.reason):
-                raise ConnectionError(f"Ollama server is not running at {full_url}. Please start Ollama with 'ollama serve'")
+                raise ConnectionError("Ollama server is not running at {0}. Please start Ollama with 'ollama serve'".format(full_url))
             elif "Name or service not known" in str(e.reason):
-                raise ConnectionError(f"Cannot resolve Ollama server address: {full_url}")
+                raise ConnectionError("Cannot resolve Ollama server address: {0}".format(full_url))
             else:
-                raise ConnectionError(f"Failed to connect to Ollama server: {e.reason}")
+                raise ConnectionError("Failed to connect to Ollama server: {0}".format(e.reason))
         except socket.timeout:
-            raise ConnectionError(f"Connection timeout to Ollama server at {full_url}")
+            raise ConnectionError("Connection timeout to Ollama server at {0}".format(full_url))
         except Exception as e:
-            raise ConnectionError(f"Unexpected error connecting to Ollama: {str(e)}")
+            raise ConnectionError("Unexpected error connecting to Ollama: {0}".format(str(e)))
     
     def make_blocking_request(self, prompt, messages=None):
         """Make a blocking request and return the response content with improved error handling."""
@@ -79,7 +79,7 @@ class LaravelWorkshopApiClient:
             
             try = json.loads(response_text)
             except json.JSONDecodeError as e:
-                print(f"[DEBUG] Invalid JSON from API: {e}\n{response_text}")
+                print("[DEBUG] Invalid JSON from API: {0}\n{1}".format(e, response_text))
                 return None
             
             if self.is_chat_api:
@@ -87,7 +87,7 @@ class LaravelWorkshopApiClient:
             else:
                 return response_data.get('response', '')
                 
-        except ConnectionError as e = f"🔴 **Ollama Connection Error:** {str(e)}\n\n"
+        except ConnectionError as e = "🔴 **Ollama Connection Error:** {0}\n\n".format(str(e))
             error_msg += "**Troubleshooting steps:**\n"
             error_msg += "1. Make sure Ollama is installed: `ollama --version`\n"
             error_msg += "2. Start Ollama server: `ollama serve`\n"
@@ -95,16 +95,16 @@ class LaravelWorkshopApiClient:
             error_msg += "4. Verify the URL in settings: {}\n".format(self.base_url)
             error_msg += "5. Check firewall/network settings\n\n"
             error_msg += "**Current settings:**\n"
-            error_msg += f"- Model: {self.model}\n"
-            error_msg += f"- URL: {self.base_url}\n"
-            error_msg += f"- API Type: {'Chat' if self.is_chat_api else 'Generate'}"
+            error_msg += "- Model: {0}\n".format(self.model)
+            error_msg += "- URL: {0}\n".format(self.base_url)
+            error_msg += "- API Type: {0}".format('Chat' if self.is_chat_api else 'Generate')
             
-            print(f"[Laravel Workshop AI] {error_msg}")
+            print("[Laravel Workshop AI] {0}".format(error_msg))
             return error_msg
             
-        except Exception as e = f"🔴 **Unexpected Error:** {str(e)}\n\n"
+        except Exception as e = "🔴 **Unexpected Error:** {0}\n\n".format(str(e))
             error_msg += "Please check the console for more details or report this issue."
-            print(f"[Laravel Workshop AI] Unexpected error: {e}")
+            print("[Laravel Workshop AI] Unexpected error: {0}".format(e))
             return error_msg
     
     def make_streaming_request(self, prompt, callback, messages=None):
@@ -130,7 +130,7 @@ class LaravelWorkshopApiClient:
                     except json.JSONDecodeError:
                         continue
                         
-        except ConnectionError as e = f"🔴 **Ollama Connection Error:** {str(e)}\n\n"
+        except ConnectionError as e = "🔴 **Ollama Connection Error:** {0}\n\n".format(str(e))
             error_msg += "**Troubleshooting steps:**\n"
             error_msg += "1. Make sure Ollama is installed: `ollama --version`\n"
             error_msg += "2. Start Ollama server: `ollama serve`\n"
@@ -138,9 +138,9 @@ class LaravelWorkshopApiClient:
             error_msg += "4. Verify the URL in settings: {}\n".format(self.base_url)
             error_msg += "5. Check firewall/network settings"
             
-            callback(f"\n{error_msg}")
+            callback("\n{0}".format(error_msg))
         except Exception as e:
-            callback(f"\n🔴 **Unexpected Error:** {str(e)}")
+            callback("\n🔴 **Unexpected Error:** {0}".format(str(e)))
 
 
 def create_api_client_from_settings():

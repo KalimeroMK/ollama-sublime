@@ -82,7 +82,7 @@ class LaravelModelAnalyzer:
             return model_info
             
         except Exception as e:
-            print(f"Error analyzing model {model_path}: {e}")
+            print("Error analyzing model {0}: {1}".format(model_path, e))
             return {}
     
     def _extract_class_name(self, content):
@@ -210,7 +210,7 @@ class LaravelModelAnalyzer:
             return models_data
             
         except Exception as e:
-            print(f"Error loading IDE helper: {e}")
+            print("Error loading IDE helper: {0}".format(e))
             self.ide_helper_cache = {}
             return {}
     
@@ -252,7 +252,7 @@ class LaravelModelAnalyzer:
         """Find model file by class name"""
         models = self.find_all_models()
         for model_path in models:
-            if model_name in model_path or model_path.endswith(f'{model_name}.php'):
+            if model_name in model_path or model_path.endswith('{0}.php'.format(model_name)):
                 return model_path
         return None
     
@@ -262,7 +262,7 @@ class LaravelModelAnalyzer:
         
         # Get properties
         properties = self.get_model_properties(model_name)
-        for prop in properties = f"{prop['name']}\t{prop['type']} ({prop['source']})"
+        for prop in properties = "{0}\t{1} ({2})".format(prop['name'], prop['type'], prop['source'])
             completions.append((completion, prop['name']))
         
         # Get relationships
@@ -270,13 +270,13 @@ class LaravelModelAnalyzer:
         if model_path = self.analyze_model(model_path)
             
             for rel in model_info.get('relationships', []):
-                completion = f"{rel['name']}\t{rel['type']} -> {rel['related']}"
+                completion = "{0}\t{1} -> {2}".format(rel['name'], rel['type'], rel['related'])
                 completions.append((completion, rel['name']))
             
             # Get scopes
             for scope in model_info.get('scopes', []):
-                completion = f"scope{scope}\tQuery Scope"
-                completions.append((completion, f"scope{scope}()"))
+                completion = "scope{0}\tQuery Scope".format(scope)
+                completions.append((completion, "scope{0}()".format(scope)))
         
         # Filter by prefix
         if prefix = [c for c in completions if c[1].startswith(prefix)]

@@ -25,7 +25,7 @@ class ContextCache:
     
     def _get_cache_key(self, project_root, file_path, content_hash):
         """Generate a unique cache key for a file."""
-        return hashlib.md5(f"{project_root}:{file_path}:{content_hash}".encode()).hexdigest()
+        return hashlib.md5("{0}:{1}:{2}".format(project_root, file_path, content_hash).encode()).hexdigest()
     
     def _get_content_hash(self, content):
         """Generate hash for file content."""
@@ -33,7 +33,7 @@ class ContextCache:
     
     def _get_cache_file_path(self, cache_key):
         """Get the full path for a cache file."""
-        return os.path.join(self.cache_dir, f"{cache_key}.cache")
+        return os.path.join(self.cache_dir, "{0}.cache".format(cache_key))
     
     def _load_cache_index(self):
         """Load the cache index from disk."""
@@ -160,7 +160,7 @@ class FileRelationship:
         self.context = context or ""
     
     def __repr__(self):
-        return f"FileRelationship({self.source_file} -> {self.target_file} [{self.relationship_type}])"
+        return "FileRelationship({0} -> {1} [{2}])".format(self.source_file, self.target_file, self.relationship_type)
 
 
 class ArchitecturalPattern:
@@ -172,7 +172,7 @@ class ArchitecturalPattern:
         self.description = description
     
     def __repr__(self):
-        return f"ArchitecturalPattern({self.pattern_type}: {len(self.files)} files)"
+        return "ArchitecturalPattern({0}: {1} files)".format(self.pattern_type, len(self.files))
 
 
 class MultiFileContextAnalyzer:
@@ -253,7 +253,7 @@ class MultiFileContextAnalyzer:
             return
         
         # Check cache first
-        cache_key = f"project_scan_{self.project_root}"
+        cache_key = "project_scan_{0}".format(self.project_root)
         cached_result = self.cache.get(self.project_root, cache_key, "")
         if cached_result:
             self._file_cache = cached_result.get("files", {})
@@ -301,12 +301,12 @@ class MultiFileContextAnalyzer:
             for file in files:
                 # Check timeout
                 if time.time() - start_time > self._scan_timeout:
-                    print(f"[Laravel Workshop AI] File scanning timeout after {self._scan_timeout}s")
+                    print("[Laravel Workshop AI] File scanning timeout after {0}s".format(self._scan_timeout))
                     break
                 
                 # Check file limit
                 if scanned_files >= self._max_files_to_scan:
-                    print(f"[Laravel Workshop AI] Reached maximum files limit ({self._max_files_to_scan})")
+                    print("[Laravel Workshop AI] Reached maximum files limit ({0})".format(self._max_files_to_scan))
                     break
                 
                 # Check file extension
@@ -320,7 +320,7 @@ class MultiFileContextAnalyzer:
                     # Check file size
                     file_size = os.path.getsize(file_path)
                     if file_size > self._file_size_limit:
-                        print(f"[Laravel Workshop AI] Skipping large file: {relative_path} ({file_size} bytes)")
+                        print("[Laravel Workshop AI] Skipping large file: {0} ({1} bytes)".format(relative_path, file_size))
                         continue
                     
                     # Read file content
@@ -338,10 +338,10 @@ class MultiFileContextAnalyzer:
                     
                     # Progress update every 50 files
                     if scanned_files % 50 == 0 and total_files > 0 = (scanned_files / total_files) * 100
-                        print(f"[Laravel Workshop AI] Scanning progress: {scanned_files}/{total_files} ({progress:.1f}%)")
+                        print("[Laravel Workshop AI] Scanning progress: {0}/{1} ({2}%)".format(scanned_files, total_files, progress:.1f))
                     
                 except Exception as e:
-                    print(f"[Laravel Workshop AI] Error reading file {relative_path}: {e}")
+                    print("[Laravel Workshop AI] Error reading file {0}: {1}".format(relative_path, e))
                     continue
         
         # Cache the scan results
@@ -355,7 +355,7 @@ class MultiFileContextAnalyzer:
         
         self.cache.set(self.project_root, cache_key, "", scan_result, ttl=1800)  # 30 minutes
         
-        print(f"[Laravel Workshop AI] File scanning completed: {scanned_files} files in {scan_result['scan_time']:.2f}s")
+        print("[Laravel Workshop AI] File scanning completed: {0} files in {1}s".format(scanned_files, scan_result['scan_time']:.2f))
     
     def _build_dependency_graph(self):
         """Build dependency graph with performance optimizations."""
@@ -383,7 +383,7 @@ class MultiFileContextAnalyzer:
                         self._dependency_graph[file_path].append(relationship)
                         self._reverse_dependency_graph[dep].append(relationship)
         
-        print(f"[Laravel Workshop AI] Dependency graph built in {time.time() - start_time:.2f}s")
+        print("[Laravel Workshop AI] Dependency graph built in {0}s".format(time.time() - start_time:.2f))
     
     def _extract_dependencies(self, file_path, content):
         """Extract dependencies from file content with optimized patterns."""
@@ -556,21 +556,21 @@ class MultiFileContextAnalyzer:
         role = self._file_roles.get(file_path, 'unknown')
         related_files = self.get_related_files(file_path, max_depth=1)
         
-        context = f"\n\nArchitectural Context for {file_path}:\n"
-        context += f"- File Role: {role.title()}\n"
+        context = "\n\nArchitectural Context for {0}:\n".format(file_path)
+        context += "- File Role: {0}\n".format(role.title())
         
         if related_files:
-            context += f"- Related Files ({len(related_files)}):\n"
+            context += "- Related Files ({0}):\n".format(len(related_files))
             for related_file in related_files[:5]:  # Limit to top 5
                 related_role = self._file_roles.get(related_file, 'unknown')
-                context += f"  • {related_file} [{related_role}]\n"
+                context += "  • {0} [{1}]\n".format(related_file, related_role)
         
         # Add architectural patterns this file participates in
         participating_patterns = [p for p in self._architectural_patterns if file_path in p.files]
         if participating_patterns:
-            context += f"- Architectural Patterns:\n"
+            context += "- Architectural Patterns:\n"
             for pattern in participating_patterns:
-                context += f"  • {pattern.pattern_type.upper()}: {pattern.description}\n"
+                context += "  • {0}: {1}\n".format(pattern.pattern_type.upper(), pattern.description)
         
         return context
     
@@ -582,20 +582,20 @@ class MultiFileContextAnalyzer:
         dependents = self.get_file_dependents(file_path)
         dependencies = self.get_file_dependencies(file_path)
         
-        context = f"\n\nImpact Analysis for {file_path}:\n"
+        context = "\n\nImpact Analysis for {0}:\n".format(file_path)
         
         if dependencies:
-            context += f"- Dependencies ({len(dependencies)} files): Changes here may require updates to imported functionality\n"
+            context += "- Dependencies ({0} files): Changes here may require updates to imported functionality\n".format(len(dependencies))
             for dep in dependencies[:3]:
-                context += f"  • {dep}\n"
+                context += "  • {0}\n".format(dep)
         
         if dependents:
-            context += f"- Dependents ({len(dependents)} files): Changes here will affect these files\n"
+            context += "- Dependents ({0} files): Changes here will affect these files\n".format(len(dependents))
             for dep in dependents[:3]:
-                context += f"  • {dep}\n"
+                context += "  • {0}\n".format(dep)
         
         if len(dependents) > 3:
-            context += f"  • ... and {len(dependents) - 3} more files\n"
+            context += "  • ... and {0} more files\n".format(len(dependents) - 3)
         
         return context
     
@@ -615,11 +615,11 @@ class MultiFileContextAnalyzer:
         # Add related file content snippets if requested
         if include_content_snippets = self.get_related_files(file_path, max_depth=1)
             if related_files:
-                context += f"\n\nRelated File Snippets:\n"
+                context += "\n\nRelated File Snippets:\n"
                 for related_file in related_files[:3]:  # Limit to top 3
                     snippet = self._get_file_snippet(related_file)
                     if snippet:
-                        context += f"--- {related_file} ---\n{snippet}\n\n"
+                        context += "--- {0} ---\n{1}\n\n".format(related_file, snippet)
         
         return context
     
@@ -644,7 +644,7 @@ class MultiFileContextAnalyzer:
                 end = min(len(lines), i + 3)
                 for j in range(start, end):
                     if j < len(lines):
-                        important_lines.append(f"{j+1:3d}: {lines[j]}")
+                        important_lines.append("{0}: {1}".format(j+1:3d, lines[j]))
                 
                 if len(important_lines) >= max_lines:
                     break
@@ -691,15 +691,15 @@ class MultiFileContextAnalyzer:
                         context_start = max(0, i - 1)
                         context_end = min(len(lines), i + 2)
                         context_lines = lines[context_start:context_end]
-                        matching_lines.append(f"Line {i+1}: {' '.join(context_lines).strip()}")
+                        matching_lines.append("Line {0}: {1}".format(i+1, ' '.join(context_lines).strip()))
                 
                 if matching_lines:
-                    references.append(f"--- {file_path} [{role}] ---\n" + '\n'.join(matching_lines))
+                    references.append("--- {0} [{1}] ---\n".format(file_path, role) + '\n'.join(matching_lines))
         
         if not references:
             return ""
         
-        return f"\n\nCross-File References for `{symbol}`:\n" + '\n\n'.join(references)
+        return "\n\nCross-File References for `{0}`:\n".format(symbol) + '\n\n'.join(references)
     
     def get_change_impact_summary(self, file_path):
         """Get a summary of potential change impacts."""
@@ -710,22 +710,22 @@ class MultiFileContextAnalyzer:
         dependents = self.get_file_dependents(file_path)
         dependencies = self.get_file_dependencies(file_path)
         
-        impact_summary = f"\n\nChange Impact Summary:\n"
-        impact_summary += f"- Modifying this {role} file\n"
+        impact_summary = "\n\nChange Impact Summary:\n"
+        impact_summary += "- Modifying this {0} file\n".format(role)
         
         if dependents:
-            impact_summary += f"- Will potentially affect {len(dependents)} dependent files\n"
+            impact_summary += "- Will potentially affect {0} dependent files\n".format(len(dependents))
             high_impact_dependents = [d for d in dependents if self._file_roles.get(d) in ['controller', 'service', 'model']]
             if high_impact_dependents:
-                impact_summary += f"- High-impact dependents: {', '.join(high_impact_dependents[:3])}\n"
+                impact_summary += "- High-impact dependents: {0}\n".format(', '.join(high_impact_dependents[:3]))
         
         if dependencies:
-            impact_summary += f"- Depends on {len(dependencies)} other files\n"
+            impact_summary += "- Depends on {0} other files\n".format(len(dependencies))
         
         # Suggest testing strategy
         test_files = [f for f in self._file_cache.keys() if 'test' in f.lower() and os.path.splitext(os.path.basename(file_path))[0].lower() in f.lower()]
         if test_files:
-            impact_summary += f"- Recommended tests to run: {', '.join(test_files)}\n"
+            impact_summary += "- Recommended tests to run: {0}\n".format(', '.join(test_files))
         
         return impact_summary
 

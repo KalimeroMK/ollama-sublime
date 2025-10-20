@@ -45,7 +45,7 @@ class InlineChatManager:
         project_name = os.path.basename(project_root)
         cache_dir = os.path.join(sublime.packages_path(), 'User', 'LaravelWorkshopAI', 'chat_history')
         os.makedirs(cache_dir, exist_ok=True)
-        return os.path.join(cache_dir, f'{project_name}_chat.json')
+        return os.path.join(cache_dir, '{0}_chat.json'.format(project_name))
     
     def _load_history(self):
         """Load chat history from file"""
@@ -60,7 +60,7 @@ class InlineChatManager:
                     self.chat_history = data.get('history', [])
                     self.context_cache = data.get('context', {})
             except Exception as e:
-                print(f"Error loading chat history: {e}")
+                print("Error loading chat history: {0}".format(e))
                 self.chat_history = []
     
     def _save_history(self):
@@ -75,7 +75,7 @@ class InlineChatManager:
             with open(self.history_file, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
         except Exception as e:
-            print(f"Error saving chat history: {e}")
+            print("Error saving chat history: {0}".format(e))
     
     def start_chat(self, view: sublime.View):
         """Start a new chat session in sidebar"""
@@ -198,7 +198,7 @@ class InlineChatManager:
                 sublime.set_timeout(lambda: self.show_input_prompt(), 100)
                 
             except Exception as e:
-                self.chat_history[-1]['content'] = f"❌ Error: {str(e)}"
+                self.chat_history[-1]['content'] = "❌ Error: {0}".format(str(e))
                 sublime.set_timeout(lambda: self._update_chat_display(), 0)
                 self._save_history()
         
@@ -250,29 +250,29 @@ class InlineChatManager:
         
         # Add context
         if context['file']:
-            prompt_parts.append(f"Current file: {context['file']}")
+            prompt_parts.append("Current file: {0}".format(context['file']))
         
         if context['selection']:
-            prompt_parts.append(f"Selected code:\n```\n{context['selection']}\n```")
+            prompt_parts.append("Selected code:\n```\n{0}\n```".format(context['selection']))
         
         if context['laravel_model']:
-            prompt_parts.append(f"\nLaravel Model: {context['laravel_model']}")
+            prompt_parts.append("\nLaravel Model: {0}".format(context['laravel_model']))
             
             if context['laravel_properties']:
-                props_str = ", ".join([f"{p['name']} ({p['type']})" for p in context['laravel_properties'][:10]])
-                prompt_parts.append(f"Model properties: {props_str}")
+                props_str = ", ".join(["{0} ({1})".format(p['name'], p['type']) for p in context['laravel_properties'][:10]])
+                prompt_parts.append("Model properties: {0}".format(props_str))
         
         # Add conversation history (last 5 messages)
         if len(self.chat_history) > 1:
             prompt_parts.append("\nConversation history:")
             for msg in self.chat_history[-6:-1]:  # Exclude current message
                 if msg['role'] == 'user':
-                    prompt_parts.append(f"User: {msg['content']}")
+                    prompt_parts.append("User: {0}".format(msg['content']))
                 else:
-                    prompt_parts.append(f"Assistant: {msg['content'][:100]}...")
+                    prompt_parts.append("Assistant: {0}...".format(msg['content'][:100]))
         
         # Add current message
-        prompt_parts.append(f"\nUser: {user_message}")
+        prompt_parts.append("\nUser: {0}".format(user_message))
         
         return "\n".join(prompt_parts)
     
@@ -323,17 +323,17 @@ Type your question and press Enter!
             timestamp = msg.get('timestamp', '')
             
             if role == 'user':
-                lines.append(f"┌─ 👤 You [{timestamp}]")
+                lines.append("┌─ 👤 You [{0}]".format(timestamp))
                 lines.append("│")
                 for line in content.split('\n'):
-                    lines.append(f"│  {line}")
+                    lines.append("│  {0}".format(line))
                 lines.append("└─")
                 lines.append("")
             else:
-                lines.append(f"┌─ 🤖 AI [{timestamp}]")
+                lines.append("┌─ 🤖 AI [{0}]".format(timestamp))
                 lines.append("│")
                 for line in content.split('\n'):
-                    lines.append(f"│  {line}")
+                    lines.append("│  {0}".format(line))
                 lines.append("└─")
                 lines.append("")
         
@@ -375,21 +375,21 @@ Type your question and press Enter!
             content = html.escape(msg['content'])
             
             if role == 'user':
-                messages_html.append(f"""
+                messages_html.append("""
                 <div class="message user-message">
                     <div class="message-header">👤 You</div>
                     <div class="message-content">{content}</div>
                 </div>
                 """)
             else:
-                messages_html.append(f"""
+                messages_html.append("""
                 <div class="message ai-message">
                     <div class="message-header">🤖 AI</div>
                     <div class="message-content">{content}</div>
                 </div>
                 """)
         
-        return f"""
+        return """
         <body id="ollama-chat">
             <style>
                 body {{
