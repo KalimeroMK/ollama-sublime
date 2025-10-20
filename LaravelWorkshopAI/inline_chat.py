@@ -102,7 +102,7 @@ class InlineChatManager:
         
         # Check if chat tab already exists
         for view in window.views():
-            if view.settings().get('ollama_chat_tab'):
+            if view.settings().get('laravel_workshop_chat_tab'):
                 self.chat_view = view
                 window.focus_view(view)
                 self._update_chat_display()
@@ -111,7 +111,7 @@ class InlineChatManager:
         # Create new chat tab
         self.chat_view = window.new_file()
         self.chat_view.set_name("💬 AI Chat")
-        self.chat_view.settings().set('ollama_chat_tab', True)
+        self.chat_view.settings().set('laravel_workshop_chat_tab', True)
         self.chat_view.settings().set('word_wrap', True)
         self.chat_view.set_scratch(True)
         self.chat_view.set_read_only(True)
@@ -492,7 +492,7 @@ Type your question and press Enter!
 _chat_manager = InlineChatManager()
 
 
-class OllamaInlineChatCommand(sublime_plugin.TextCommand):
+class LaravelWorkshopInlineChatCommand(sublime_plugin.TextCommand):
     """Start inline chat (Cursor/Windsurf-like)"""
     
     def run(self, edit):
@@ -506,7 +506,7 @@ class OllamaInlineChatCommand(sublime_plugin.TextCommand):
             _chat_manager.start_chat(self.view)
 
 
-class OllamaCloseChatCommand(sublime_plugin.TextCommand):
+class LaravelWorkshopCloseChatCommand(sublime_plugin.TextCommand):
     """Close inline chat"""
     
     def run(self, edit):
@@ -514,7 +514,7 @@ class OllamaCloseChatCommand(sublime_plugin.TextCommand):
         _chat_manager.close_chat()
 
 
-class OllamaClearChatHistoryCommand(sublime_plugin.TextCommand):
+class LaravelWorkshopClearChatHistoryCommand(sublime_plugin.TextCommand):
     """Clear chat history"""
     
     def run(self, edit):

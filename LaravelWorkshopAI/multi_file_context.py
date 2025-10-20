@@ -12,7 +12,7 @@ class ContextCache:
     """Advanced caching system for context analysis results."""
     
     def __init__(self, cache_dir=None, max_cache_size=100):
-        self.cache_dir = cache_dir or os.path.expanduser("~/.sublime_ollama_cache")
+        self.cache_dir = cache_dir or os.path.expanduser("~/.sublime_laravel_workshop_cache")
         self.max_cache_size = max_cache_size
         self.cache_index = {}
         self.cache_stats = {"hits": 0, "misses": 0, "size": 0}
@@ -233,7 +233,7 @@ class MultiFileContextAnalyzer:
         folders = view.window().folders()
         project_root = folders[0] if folders else None
         
-        settings = sublime.load_settings("Ollama.sublime-settings")
+        settings = sublime.load_settings("LaravelWorkshopAI.sublime-settings")
         code_file_extensions = settings.get("code_file_extensions", [".php", ".js", ".py", ".blade.php", ".vue"])
         
         analyzer = cls(project_root, code_file_extensions)
@@ -265,7 +265,7 @@ class MultiFileContextAnalyzer:
             return
         
         # Performance settings from configuration
-        settings = sublime.load_settings("Ollama.sublime-settings")
+        settings = sublime.load_settings("LaravelWorkshopAI.sublime-settings")
         self._max_files_to_scan = int(settings.get("max_files_to_scan", 1000))
         self._file_size_limit = int(settings.get("file_size_limit", 1024 * 1024))
         self._scan_timeout = int(settings.get("scan_timeout", 30))

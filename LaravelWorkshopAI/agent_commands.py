@@ -16,7 +16,7 @@ from ui_helpers import UIHelpers, TabManager
 from context_analyzer import ContextAnalyzer
 
 
-class OllamaAgentGenerateFeatureCommand(sublime_plugin.WindowCommand):
+class LaravelWorkshopAgentGenerateFeatureCommand(sublime_plugin.WindowCommand):
     """
     Generate a complete feature using AI agents
     This is the main "agentic" command - like Cursor's "Generate with AI"
@@ -102,7 +102,7 @@ class OllamaAgentGenerateFeatureCommand(sublime_plugin.WindowCommand):
         sublime.set_timeout_async(run_workflow, 0)
 
 
-class OllamaAgentDebugCommand(sublime_plugin.TextCommand):
+class LaravelWorkshopAgentDebugCommand(sublime_plugin.TextCommand):
     """
     Debug selected code using AI agent
     Agent will analyze, find issues, and suggest fixes
@@ -175,7 +175,7 @@ class OllamaAgentDebugCommand(sublime_plugin.TextCommand):
         return UIHelpers.has_selection(self.view)
 
 
-class OllamaAgentRefactorCommand(sublime_plugin.TextCommand):
+class LaravelWorkshopAgentRefactorCommand(sublime_plugin.TextCommand):
     """
     Refactor selected code using AI agent
     Agent will improve code quality and suggest best practices
@@ -239,7 +239,7 @@ class OllamaAgentRefactorCommand(sublime_plugin.TextCommand):
         return UIHelpers.has_selection(self.view)
 
 
-class OllamaAgentCustomTaskCommand(sublime_plugin.WindowCommand):
+class LaravelWorkshopAgentCustomTaskCommand(sublime_plugin.WindowCommand):
     """
     Execute a custom task using AI agents
     User can describe any task and agents will try to complete it
@@ -352,7 +352,7 @@ class OllamaAgentCustomTaskCommand(sublime_plugin.WindowCommand):
         sublime.set_timeout_async(run_task, 0)
 
 
-class OllamaAgentChatCommand(sublime_plugin.WindowCommand):
+class LaravelWorkshopAgentChatCommand(sublime_plugin.WindowCommand):
     """
     Interactive chat with AI agent
     Maintains conversation history and context

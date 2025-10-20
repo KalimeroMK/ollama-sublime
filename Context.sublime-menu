@@ -8,47 +8,47 @@
                 "children": [
                     {
                         "caption": "Generate Feature...",
-                        "command": "ollama_agent_generate_feature"
+                        "command": "laravel_workshop_agent_generate_feature"
                     },
                     {
                         "caption": "Debug Code",
-                        "command": "ollama_agent_debug"
+                        "command": "laravel_workshop_agent_debug"
                     },
                     {
                         "caption": "Refactor Code",
-                        "command": "ollama_agent_refactor"
+                        "command": "laravel_workshop_agent_refactor"
                     },
                     {
                         "caption": "Custom Task...",
-                        "command": "ollama_agent_custom_task"
+                        "command": "laravel_workshop_agent_custom_task"
                     },
                     {
                         "caption": "Chat with Agent...",
-                        "command": "ollama_agent_chat"
+                        "command": "laravel_workshop_agent_chat"
                     }
                 ]
             },
             { "caption": "-" },
             {
                 "caption": "Explain Selection",
-                "command": "ollama_explain_selection"
+                "command": "laravel_workshop_explain_selection"
             },
             {
                 "caption": "Optimize Selection",
-                "command": "ollama_optimize_selection"
+                "command": "laravel_workshop_optimize_selection"
             },
             {
                 "caption": "Suggest Refactoring...",
-                "command": "ollama_selection_prompt"
+                "command": "laravel_workshop_selection_prompt"
             },
             {
                 "caption": "Find Code Smells",
-                "command": "ollama_code_smell_finder"
+                "command": "laravel_workshop_code_smell_finder"
             },
             { "caption": "-" },
             {
                 "caption": "PHP/Laravel Completion",
-                "command": "ollama_php_completion"
+                "command": "laravel_workshop_php_completion"
             }
         ]
     }

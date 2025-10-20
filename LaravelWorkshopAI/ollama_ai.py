@@ -19,7 +19,7 @@ from response_processor import ResponseProcessor, StreamingResponseHandler
 # BASE CLASSES
 # ============================================================================
 
-class OllamaContextCommandBase(sublime_plugin.TextCommand):
+class LaravelWorkshopContextCommandBase(sublime_plugin.TextCommand):
     """Base class for commands that work with current cursor position or selection"""
     
     def get_api_client(self):
@@ -50,7 +50,7 @@ class OllamaContextCommandBase(sublime_plugin.TextCommand):
 # PHP/LARAVEL COMPLETION (Specialized feature)
 # ============================================================================
 
-class OllamaPhpCompletionCommand(OllamaContextCommandBase):
+class LaravelWorkshopPhpCompletionCommand(LaravelWorkshopContextCommandBase):
     """AI-powered PHP/Laravel code completion - specialized autocomplete"""
     
     def __init__(self):
@@ -264,7 +264,7 @@ Provide 5 {framework}-specific completions. Return only code, one per line."""
 # CREATE FILE (Utility command)
 # ============================================================================
 
-class OllamaCreateFileCommand(sublime_plugin.WindowCommand):
+class LaravelWorkshopCreateFileCommand(sublime_plugin.WindowCommand):
     """Create a new file based on a prompt"""
     
     def run(self):
@@ -349,7 +349,7 @@ Generate only the file content, no explanations."""
 # CACHE MANAGER (Utility command)
 # ============================================================================
 
-class OllamaCacheManagerCommand(sublime_plugin.WindowCommand):
+class LaravelWorkshopCacheManagerCommand(sublime_plugin.WindowCommand):
     """Manage Laravel Workshop AI cache"""
     
     def run(self):
@@ -400,11 +400,11 @@ class OllamaCacheManagerCommand(sublime_plugin.WindowCommand):
 # SETTINGS (Utility command)
 # ============================================================================
 
-class OllamaEditSettingsCommand(sublime_plugin.WindowCommand):
+class LaravelWorkshopEditSettingsCommand(sublime_plugin.WindowCommand):
     """Opens the Laravel Workshop AI settings file"""
     
     def run(self):
-        settings_file = "Packages/User/Ollama.sublime-settings"
+        settings_file = "Packages/User/LaravelWorkshopAI.sublime-settings"
         self.window.run_command("open_file", {"file": "${packages}/" + settings_file})
 
 
@@ -412,7 +412,7 @@ class OllamaEditSettingsCommand(sublime_plugin.WindowCommand):
 # INLINE CHAT (Cursor-like feature)
 # ============================================================================
 
-class OllamaAiPromptCommand(sublime_plugin.WindowCommand):
+class LaravelWorkshopAiPromptCommand(sublime_plugin.WindowCommand):
     """Cursor-like inline chat interface"""
     
     def run(self):
@@ -464,7 +464,7 @@ class OllamaAiPromptCommand(sublime_plugin.WindowCommand):
 # SMART COMPLETION (Cursor-like feature)
 # ============================================================================
 
-class OllamaAiSmartCompletionCommand(OllamaContextCommandBase):
+class LaravelWorkshopAiSmartCompletionCommand(LaravelWorkshopContextCommandBase):
     """Cursor-like smart code completion"""
     
     def run(self, edit):

@@ -22,7 +22,7 @@ class ContextAnalyzer:
         folders = view.window().folders()
         project_root = folders[0] if folders else None
         
-        settings = sublime.load_settings("Ollama.sublime-settings")
+        settings = sublime.load_settings("LaravelWorkshopAI.sublime-settings")
         code_file_extensions = settings.get("code_file_extensions", [".php", ".js", ".py"])
         
         return cls(project_root, code_file_extensions)
@@ -128,7 +128,7 @@ class ContextAnalyzer:
         
         # Check if advanced context should be used
         if use_advanced_context is None:
-            settings = sublime.load_settings("Ollama.sublime-settings")
+            settings = sublime.load_settings("LaravelWorkshopAI.sublime-settings")
             use_advanced_context = settings.get("use_advanced_context", True)
         
         if use_advanced_context and current_file_path:

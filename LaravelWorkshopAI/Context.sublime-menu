@@ -5,50 +5,50 @@
         "children": [
             {
                 "caption": "Explain Selection",
-                "command": "ollama_explain_selection"
+                "command": "laravel_workshop_explain_selection"
             },
             {
                 "caption": "Optimize Selection",
-                "command": "ollama_optimize_selection"
+                "command": "laravel_workshop_optimize_selection"
             },
             {
                 "caption": "Find Code Smells...",
-                "command": "ollama_code_smell_finder"
+                "command": "laravel_workshop_code_smell_finder"
             },
             {
                 "caption": "Suggest Refactoring...",
-                "command": "ollama_inline_refactor"
+                "command": "laravel_workshop_inline_refactor"
             },
             {
                 "caption": "Custom Prompt for Selection...",
-                "command": "ollama_selection_prompt"
+                "command": "laravel_workshop_selection_prompt"
             },
             {
                 "caption": "Show Related Files",
-                "command": "ollama_related_files"
+                "command": "laravel_workshop_related_files"
             },
             {
                 "caption": "Analyze Change Impact...",
-                "command": "ollama_impact_analysis"
+                "command": "laravel_workshop_impact_analysis"
             },
             {
                 "caption": "-"
             },
             {
                 "caption": "Cache Management",
-                "command": "ollama_cache_manager"
+                "command": "laravel_workshop_cache_manager"
             },
             {
                 "caption": "Inline Chat",
-                "command": "ollama_ai_prompt"
+                "command": "laravel_workshop_ai_prompt"
             },
             {
                 "caption": "Smart Completion",
-                "command": "ollama_ai_smart_completion"
+                "command": "laravel_workshop_ai_smart_completion"
             },
             {
                 "caption": "PHP/Laravel Completion",
-                "command": "ollama_php_completion"
+                "command": "laravel_workshop_php_completion"
             }
         ]
     }

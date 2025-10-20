@@ -1,32 +1,32 @@
 [
     {
         "keys": ["cmd+shift+c"],
-        "command": "ollama_cache_manager"
+        "command": "laravel_workshop_cache_manager"
     },
     {
         "keys": ["ctrl+shift+o"],
-        "command": "ollama_prompt"
+        "command": "laravel_workshop_prompt"
     },
     {
         "keys": ["cmd+k"],
-        "command": "ollama_inline_chat",
+        "command": "laravel_workshop_inline_chat",
         "context": [
             { "key": "selector", "operator": "equal", "operand": "source.php" }
         ]
     },
     {
         "keys": ["cmd+shift+k"],
-        "command": "ollama_clear_chat_history",
+        "command": "laravel_workshop_clear_chat_history",
         "context": [
             { "key": "selector", "operator": "equal", "operand": "source.php" }
         ]
     },
     {
         "keys": ["cmd+shift+i"],
-        "command": "ollama_ai_prompt"
+        "command": "laravel_workshop_ai_prompt"
     },
     {
         "keys": ["cmd+shift+space"],
-        "command": "ollama_ai_smart_completion"
+        "command": "laravel_workshop_ai_smart_completion"
     }
 ]

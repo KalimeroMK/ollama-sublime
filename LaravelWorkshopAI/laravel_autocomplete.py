@@ -11,7 +11,7 @@ from typing import List, Tuple
 from laravel_intelligence import get_laravel_analyzer, LaravelContextDetector
 
 
-class OllamaLaravelAutocompleteCommand(sublime_plugin.EventListener):
+class LaravelWorkshopLaravelAutocompleteCommand(sublime_plugin.EventListener):
     """Provides Laravel-aware autocomplete"""
     
     def __init__(self):
@@ -131,7 +131,7 @@ class OllamaLaravelAutocompleteCommand(sublime_plugin.EventListener):
         return completions
 
 
-class OllamaShowModelInfoCommand(sublime_plugin.TextCommand):
+class LaravelWorkshopShowModelInfoCommand(sublime_plugin.TextCommand):
     """Show model information in popup"""
     
     def run(self, edit):
@@ -225,7 +225,7 @@ class OllamaShowModelInfoCommand(sublime_plugin.TextCommand):
         return self.view.match_selector(0, "source.php")
 
 
-class OllamaGenerateIdeHelperCommand(sublime_plugin.WindowCommand):
+class LaravelWorkshopGenerateIdeHelperCommand(sublime_plugin.WindowCommand):
     """Generate IDE helper for Laravel models"""
     
     def run(self):

@@ -9,7 +9,7 @@ class RefactoringOverlay:
         self.view = view
         self.original_text = original_text
         self.suggested_text = suggested_text
-        self.overlay_key = f"ollama_refactor_{id(self)}"
+        self.overlay_key = f"laravel_workshop_refactor_{id(self)}"
         self.is_active = False
         
     def show(self):

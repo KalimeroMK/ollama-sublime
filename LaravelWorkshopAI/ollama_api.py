@@ -8,7 +8,7 @@ import urllib.error
 from .universal_api_client import create_universal_api_client
 
 
-class OllamaApiClient:
+class LaravelWorkshopApiClient:
     """
     Handles all API communication with Ollama server.
     Centralizes request/response logic to avoid code duplication.
@@ -156,7 +156,7 @@ class OllamaApiClient:
 
 def create_api_client_from_settings():
     """Factory function to create API client from Sublime settings."""
-    settings = sublime.load_settings("Ollama.sublime-settings")
+    settings = sublime.load_settings("LaravelWorkshopAI.sublime-settings")
     
     # Check if using new universal API client
     provider = settings.get("ai_provider", None)

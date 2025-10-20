@@ -2,70 +2,70 @@
     // AI Agent Commands (Primary)
     {
         "caption": "Laravel Workshop AI Agent: Generate Feature",
-        "command": "ollama_agent_generate_feature"
+        "command": "laravel_workshop_agent_generate_feature"
     },
     {
         "caption": "Laravel Workshop AI Agent: Debug Code",
-        "command": "ollama_agent_debug"
+        "command": "laravel_workshop_agent_debug"
     },
     {
         "caption": "Laravel Workshop AI Agent: Refactor Code",
-        "command": "ollama_agent_refactor"
+        "command": "laravel_workshop_agent_refactor"
     },
     {
         "caption": "Laravel Workshop AI Agent: Custom Task",
-        "command": "ollama_agent_custom_task"
+        "command": "laravel_workshop_agent_custom_task"
     },
     {
         "caption": "Laravel Workshop AI Agent: Chat",
-        "command": "ollama_agent_chat"
+        "command": "laravel_workshop_agent_chat"
     },
     
     // Inline Chat (NEW!)
     {
         "caption": "Laravel Workshop AI: Inline Chat (Cursor-like)",
-        "command": "ollama_inline_chat"
+        "command": "laravel_workshop_inline_chat"
     },
     {
         "caption": "Laravel Workshop AI: Clear Chat History",
-        "command": "ollama_clear_chat_history"
+        "command": "laravel_workshop_clear_chat_history"
     },
     {
         "caption": "Laravel Workshop AI: Close Chat",
-        "command": "ollama_close_chat"
+        "command": "laravel_workshop_close_chat"
     },
     
     // Laravel Intelligence (NEW!)
     {
         "caption": "Laravel Workshop AI: Show Model Info",
-        "command": "ollama_show_model_info"
+        "command": "laravel_workshop_show_model_info"
     },
     {
         "caption": "Laravel Workshop AI: Generate IDE Helper",
-        "command": "ollama_generate_ide_helper"
+        "command": "laravel_workshop_generate_ide_helper"
     },
     
     // Specialized Commands
     {
         "caption": "Laravel Workshop AI: PHP/Laravel Completion",
-        "command": "ollama_php_completion"
+        "command": "laravel_workshop_php_completion"
     },
     {
         "caption": "Laravel Workshop AI: Create File",
-        "command": "ollama_create_file"
+        "command": "laravel_workshop_create_file"
     },
     {
         "caption": "Laravel Workshop AI: Smart Completion",
-        "command": "ollama_ai_smart_completion"
+        "command": "laravel_workshop_ai_smart_completion"
     },
     
     // Utility
     {
         "caption": "Laravel Workshop AI: Cache Manager",
-        "command": "ollama_cache_manager"
+        "command": "laravel_workshop_cache_manager"
     },
     {
         "caption": "Laravel Workshop AI: Settings",
-        "command": "ollama_edit_settings"
+        "command": "laravel_workshop_edit_settings"
     }
 ]

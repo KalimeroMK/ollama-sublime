@@ -18,7 +18,7 @@ class UniversalAPIClient:
     
     def __init__(self, provider: str = "ollama"):
         self.provider = provider
-        self.settings = sublime.load_settings("Ollama.sublime-settings")
+        self.settings = sublime.load_settings("LaravelWorkshopAI.sublime-settings")
         self._load_config()
     
     def _load_config(self):
@@ -43,7 +43,7 @@ class UniversalAPIClient:
             self.max_tokens = provider_config.get("max_tokens", 4000)
             
             if not self.api_key:
-                raise ValueError("OpenAI API key is required. Set it in Ollama.sublime-settings")
+                raise ValueError("OpenAI API key is required. Set it in LaravelWorkshopAI.sublime-settings")
             
             self.headers = {
                 "Content-Type": "application/json",
@@ -59,7 +59,7 @@ class UniversalAPIClient:
             self.max_tokens = provider_config.get("max_tokens", 8000)
             
             if not self.api_key:
-                raise ValueError("Gemini API key is required. Set it in Ollama.sublime-settings")
+                raise ValueError("Gemini API key is required. Set it in LaravelWorkshopAI.sublime-settings")
             
             # Gemini uses API key in URL, not headers
             self.base_url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}"
@@ -297,7 +297,7 @@ class UniversalAPIClient:
 
 def create_universal_api_client() -> UniversalAPIClient:
     """Create API client based on settings"""
-    settings = sublime.load_settings("Ollama.sublime-settings")
+    settings = sublime.load_settings("LaravelWorkshopAI.sublime-settings")
     provider = settings.get("ai_provider", "ollama")
     
     try:
