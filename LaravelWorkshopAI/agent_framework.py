@@ -30,9 +30,9 @@ class Tool:
     name: str
     description: str
     function: Callable
-    parameters: Dict[str, Any] = field(default_factory=dict)
+    parameters, Any] = field(default_factory=dict)
     
-    def execute(self, **kwargs) -> Any:
+    def execute(self, **kwargs):
         """Execute the tool with given parameters"""
         return self.function(**kwargs)
 
@@ -42,8 +42,8 @@ class AgentMessage:
     """Message in agent conversation"""
     role: str
     content: str
-    timestamp: float = field(default_factory=time.time)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    timestamp = field(default_factory=time.time)
+    metadata, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -51,10 +51,10 @@ class Task:
     """Represents a task for an agent to complete"""
     description: str
     agent_role: AgentRole
-    context: Dict[str, Any] = field(default_factory=dict)
-    dependencies: List[str] = field(default_factory=list)
-    output: Optional[str] = None
-    status: str = "pending"  # pending, in_progress, completed, failed
+    context, Any] = field(default_factory=dict)
+    dependencies = field(default_factory=list)
+    output = None
+    status = "pending"  # pending, in_progress, completed, failed
 
 
 class Agent:
@@ -65,13 +65,13 @@ class Agent:
     
     def __init__(
         self,
-        role: AgentRole,
-        goal: str,
-        backstory: str,
+        role,
+        goal,
+        backstory,
         api_client,
-        tools: List[Tool] = None,
-        memory: List[AgentMessage] = None,
-        project_root: str = None
+        tools = None,
+        memory = None,
+        project_root = None
     ):
         self.role = role
         self.goal = goal
@@ -87,7 +87,7 @@ class Agent:
         if project_root:
             self._analyze_project_structure()
         
-    def get_system_prompt(self) -> str:
+    def get_system_prompt(self):
         """Generate system prompt based on agent role and capabilities"""
         tools_desc = "\n".join([
             f"- {tool.name}: {tool.description}" 
@@ -112,7 +112,7 @@ When you have completed the task, respond with:
 Always think step-by-step and explain your reasoning.
 """
     
-    def execute_task(self, task: Task) -> str:
+    def execute_task(self, task):
         """Execute a task using the agent's capabilities"""
         task.status = "in_progress"
         
@@ -156,8 +156,7 @@ Always think step-by-step and explain your reasoning.
             
             # Check if agent wants to use a tool
             tool_call = self._parse_tool_call(response)
-            if tool_call:
-                tool_result = self._execute_tool(tool_call)
+            if tool_call = self._execute_tool(tool_call)
                 self.memory.append(AgentMessage(
                     role="user",
                     content=f"Tool result: {tool_result}"
@@ -173,7 +172,7 @@ Always think step-by-step and explain your reasoning.
         task.status = "failed"
         return "Error: Max iterations reached without completion"
     
-    def _build_task_prompt(self, task: Task) -> str:
+    def _build_task_prompt(self, task):
         """Build comprehensive prompt for task"""
         context_str = "\n".join([
             f"- {key}: {value}" 
@@ -193,14 +192,13 @@ Please complete this task step by step. Use available tools if needed.
 IMPORTANT: Respect the detected project structure and patterns!
 """
     
-    def _parse_tool_call(self, response: str) -> Optional[Dict]:
+    def _parse_tool_call(self, response):
         """Parse tool call from agent response"""
         try:
             # Look for JSON in response
             start = response.find('{')
             end = response.rfind('}') + 1
-            if start != -1 and end > start:
-                json_str = response[start:end]
+            if start != -1 and end > start = response[start:end]
                 data = json.loads(json_str)
                 if "tool" in data:
                     return data
@@ -208,15 +206,14 @@ IMPORTANT: Respect the detected project structure and patterns!
             pass
         return None
     
-    def _execute_tool(self, tool_call: Dict) -> str:
+    def _execute_tool(self, tool_call):
         """Execute a tool based on parsed call"""
         tool_name = tool_call.get("tool")
         parameters = tool_call.get("parameters", {})
         
         for tool in self.tools:
             if tool.name == tool_name:
-                try:
-                    result = tool.execute(**parameters)
+                try = tool.execute(**parameters)
                     return str(result)
                 except Exception as e:
                     return f"Error executing tool {tool_name}: {str(e)}"
@@ -231,7 +228,7 @@ IMPORTANT: Respect the detected project structure and patterns!
             print(f"Error analyzing project structure: {e}")
             self.project_structure = None
     
-    def _get_structure_context(self) -> str:
+    def _get_structure_context(self):
         """Get project structure context for prompts"""
         if not self.project_structure:
             return ""
@@ -274,13 +271,11 @@ IMPORTANT: Respect the detected project structure and patterns!
         
         return "\n".join(context_parts)
     
-    def _is_task_completed(self, response: str) -> bool:
+    def _is_task_completed(self, response):
         """Check if agent indicates task completion"""
-        try:
-            start = response.find('{')
+        try = response.find('{')
             end = response.rfind('}') + 1
-            if start != -1 and end > start:
-                json_str = response[start:end]
+            if start != -1 and end > start = response[start:end]
                 data = json.loads(json_str)
                 return data.get("status") == "completed"
         except json.JSONDecodeError:
@@ -295,13 +290,11 @@ IMPORTANT: Respect the detected project structure and patterns!
         ]
         return any(keyword in response.lower() for keyword in completion_keywords)
     
-    def _extract_result(self, response: str) -> str:
+    def _extract_result(self, response):
         """Extract final result from agent response"""
-        try:
-            start = response.find('{')
+        try = response.find('{')
             end = response.rfind('}') + 1
-            if start != -1 and end > start:
-                json_str = response[start:end]
+            if start != -1 and end > start = response[start:end]
                 data = json.loads(json_str)
                 if "result" in data:
                     return data["result"]
@@ -318,12 +311,12 @@ class AgentCrew:
     Similar to CrewAI's Crew concept
     """
     
-    def __init__(self, agents: List[Agent], tasks: List[Task]):
+    def __init__(self, agents, tasks):
         self.agents = agents
         self.tasks = tasks
         self.execution_log = []
         
-    def kickoff(self) -> Dict[str, Any]:
+    def kickoff(self):
         """Start the crew execution"""
         results = {}
         
@@ -347,7 +340,7 @@ class AgentCrew:
             "tasks": self.tasks
         }
     
-    def _find_agent_for_task(self, task: Task) -> Optional[Agent]:
+    def _find_agent_for_task(self, task):
         """Find appropriate agent for a task"""
         for agent in self.agents:
             if agent.role == task.agent_role:
@@ -366,10 +359,10 @@ class AgentWorkflow:
         
     def create_feature_from_description(
         self,
-        description: str,
-        project_context: Dict[str, Any],
-        tools: List[Tool] = None
-    ) -> Dict[str, Any]:
+        description,
+        project_context,
+        tools = None
+    ):
         """
         Create a complete feature from description using multiple agents
         This is the main "agentic" workflow
@@ -431,11 +424,11 @@ class AgentWorkflow:
     
     def debug_code(
         self,
-        code: str,
-        error_message: str,
-        context: Dict[str, Any],
-        tools: List[Tool] = None
-    ) -> Dict[str, Any]:
+        code,
+        error_message,
+        context,
+        tools = None
+    ):
         """Debug code using specialized debugger agent"""
         
         debugger = Agent(
@@ -457,10 +450,10 @@ class AgentWorkflow:
     
     def refactor_code(
         self,
-        code: str,
-        context: Dict[str, Any],
-        tools: List[Tool] = None
-    ) -> Dict[str, Any]:
+        code,
+        context,
+        tools = None
+    ):
         """Refactor code using specialized refactorer agent"""
         
         refactorer = Agent(
@@ -482,6 +475,6 @@ class AgentWorkflow:
 
 
 # Factory function for easy integration
-def create_agent_workflow(api_client) -> AgentWorkflow:
+def create_agent_workflow(api_client):
     """Create an agent workflow instance"""
     return AgentWorkflow(api_client)

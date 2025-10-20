@@ -14,7 +14,7 @@ class FileSystemTools:
     """Tools for file system operations"""
     
     @staticmethod
-    def read_file(file_path: str) -> str:
+    def read_file(file_path):
         """Read contents of a file"""
         try:
             if not os.path.isabs(file_path):
@@ -29,7 +29,7 @@ class FileSystemTools:
             return f"Error reading file: {str(e)}"
     
     @staticmethod
-    def write_file(file_path: str, content: str) -> str:
+    def write_file(file_path, content):
         """Write content to a file"""
         try:
             if not os.path.isabs(file_path):
@@ -48,7 +48,7 @@ class FileSystemTools:
             return f"Error writing file: {str(e)}"
     
     @staticmethod
-    def list_files(directory: str, pattern: str = "*") -> str:
+    def list_files(directory, pattern = "*"):
         """List files in a directory"""
         try:
             if not os.path.isabs(directory):
@@ -63,7 +63,7 @@ class FileSystemTools:
             return f"Error listing files: {str(e)}"
     
     @staticmethod
-    def file_exists(file_path: str) -> str:
+    def file_exists(file_path):
         """Check if a file exists"""
         try:
             if not os.path.isabs(file_path):
@@ -81,10 +81,9 @@ class CodeAnalysisTools:
     """Tools for analyzing code"""
     
     @staticmethod
-    def find_function(file_path: str, function_name: str) -> str:
+    def find_function(file_path, function_name):
         """Find a function definition in a file"""
-        try:
-            content = FileSystemTools.read_file(file_path)
+        try = FileSystemTools.read_file(file_path)
             lines = content.split('\n')
             
             for i, line in enumerate(lines):
@@ -92,17 +91,16 @@ class CodeAnalysisTools:
                     # Get function and some context
                     start = max(0, i - 2)
                     end = min(len(lines), i + 20)
-                    return "\n".join(lines[start:end])
+                    return "\n".join(lines[start)
             
             return f"Function '{function_name}' not found in {file_path}"
         except Exception as e:
             return f"Error finding function: {str(e)}"
     
     @staticmethod
-    def find_class(file_path: str, class_name: str) -> str:
+    def find_class(file_path, class_name):
         """Find a class definition in a file"""
-        try:
-            content = FileSystemTools.read_file(file_path)
+        try = FileSystemTools.read_file(file_path)
             lines = content.split('\n')
             
             for i, line in enumerate(lines):
@@ -110,22 +108,20 @@ class CodeAnalysisTools:
                     # Get class and some context
                     start = max(0, i - 2)
                     end = min(len(lines), i + 30)
-                    return "\n".join(lines[start:end])
+                    return "\n".join(lines[start)
             
             return f"Class '{class_name}' not found in {file_path}"
         except Exception as e:
             return f"Error finding class: {str(e)}"
     
     @staticmethod
-    def get_imports(file_path: str) -> str:
+    def get_imports(file_path):
         """Get all imports from a file"""
-        try:
-            content = FileSystemTools.read_file(file_path)
+        try = FileSystemTools.read_file(file_path)
             lines = content.split('\n')
             
             imports = []
-            for line in lines:
-                line = line.strip()
+            for line in lines = line.strip()
                 if line.startswith('import ') or line.startswith('from ') or line.startswith('use '):
                     imports.append(line)
             
@@ -138,10 +134,9 @@ class ProjectTools:
     """Tools for project-level operations"""
     
     @staticmethod
-    def get_project_structure() -> str:
+    def get_project_structure():
         """Get the project directory structure"""
-        try:
-            window = sublime.active_window()
+        try = sublime.active_window()
             if not window or not window.folders():
                 return "No project folder open"
             
@@ -169,10 +164,9 @@ class ProjectTools:
             return f"Error getting project structure: {str(e)}"
     
     @staticmethod
-    def find_files_by_name(name_pattern: str) -> str:
+    def find_files_by_name(name_pattern):
         """Find files matching a pattern"""
-        try:
-            window = sublime.active_window()
+        try = sublime.active_window()
             if not window or not window.folders():
                 return "No project folder open"
             
@@ -190,10 +184,9 @@ class ProjectTools:
             return f"Error finding files: {str(e)}"
     
     @staticmethod
-    def get_git_status() -> str:
+    def get_git_status():
         """Get git status of the project"""
-        try:
-            window = sublime.active_window()
+        try = sublime.active_window()
             if not window or not window.folders():
                 return "No project folder open"
             
@@ -219,10 +212,9 @@ class LaravelTools:
     """Laravel-specific tools"""
     
     @staticmethod
-    def run_artisan_command(command: str) -> str:
+    def run_artisan_command(command):
         """Run a Laravel artisan command"""
-        try:
-            window = sublime.active_window()
+        try = sublime.active_window()
             if not window or not window.folders():
                 return "No project folder open"
             
@@ -246,15 +238,14 @@ class LaravelTools:
             return f"Error running artisan command: {str(e)}"
     
     @staticmethod
-    def get_routes() -> str:
+    def get_routes():
         """Get Laravel routes"""
         return LaravelTools.run_artisan_command('route:list')
     
     @staticmethod
-    def get_models() -> str:
+    def get_models():
         """List Laravel models"""
-        try:
-            window = sublime.active_window()
+        try = sublime.active_window()
             if not window or not window.folders():
                 return "No project folder open"
             
@@ -274,10 +265,9 @@ class TestingTools:
     """Tools for running tests"""
     
     @staticmethod
-    def run_phpunit(test_path: str = "") -> str:
+    def run_phpunit(test_path = ""):
         """Run PHPUnit tests"""
-        try:
-            window = sublime.active_window()
+        try = sublime.active_window()
             if not window or not window.folders():
                 return "No project folder open"
             
@@ -300,10 +290,9 @@ class TestingTools:
             return f"Error running tests: {str(e)}"
     
     @staticmethod
-    def run_pest(test_path: str = "") -> str:
+    def run_pest(test_path = ""):
         """Run Pest tests"""
-        try:
-            window = sublime.active_window()
+        try = sublime.active_window()
             if not window or not window.folders():
                 return "No project folder open"
             
@@ -326,7 +315,7 @@ class TestingTools:
             return f"Error running tests: {str(e)}"
 
 
-def create_default_tools() -> List[Tool]:
+def create_default_tools():
     """Create a list of default tools for agents"""
     return [
         # File System Tools

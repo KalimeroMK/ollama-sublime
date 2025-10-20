@@ -15,12 +15,12 @@ from typing import List, Dict, Any, Optional, Tuple
 class LaravelModelAnalyzer:
     """Analyzes Laravel models to extract properties, relationships, and methods"""
     
-    def __init__(self, project_root: str):
+    def __init__(self, project_root):
         self.project_root = project_root
         self.models_cache = {}
         self.ide_helper_cache = None
         
-    def get_models_directory(self) -> Optional[str]:
+    def get_models_directory(self):
         """Get the models directory path"""
         possible_paths = [
             os.path.join(self.project_root, 'app', 'Models'),
@@ -32,7 +32,7 @@ class LaravelModelAnalyzer:
                 return path
         return None
     
-    def find_all_models(self) -> List[str]:
+    def find_all_models(self):
         """Find all Laravel model files"""
         models_dir = self.get_models_directory()
         if not models_dir:
@@ -48,23 +48,21 @@ class LaravelModelAnalyzer:
         
         return models
     
-    def _is_model_file(self, file_path: str) -> bool:
+    def _is_model_file(self, file_path):
         """Check if file is a Laravel model"""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                content = f.read(1000)  # Read first 1000 chars
+            with open(file_path, 'r', encoding='utf-8') as f = f.read(1000)  # Read first 1000 chars
                 return 'extends Model' in content or 'extends Authenticatable' in content
         except:
             return False
     
-    def analyze_model(self, model_path: str) -> Dict[str, Any]:
+    def analyze_model(self, model_path):
         """Analyze a model file and extract all information"""
         if model_path in self.models_cache:
             return self.models_cache[model_path]
         
         try:
-            with open(model_path, 'r', encoding='utf-8') as f:
-                content = f.read()
+            with open(model_path, 'r', encoding='utf-8') as f = f.read()
             
             model_info = {
                 'name': self._extract_class_name(content),
@@ -87,56 +85,51 @@ class LaravelModelAnalyzer:
             print(f"Error analyzing model {model_path}: {e}")
             return {}
     
-    def _extract_class_name(self, content: str) -> str:
+    def _extract_class_name(self, content):
         """Extract class name from model"""
         match = re.search(r'class\s+(\w+)\s+extends', content)
         return match.group(1) if match else ''
     
-    def _extract_table_name(self, content: str) -> Optional[str]:
+    def _extract_table_name(self, content):
         """Extract table name"""
         match = re.search(r'\$table\s*=\s*[\'"](\w+)[\'"]', content)
         return match.group(1) if match else None
     
-    def _extract_fillable(self, content: str) -> List[str]:
+    def _extract_fillable(self, content):
         """Extract fillable properties"""
         match = re.search(r'\$fillable\s*=\s*\[(.*?)\]', content, re.DOTALL)
-        if match:
-            items = match.group(1)
+        if match = match.group(1)
             return [item.strip().strip('\'"') for item in items.split(',') if item.strip()]
         return []
     
-    def _extract_guarded(self, content: str) -> List[str]:
+    def _extract_guarded(self, content):
         """Extract guarded properties"""
         match = re.search(r'\$guarded\s*=\s*\[(.*?)\]', content, re.DOTALL)
-        if match:
-            items = match.group(1)
+        if match = match.group(1)
             return [item.strip().strip('\'"') for item in items.split(',') if item.strip()]
         return []
     
-    def _extract_casts(self, content: str) -> Dict[str, str]:
+    def _extract_casts(self, content):
         """Extract casts"""
         match = re.search(r'\$casts\s*=\s*\[(.*?)\]', content, re.DOTALL)
-        if match:
-            items = match.group(1)
+        if match = match.group(1)
             casts = {}
             for item in items.split(','):
-                if '=>' in item:
-                    key, value = item.split('=>')
+                if '=>' in item, value = item.split('=>')
                     key = key.strip().strip('\'"')
                     value = value.strip().strip('\'"')
                     casts[key] = value
             return casts
         return {}
     
-    def _extract_dates(self, content: str) -> List[str]:
+    def _extract_dates(self, content):
         """Extract date fields"""
         match = re.search(r'\$dates\s*=\s*\[(.*?)\]', content, re.DOTALL)
-        if match:
-            items = match.group(1)
+        if match = match.group(1)
             return [item.strip().strip('\'"') for item in items.split(',') if item.strip()]
         return []
     
-    def _extract_relationships(self, content: str) -> List[Dict[str, str]]:
+    def _extract_relationships(self, content):
         """Extract relationships (hasMany, belongsTo, etc.)"""
         relationships = []
         
@@ -150,10 +143,8 @@ class LaravelModelAnalyzer:
             (r'public\s+function\s+(\w+)\s*\([^)]*\)\s*(?::\s*\w+)?\s*\{\s*return\s+\$this->morphTo\(([^)]*)\)', 'morphTo'),
         ]
         
-        for pattern, rel_type in patterns:
-            matches = re.finditer(pattern, content)
-            for match in matches:
-                method_name = match.group(1)
+        for pattern, rel_type in patterns = re.finditer(pattern, content)
+            for match in matches = match.group(1)
                 related = match.group(2).split(',')[0].strip().strip('\'"').replace('::', '').replace('class', '')
                 relationships.append({
                     'name': method_name,
@@ -163,26 +154,26 @@ class LaravelModelAnalyzer:
         
         return relationships
     
-    def _extract_scopes(self, content: str) -> List[str]:
+    def _extract_scopes(self, content):
         """Extract query scopes"""
         matches = re.finditer(r'public\s+function\s+scope(\w+)', content)
         return [match.group(1) for match in matches]
     
-    def _extract_accessors(self, content: str) -> List[str]:
+    def _extract_accessors(self, content):
         """Extract accessors (get...Attribute)"""
         matches = re.finditer(r'public\s+function\s+get(\w+)Attribute', content)
         return [self._snake_case(match.group(1)) for match in matches]
     
-    def _extract_mutators(self, content: str) -> List[str]:
+    def _extract_mutators(self, content):
         """Extract mutators (set...Attribute)"""
         matches = re.finditer(r'public\s+function\s+set(\w+)Attribute', content)
         return [self._snake_case(match.group(1)) for match in matches]
     
-    def _snake_case(self, text: str) -> str:
+    def _snake_case(self, text):
         """Convert PascalCase to snake_case"""
         return re.sub(r'(?<!^)(?=[A-Z])', '_', text).lower()
     
-    def load_ide_helper(self) -> Dict[str, Any]:
+    def load_ide_helper(self):
         """Load _ide_helper_models.php if exists"""
         if self.ide_helper_cache is not None:
             return self.ide_helper_cache
@@ -193,8 +184,7 @@ class LaravelModelAnalyzer:
             return {}
         
         try:
-            with open(ide_helper_path, 'r', encoding='utf-8') as f:
-                content = f.read()
+            with open(ide_helper_path, 'r', encoding='utf-8') as f = f.read()
             
             # Parse IDE helper annotations
             models_data = {}
@@ -204,16 +194,12 @@ class LaravelModelAnalyzer:
             for line in content.split('\n'):
                 # Detect class
                 class_match = re.search(r'class\s+(\w+)', line)
-                if class_match:
-                    current_class = class_match.group(1)
-                    if current_class not in models_data:
-                        models_data[current_class] = {'properties': [], 'relationships': []}
+                if class_match = class_match.group(1)
+                    if current_class not in models_data = {'properties': [], 'relationships': []}
                 
                 # Detect properties
-                if current_class and '@property' in line:
-                    prop_match = re.search(r'@property(?:-read)?\s+([^\s]+)\s+\$(\w+)', line)
-                    if prop_match:
-                        prop_type = prop_match.group(1)
+                if current_class and '@property' in line = re.search(r'@property(?:-read)?\s+([^\s]+)\s+\$(\w+)', line)
+                    if prop_match = prop_match.group(1)
                         prop_name = prop_match.group(2)
                         models_data[current_class]['properties'].append({
                             'name': prop_name,
@@ -228,14 +214,13 @@ class LaravelModelAnalyzer:
             self.ide_helper_cache = {}
             return {}
     
-    def get_model_properties(self, model_name: str) -> List[Dict[str, str]]:
+    def get_model_properties(self, model_name):
         """Get all properties for a model (from fillable, casts, IDE helper)"""
         properties = []
         
         # Find model file
         model_path = self._find_model_file(model_name)
-        if model_path:
-            model_info = self.analyze_model(model_path)
+        if model_path = self.analyze_model(model_path)
             
             # Add fillable
             for field in model_info.get('fillable', []):
@@ -263,7 +248,7 @@ class LaravelModelAnalyzer:
         
         return properties
     
-    def _find_model_file(self, model_name: str) -> Optional[str]:
+    def _find_model_file(self, model_name):
         """Find model file by class name"""
         models = self.find_all_models()
         for model_path in models:
@@ -271,20 +256,18 @@ class LaravelModelAnalyzer:
                 return model_path
         return None
     
-    def get_model_completions(self, model_name: str, prefix: str = '') -> List[Tuple[str, str]]:
+    def get_model_completions(self, model_name, prefix = ''):
         """Get completions for a model (properties + relationships + scopes)"""
         completions = []
         
         # Get properties
         properties = self.get_model_properties(model_name)
-        for prop in properties:
-            completion = f"{prop['name']}\t{prop['type']} ({prop['source']})"
+        for prop in properties = f"{prop['name']}\t{prop['type']} ({prop['source']})"
             completions.append((completion, prop['name']))
         
         # Get relationships
         model_path = self._find_model_file(model_name)
-        if model_path:
-            model_info = self.analyze_model(model_path)
+        if model_path = self.analyze_model(model_path)
             
             for rel in model_info.get('relationships', []):
                 completion = f"{rel['name']}\t{rel['type']} -> {rel['related']}"
@@ -296,8 +279,7 @@ class LaravelModelAnalyzer:
                 completions.append((completion, f"scope{scope}()"))
         
         # Filter by prefix
-        if prefix:
-            completions = [c for c in completions if c[1].startswith(prefix)]
+        if prefix = [c for c in completions if c[1].startswith(prefix)]
         
         return completions
 
@@ -306,7 +288,7 @@ class LaravelContextDetector:
     """Detects Laravel context (model usage, query builder, etc.)"""
     
     @staticmethod
-    def detect_model_context(view: sublime.View, cursor_pos: int) -> Optional[str]:
+    def detect_model_context(view: sublime.View, cursor_pos):
         """Detect which model is being used at cursor position"""
         # Get line
         line_region = view.line(cursor_pos)
@@ -320,10 +302,8 @@ class LaravelContextDetector:
             r'(\w+)::query\(',  # Model::query()
         ]
         
-        for pattern in patterns:
-            match = re.search(pattern, line_text)
-            if match:
-                potential_model = match.group(1)
+        for pattern in patterns = re.search(pattern, line_text)
+            if match = match.group(1)
                 # Check if it looks like a model (PascalCase)
                 if potential_model[0].isupper():
                     return potential_model
@@ -331,7 +311,7 @@ class LaravelContextDetector:
         return None
     
     @staticmethod
-    def is_in_model_file(view: sublime.View) -> bool:
+    def is_in_model_file(view: sublime.View):
         """Check if current file is a model"""
         file_name = view.file_name()
         if not file_name:
@@ -346,7 +326,7 @@ class LaravelContextDetector:
         return False
     
     @staticmethod
-    def get_current_model_name(view: sublime.View) -> Optional[str]:
+    def get_current_model_name(view: sublime.View):
         """Get current model name if in model file"""
         if not LaravelContextDetector.is_in_model_file(view):
             return None
@@ -356,7 +336,7 @@ class LaravelContextDetector:
         return match.group(1) if match else None
 
 
-def get_laravel_analyzer(view: sublime.View) -> Optional[LaravelModelAnalyzer]:
+def get_laravel_analyzer(view: sublime.View):
     """Get Laravel analyzer for current project"""
     window = view.window()
     if not window or not window.folders():

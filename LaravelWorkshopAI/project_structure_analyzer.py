@@ -20,18 +20,18 @@ class ProjectPattern:
     name: str
     confidence: float  # 0.0 - 1.0
     evidence: List[str]
-    structure: Dict[str, str]
+    structure, str]
 
 
 class ProjectStructureAnalyzer:
     """Analyzes project structure and detects architectural patterns"""
     
-    def __init__(self, project_root: str):
+    def __init__(self, project_root):
         self.project_root = project_root
         self.patterns = []
         self.directory_structure = {}
         
-    def analyze(self) -> Dict[str, any]:
+    def analyze(self):
         """Analyze project and return detected patterns"""
         
         # Scan directory structure
@@ -91,8 +91,7 @@ class ProjectStructureAnalyzer:
         
         # Check for domain subdirectories
         domain_path = self._find_directory(['Domain', 'Domains'])
-        if domain_path:
-            subdirs = self._get_subdirectories(domain_path)
+        if domain_path = self._get_subdirectories(domain_path)
             if len(subdirs) > 0:
                 evidence.append(f"Found {len(subdirs)} domain modules")
                 confidence += 0.2
@@ -168,8 +167,7 @@ class ProjectStructureAnalyzer:
         ]
         
         actions_found = []
-        for pattern in actions_paths:
-            matches = self._find_directories_by_pattern(pattern)
+        for pattern in actions_paths = self._find_directories_by_pattern(pattern)
             actions_found.extend(matches)
         
         if actions_found:
@@ -208,8 +206,7 @@ class ProjectStructureAnalyzer:
         ]
         
         dto_found = []
-        for pattern in dto_paths:
-            matches = self._find_directories_by_pattern(pattern)
+        for pattern in dto_paths = self._find_directories_by_pattern(pattern)
             dto_found.extend(matches)
         
         if dto_found:
@@ -286,14 +283,14 @@ class ProjectStructureAnalyzer:
                 structure=structure
             ))
     
-    def _get_primary_pattern(self) -> Optional[ProjectPattern]:
+    def _get_primary_pattern(self):
         """Get primary pattern based on confidence"""
         if not self.patterns:
             return None
         
         return max(self.patterns, key=lambda p: p.confidence)
     
-    def _get_recommendations(self) -> Dict[str, str]:
+    def _get_recommendations(self):
         """Get recommendations for code generation"""
         recommendations = {}
         
@@ -339,7 +336,7 @@ class ProjectStructureAnalyzer:
         
         return recommendations
     
-    def get_file_path_for_type(self, file_type: str, context: Dict = None) -> str:
+    def get_file_path_for_type(self, file_type, context = None):
         """Get appropriate file path based on detected patterns"""
         primary = self._get_primary_pattern()
         context = context or {}
@@ -389,18 +386,18 @@ class ProjectStructureAnalyzer:
     
     # Helper methods
     
-    def _directory_exists(self, name: str) -> bool:
+    def _directory_exists(self, name):
         """Check if directory exists in app/"""
         return name in str(self.directory_structure)
     
-    def _find_directory(self, names: List[str]) -> Optional[str]:
+    def _find_directory(self, names):
         """Find first matching directory"""
         for name in names:
             if self._directory_exists(name):
                 return name
         return None
     
-    def _get_subdirectories(self, path: str) -> List[str]:
+    def _get_subdirectories(self, path):
         """Get subdirectories of a path"""
         full_path = os.path.join(self.project_root, 'app', path)
         if not os.path.exists(full_path):
@@ -409,24 +406,24 @@ class ProjectStructureAnalyzer:
         return [d for d in os.listdir(full_path) 
                 if os.path.isdir(os.path.join(full_path, d))]
     
-    def _find_directories_by_pattern(self, pattern: str) -> List[str]:
+    def _find_directories_by_pattern(self, pattern):
         """Find directories matching pattern"""
         import glob
         full_pattern = os.path.join(self.project_root, pattern)
         return glob.glob(full_pattern)
     
-    def _find_files_by_pattern(self, pattern: str) -> List[str]:
+    def _find_files_by_pattern(self, pattern):
         """Find files matching pattern"""
         import glob
         full_pattern = os.path.join(self.project_root, 'app', '**', pattern)
         return glob.glob(full_pattern, recursive=True)
     
-    def _file_pattern_exists(self, pattern: str) -> bool:
+    def _file_pattern_exists(self, pattern):
         """Check if files matching pattern exist"""
         return len(self._find_files_by_pattern(pattern)) > 0
 
 
-def analyze_project_structure(project_root: str) -> Dict[str, any]:
+def analyze_project_structure(project_root):
     """Analyze project structure and return recommendations"""
     analyzer = ProjectStructureAnalyzer(project_root)
     return analyzer.analyze()

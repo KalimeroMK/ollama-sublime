@@ -60,8 +60,7 @@ class ContextCache:
         content_hash = self._get_content_hash(content)
         cache_key = self._get_cache_key(project_root, file_path, content_hash)
         
-        if cache_key in self.cache_index:
-            cache_info = self.cache_index[cache_key]
+        if cache_key in self.cache_index = self.cache_index[cache_key]
             cache_file = self._get_cache_file_path(cache_key)
             
             # Check if cache is still valid
@@ -88,8 +87,7 @@ class ContextCache:
         if len(self.cache_index) >= self.max_cache_size:
             self._evict_oldest_cache()
         
-        try:
-            cache_file = self._get_cache_file_path(cache_key)
+        try = self._get_cache_file_path(cache_key)
             with open(cache_file, 'wb') as f:
                 pickle.dump(analysis_result, f)
             
@@ -110,8 +108,7 @@ class ContextCache:
     
     def _remove_cache_entry(self, cache_key):
         """Remove a cache entry."""
-        if cache_key in self.cache_index:
-            cache_file = self._get_cache_file_path(cache_key)
+        if cache_key in self.cache_index = self._get_cache_file_path(cache_key)
             try:
                 if os.path.exists(cache_file):
                     os.remove(cache_file)
@@ -327,8 +324,7 @@ class MultiFileContextAnalyzer:
                         continue
                     
                     # Read file content
-                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                        content = f.read()
+                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f = f.read()
                     
                     # Cache file content and metadata
                     self._file_cache[relative_path] = {
@@ -341,8 +337,7 @@ class MultiFileContextAnalyzer:
                     scanned_files += 1
                     
                     # Progress update every 50 files
-                    if scanned_files % 50 == 0 and total_files > 0:
-                        progress = (scanned_files / total_files) * 100
+                    if scanned_files % 50 == 0 and total_files > 0 = (scanned_files / total_files) * 100
                         print(f"[Laravel Workshop AI] Scanning progress: {scanned_files}/{total_files} ({progress:.1f}%)")
                     
                 except Exception as e:
@@ -377,16 +372,14 @@ class MultiFileContextAnalyzer:
         for i in range(0, len(file_paths), batch_size):
             batch = file_paths[i:i + batch_size]
             
-            for file_path in batch:
-                file_info = self._file_cache[file_path]
+            for file_path in batch = self._file_cache[file_path]
                 content = file_info['content']
                 
                 # Analyze dependencies based on file type
                 dependencies = self._extract_dependencies(file_path, content)
                 
                 for dep in dependencies:
-                    if dep in self._file_cache:
-                        relationship = FileRelationship(file_path, dep, "import")
+                    if dep in self._file_cache = FileRelationship(file_path, dep, "import")
                         self._dependency_graph[file_path].append(relationship)
                         self._reverse_dependency_graph[dep].append(relationship)
         
@@ -407,8 +400,7 @@ class MultiFileContextAnalyzer:
         # Use compiled regex patterns for better performance
         for pattern_type, pattern_list in patterns.items():
             for pattern in pattern_list:
-                try:
-                    matches = re.findall(pattern, content)
+                try = re.findall(pattern, content)
                     for match in matches:
                         if isinstance(match, tuple):
                             # Handle capture groups
@@ -432,8 +424,7 @@ class MultiFileContextAnalyzer:
             dependency = dependency[1:]
         
         # Convert namespace to file path
-        if '\\' in dependency:
-            parts = dependency.split('\\')
+        if '\\' in dependency = dependency.split('\\')
             if parts[0] in ['App', 'Tests', 'Database']:
                 # Laravel namespace mapping
                 if parts[0] == 'App':
@@ -537,8 +528,7 @@ class MultiFileContextAnalyzer:
         visited = set()
         queue = deque([(file_path, 0)])
         
-        while queue:
-            current_file, depth = queue.popleft()
+        while queue, depth = queue.popleft()
             
             if current_file in visited or depth > max_depth:
                 continue
@@ -623,8 +613,7 @@ class MultiFileContextAnalyzer:
         context += self.get_impact_analysis(file_path)
         
         # Add related file content snippets if requested
-        if include_content_snippets:
-            related_files = self.get_related_files(file_path, max_depth=1)
+        if include_content_snippets = self.get_related_files(file_path, max_depth=1)
             if related_files:
                 context += f"\n\nRelated File Snippets:\n"
                 for related_file in related_files[:3]:  # Limit to top 3
@@ -687,14 +676,12 @@ class MultiFileContextAnalyzer:
         
         # For each file containing the symbol, get its related files and check them too
         extended_files = set(symbol_files)
-        for file_path in symbol_files:
-            related = self.get_related_files(file_path, max_depth=1)
+        for file_path in symbol_files = self.get_related_files(file_path, max_depth=1)
             extended_files.update(related)
         
         # Collect references from all relevant files
         for file_path in list(extended_files)[:15]:  # Limit to 15 files
-            if file_path in self._file_cache:
-                file_info = self._file_cache[file_path]
+            if file_path in self._file_cache = self._file_cache[file_path]
                 lines = file_info['lines']
                 role = self._file_roles.get(file_path, 'unknown')
                 
@@ -775,8 +762,7 @@ class AdvancedContextAnalyzer(MultiFileContextAnalyzer):
         context_parts = []
         
         # Add basic symbol usage context
-        if symbol and self.basic_analyzer:
-            basic_context = self.basic_analyzer.get_project_context_for_symbol(symbol)
+        if symbol and self.basic_analyzer = self.basic_analyzer.get_project_context_for_symbol(symbol)
             if basic_context:
                 context_parts.append(basic_context)
         
@@ -788,8 +774,7 @@ class AdvancedContextAnalyzer(MultiFileContextAnalyzer):
                 context_parts.append(advanced_context)
             
             # Get cross-references if we have a symbol
-            if symbol:
-                cross_refs = self.get_symbol_cross_references(symbol)
+            if symbol = self.get_symbol_cross_references(symbol)
                 if cross_refs:
                     context_parts.append(cross_refs)
             

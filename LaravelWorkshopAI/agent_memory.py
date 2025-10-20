@@ -18,19 +18,19 @@ class MemoryEntry:
     id: str
     content: str
     timestamp: float
-    context: Dict[str, Any]
-    importance: int = 5  # 1-10 scale
-    tags: List[str] = None
+    context, Any]
+    importance = 5  # 1-10 scale
+    tags = None
     
     def __post_init__(self):
         if self.tags is None:
             self.tags = []
     
-    def to_dict(self) -> Dict:
+    def to_dict(self):
         return asdict(self)
     
     @staticmethod
-    def from_dict(data: Dict) -> 'MemoryEntry':
+    def from_dict(data) -> 'MemoryEntry':
         return MemoryEntry(**data)
 
 
@@ -40,7 +40,7 @@ class AgentMemoryStore:
     Stores conversation history, learned patterns, and project context
     """
     
-    def __init__(self, storage_path: Optional[str] = None):
+    def __init__(self, storage_path = None):
         if storage_path is None:
             # Use Sublime's package storage
             storage_path = os.path.join(
@@ -51,15 +51,14 @@ class AgentMemoryStore:
             )
         
         self.storage_path = storage_path
-        self.memories: List[MemoryEntry] = []
+        self.memories = []
         self.load()
     
     def load(self):
         """Load memories from disk"""
         try:
             if os.path.exists(self.storage_path):
-                with open(self.storage_path, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
+                with open(self.storage_path, 'r', encoding='utf-8') as f = json.load(f)
                     self.memories = [MemoryEntry.from_dict(m) for m in data]
         except Exception as e:
             print(f"Error loading agent memory: {e}")
@@ -69,19 +68,18 @@ class AgentMemoryStore:
         """Save memories to disk"""
         try:
             os.makedirs(os.path.dirname(self.storage_path), exist_ok=True)
-            with open(self.storage_path, 'w', encoding='utf-8') as f:
-                data = [m.to_dict() for m in self.memories]
+            with open(self.storage_path, 'w', encoding='utf-8') as f = [m.to_dict() for m in self.memories]
                 json.dump(data, f, indent=2)
         except Exception as e:
             print(f"Error saving agent memory: {e}")
     
     def add(
         self,
-        content: str,
-        context: Dict[str, Any],
-        importance: int = 5,
-        tags: List[str] = None
-    ) -> MemoryEntry:
+        content,
+        context,
+        importance = 5,
+        tags = None
+    ):
         """Add a new memory"""
         import hashlib
         memory_id = hashlib.md5(
@@ -103,17 +101,16 @@ class AgentMemoryStore:
     
     def search(
         self,
-        query: str = None,
-        tags: List[str] = None,
-        min_importance: int = 0,
-        limit: int = 10
-    ) -> List[MemoryEntry]:
+        query = None,
+        tags = None,
+        min_importance = 0,
+        limit = 10
+    ):
         """Search memories"""
         results = self.memories
         
         # Filter by tags
-        if tags:
-            results = [
+        if tags = [
                 m for m in results
                 if any(tag in m.tags for tag in tags)
             ]
@@ -122,8 +119,7 @@ class AgentMemoryStore:
         results = [m for m in results if m.importance >= min_importance]
         
         # Filter by query (simple substring match)
-        if query:
-            query_lower = query.lower()
+        if query = query.lower()
             results = [
                 m for m in results
                 if query_lower in m.content.lower()
@@ -137,7 +133,7 @@ class AgentMemoryStore:
         
         return results[:limit]
     
-    def get_recent(self, limit: int = 10) -> List[MemoryEntry]:
+    def get_recent(self, limit = 10):
         """Get most recent memories"""
         sorted_memories = sorted(
             self.memories,
@@ -148,10 +144,10 @@ class AgentMemoryStore:
     
     def get_by_context(
         self,
-        context_key: str,
-        context_value: Any,
-        limit: int = 10
-    ) -> List[MemoryEntry]:
+        context_key,
+        context_value,
+        limit = 10
+    ):
         """Get memories by context"""
         results = [
             m for m in self.memories
@@ -164,7 +160,7 @@ class AgentMemoryStore:
         self.memories = []
         self.save()
     
-    def prune(self, max_age_days: int = 30, min_importance: int = 3):
+    def prune(self, max_age_days = 30, min_importance = 3):
         """Remove old, low-importance memories"""
         current_time = time.time()
         max_age_seconds = max_age_days * 24 * 60 * 60
@@ -177,7 +173,7 @@ class AgentMemoryStore:
         
         self.save()
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self):
         """Get memory statistics"""
         if not self.memories:
             return {
@@ -211,12 +207,12 @@ class ConversationMemory:
     Provides context window management and summarization
     """
     
-    def __init__(self, max_messages: int = 50):
+    def __init__(self, max_messages = 50):
         self.max_messages = max_messages
-        self.messages: List[Dict[str, str]] = []
-        self.summary: Optional[str] = None
+        self.messages, str]] = []
+        self.summary = None
     
-    def add_message(self, role: str, content: str):
+    def add_message(self, role, content):
         """Add a message to conversation history"""
         self.messages.append({
             "role": role,
@@ -228,13 +224,13 @@ class ConversationMemory:
         if len(self.messages) > self.max_messages:
             self.messages = self.messages[-self.max_messages:]
     
-    def get_messages(self, last_n: int = None) -> List[Dict[str, str]]:
+    def get_messages(self, last_n = None):
         """Get conversation messages"""
         if last_n:
             return self.messages[-last_n:]
         return self.messages
     
-    def get_context_window(self, max_tokens: int = 2000) -> List[Dict[str, str]]:
+    def get_context_window(self, max_tokens = 2000):
         """
         Get messages that fit within token limit
         Rough estimation: 1 token ≈ 4 characters
@@ -258,7 +254,7 @@ class ConversationMemory:
         self.messages = []
         self.summary = None
     
-    def to_dict(self) -> Dict:
+    def to_dict(self):
         """Export to dictionary"""
         return {
             "messages": self.messages,
@@ -266,7 +262,7 @@ class ConversationMemory:
         }
     
     @staticmethod
-    def from_dict(data: Dict) -> 'ConversationMemory':
+    def from_dict(data) -> 'ConversationMemory':
         """Import from dictionary"""
         conv = ConversationMemory()
         conv.messages = data.get("messages", [])
@@ -280,9 +276,9 @@ class ProjectMemory:
     Learns patterns, conventions, and structure
     """
     
-    def __init__(self, project_root: str):
+    def __init__(self, project_root):
         self.project_root = project_root
-        self.knowledge: Dict[str, Any] = {
+        self.knowledge, Any] = {
             "file_patterns": {},
             "coding_conventions": [],
             "common_imports": [],
@@ -291,7 +287,7 @@ class ProjectMemory:
         }
         self.load()
     
-    def get_storage_path(self) -> str:
+    def get_storage_path(self):
         """Get storage path for this project"""
         import hashlib
         project_hash = hashlib.md5(self.project_root.encode()).hexdigest()
@@ -305,8 +301,7 @@ class ProjectMemory:
     
     def load(self):
         """Load project knowledge"""
-        try:
-            storage_path = self.get_storage_path()
+        try = self.get_storage_path()
             if os.path.exists(storage_path):
                 with open(storage_path, 'r', encoding='utf-8') as f:
                     self.knowledge = json.load(f)
@@ -315,15 +310,14 @@ class ProjectMemory:
     
     def save(self):
         """Save project knowledge"""
-        try:
-            storage_path = self.get_storage_path()
+        try = self.get_storage_path()
             os.makedirs(os.path.dirname(storage_path), exist_ok=True)
             with open(storage_path, 'w', encoding='utf-8') as f:
                 json.dump(self.knowledge, f, indent=2)
         except Exception as e:
             print(f"Error saving project memory: {e}")
     
-    def learn_pattern(self, pattern: str, description: str):
+    def learn_pattern(self, pattern, description):
         """Learn a new pattern"""
         self.knowledge["learned_patterns"].append({
             "pattern": pattern,
@@ -332,13 +326,13 @@ class ProjectMemory:
         })
         self.save()
     
-    def learn_convention(self, convention: str):
+    def learn_convention(self, convention):
         """Learn a coding convention"""
         if convention not in self.knowledge["coding_conventions"]:
             self.knowledge["coding_conventions"].append(convention)
             self.save()
     
-    def get_context_summary(self) -> str:
+    def get_context_summary(self):
         """Get a summary of project knowledge"""
         summary_parts = []
         
@@ -361,12 +355,11 @@ class ProjectMemory:
 
 
 # Global memory store instance
-_global_memory_store: Optional[AgentMemoryStore] = None
+_global_memory_store = None
 
 
-def get_global_memory_store() -> AgentMemoryStore:
+def get_global_memory_store():
     """Get or create global memory store"""
     global _global_memory_store
-    if _global_memory_store is None:
-        _global_memory_store = AgentMemoryStore()
+    if _global_memory_store is None = AgentMemoryStore()
     return _global_memory_store

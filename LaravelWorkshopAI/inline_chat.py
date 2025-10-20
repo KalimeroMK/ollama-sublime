@@ -21,7 +21,7 @@ class InlineChatManager:
     """Manages inline chat sessions with persistent history"""
     
     def __init__(self):
-        self.chat_history: List[Dict[str, str]] = []
+        self.chat_history, str]] = []
         self.current_view: Optional[sublime.View] = None
         self.chat_view: Optional[sublime.View] = None
         self.is_active = False
@@ -31,7 +31,7 @@ class InlineChatManager:
         # Load history on init
         self._load_history()
         
-    def _get_history_file(self, view: sublime.View) -> str:
+    def _get_history_file(self, view: sublime.View):
         """Get history file path for current project"""
         window = view.window()
         if not window or not window.folders():
@@ -56,8 +56,7 @@ class InlineChatManager:
         
         if os.path.exists(self.history_file):
             try:
-                with open(self.history_file, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
+                with open(self.history_file, 'r', encoding='utf-8') as f = json.load(f)
                     self.chat_history = data.get('history', [])
                     self.context_cache = data.get('context', {})
             except Exception as e:
@@ -69,8 +68,7 @@ class InlineChatManager:
         if not self.history_file:
             return
         
-        try:
-            data = {
+        try = {
                 'history': self.chat_history[-100:],  # Keep last 100 messages
                 'context': self.context_cache
             }
@@ -138,7 +136,7 @@ class InlineChatManager:
                 self.on_cancel
             )
     
-    def on_user_input(self, user_message: str):
+    def on_user_input(self, user_message):
         """Handle user input"""
         if not user_message.strip():
             return
@@ -159,12 +157,12 @@ class InlineChatManager:
         # Get AI response
         self._get_ai_response(user_message)
     
-    def _get_timestamp(self) -> str:
+    def _get_timestamp(self):
         """Get current timestamp"""
         from datetime import datetime
         return datetime.now().strftime("%H:%M")
     
-    def _get_ai_response(self, user_message: str):
+    def _get_ai_response(self, user_message):
         """Get response from AI with streaming"""
         api_client = create_api_client_from_settings()
         
@@ -206,7 +204,7 @@ class InlineChatManager:
         
         sublime.set_timeout_async(fetch, 0)
     
-    def _build_context(self) -> Dict[str, any]:
+    def _build_context(self):
         """Build context from current file and Laravel project"""
         context = {
             'file': None,
@@ -246,7 +244,7 @@ class InlineChatManager:
         
         return context
     
-    def _build_prompt_with_context(self, user_message: str, context: Dict) -> str:
+    def _build_prompt_with_context(self, user_message, context):
         """Build prompt with context"""
         prompt_parts = []
         
@@ -296,7 +294,7 @@ class InlineChatManager:
         # Scroll to bottom
         self.chat_view.show(self.chat_view.size())
     
-    def _build_chat_content(self) -> str:
+    def _build_chat_content(self):
         """Build chat content for display"""
         if not self.chat_history:
             return """╔═══════════════════════════════════════╗
@@ -320,8 +318,7 @@ Type your question and press Enter!
         lines.append("╚═══════════════════════════════════════╝")
         lines.append("")
         
-        for msg in self.chat_history:
-            role = msg['role']
+        for msg in self.chat_history = msg['role']
             content = msg['content']
             timestamp = msg.get('timestamp', '')
             
@@ -347,7 +344,7 @@ Type your question and press Enter!
         
         return "\n".join(lines)
     
-    def _create_input_html(self) -> str:
+    def _create_input_html(self):
         """Create HTML for input prompt (not used anymore)"""
         return """
         <body id="ollama-chat">
@@ -369,7 +366,7 @@ Type your question and press Enter!
         </body>
         """
     
-    def _create_chat_html(self) -> str:
+    def _create_chat_html(self):
         """Create HTML for chat display"""
         messages_html = []
         
@@ -462,7 +459,7 @@ Type your question and press Enter!
         self._update_chat_display()
         sublime.status_message("Chat history cleared")
     
-    def _handle_navigation(self, href: str):
+    def _handle_navigation(self, href):
         """Handle link clicks in phantom (not used anymore)"""
         if href == 'continue':
             self.show_input_prompt()
@@ -478,8 +475,7 @@ Type your question and press Enter!
     
     def close_chat(self):
         """Close chat tab"""
-        if self.chat_view:
-            window = self.chat_view.window()
+        if self.chat_view = self.chat_view.window()
             if window:
                 window.focus_view(self.chat_view)
                 window.run_command('close_file')

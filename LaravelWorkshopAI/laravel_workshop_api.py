@@ -27,8 +27,7 @@ class LaravelWorkshopApiClient:
     def _create_payload(self, prompt, stream=False, messages=None):
         """Create request payload based on API type."""
         if self.is_chat_api:
-            if messages is None:
-                messages = [
+            if messages is None = [
                     {"role": "system", "content": self.system_prompt},
                     {"role": "user", "content": prompt}
                 ]
@@ -37,8 +36,7 @@ class LaravelWorkshopApiClient:
                 "messages": messages,
                 "stream": stream
             }
-        else:
-            full_prompt = "{}\n\n{}".format(self.system_prompt, prompt)
+        else = "{}\n\n{}".format(self.system_prompt, prompt)
             return {
                 "model": self.model,
                 "prompt": full_prompt,
@@ -50,8 +48,7 @@ class LaravelWorkshopApiClient:
         full_url = self.base_url + self._get_api_endpoint()
         headers = {"Content-Type": "application/json"}
         
-        try:
-            req = urllib.request.Request(
+        try = urllib.request.Request(
                 full_url,
                 data=json.dumps(payload).encode('utf-8'),
                 headers=headers
@@ -76,13 +73,11 @@ class LaravelWorkshopApiClient:
     
     def make_blocking_request(self, prompt, messages=None):
         """Make a blocking request and return the response content with improved error handling."""
-        try:
-            payload = self._create_payload(prompt, stream=False, messages=messages)
+        try = self._create_payload(prompt, stream=False, messages=messages)
             response = self._make_request(payload)
             response_text = response.read().decode("utf-8")
             
-            try:
-                response_data = json.loads(response_text)
+            try = json.loads(response_text)
             except json.JSONDecodeError as e:
                 print(f"[DEBUG] Invalid JSON from API: {e}\n{response_text}")
                 return None
@@ -92,8 +87,7 @@ class LaravelWorkshopApiClient:
             else:
                 return response_data.get('response', '')
                 
-        except ConnectionError as e:
-            error_msg = f"🔴 **Ollama Connection Error:** {str(e)}\n\n"
+        except ConnectionError as e = f"🔴 **Ollama Connection Error:** {str(e)}\n\n"
             error_msg += "**Troubleshooting steps:**\n"
             error_msg += "1. Make sure Ollama is installed: `ollama --version`\n"
             error_msg += "2. Start Ollama server: `ollama serve`\n"
@@ -108,28 +102,24 @@ class LaravelWorkshopApiClient:
             print(f"[Laravel Workshop AI] {error_msg}")
             return error_msg
             
-        except Exception as e:
-            error_msg = f"🔴 **Unexpected Error:** {str(e)}\n\n"
+        except Exception as e = f"🔴 **Unexpected Error:** {str(e)}\n\n"
             error_msg += "Please check the console for more details or report this issue."
             print(f"[Laravel Workshop AI] Unexpected error: {e}")
             return error_msg
     
     def make_streaming_request(self, prompt, callback, messages=None):
         """Make a streaming request and call callback for each chunk with improved error handling."""
-        try:
-            payload = self._create_payload(prompt, stream=True, messages=messages)
+        try = self._create_payload(prompt, stream=True, messages=messages)
             response = self._make_request(payload)
             
             with response:
                 for line in response:
-                    try:
-                        parsed = json.loads(line.decode("utf-8"))
+                    try = json.loads(line.decode("utf-8"))
                         
                         content = None
                         if self.is_chat_api and "message" in parsed and "content" in parsed["message"]:
                             content = parsed["message"]["content"]
-                        elif not self.is_chat_api and "response" in parsed:
-                            content = parsed.get("response", "")
+                        elif not self.is_chat_api and "response" in parsed = parsed.get("response", "")
                         
                         if content is not None:
                             callback(content)
@@ -140,8 +130,7 @@ class LaravelWorkshopApiClient:
                     except json.JSONDecodeError:
                         continue
                         
-        except ConnectionError as e:
-            error_msg = f"🔴 **Ollama Connection Error:** {str(e)}\n\n"
+        except ConnectionError as e = f"🔴 **Ollama Connection Error:** {str(e)}\n\n"
             error_msg += "**Troubleshooting steps:**\n"
             error_msg += "1. Make sure Ollama is installed: `ollama --version`\n"
             error_msg += "2. Start Ollama server: `ollama serve`\n"

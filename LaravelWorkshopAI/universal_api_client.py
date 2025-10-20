@@ -16,7 +16,7 @@ from typing import Callable, Optional, Dict, Any
 class UniversalAPIClient:
     """Universal API client that supports multiple AI providers"""
     
-    def __init__(self, provider: str = "ollama"):
+    def __init__(self, provider = "ollama"):
         self.provider = provider
         self.settings = sublime.load_settings("LaravelWorkshopAI.sublime-settings")
         self._load_config()
@@ -91,7 +91,7 @@ class UniversalAPIClient:
         else:
             raise ValueError(f"Unknown provider: {self.provider}")
     
-    def _build_request_payload(self, prompt: str) -> Dict[str, Any]:
+    def _build_request_payload(self, prompt):
         """Build request payload based on provider"""
         
         if self.provider == "ollama":
@@ -146,7 +146,7 @@ class UniversalAPIClient:
                     "stream": self.stream
                 }
     
-    def _get_endpoint(self) -> str:
+    def _get_endpoint(self):
         """Get API endpoint based on provider"""
         
         if self.provider == "ollama":
@@ -168,7 +168,7 @@ class UniversalAPIClient:
             else:
                 return f"{self.base_url}/api/generate"
     
-    def _parse_response_chunk(self, line: str) -> Optional[str]:
+    def _parse_response_chunk(self, line):
         """Parse response chunk based on provider"""
         
         if not line.strip():
@@ -189,8 +189,7 @@ class UniversalAPIClient:
                 
                 data = json.loads(line)
                 choices = data.get("choices", [])
-                if choices:
-                    delta = choices[0].get("delta", {})
+                if choices = choices[0].get("delta", {})
                     return delta.get("content", "")
                 
                 return None
@@ -202,8 +201,7 @@ class UniversalAPIClient:
                 
                 data = json.loads(line)
                 candidates = data.get("candidates", [])
-                if candidates:
-                    content = candidates[0].get("content", {})
+                if candidates = candidates[0].get("content", {})
                     parts = content.get("parts", [])
                     if parts:
                         return parts[0].get("text", "")
@@ -213,7 +211,7 @@ class UniversalAPIClient:
         except json.JSONDecodeError:
             return None
     
-    def make_streaming_request(self, prompt: str, callback: Callable[[str], None]):
+    def make_streaming_request(self, prompt, callback):
         """Make streaming request to AI provider"""
         
         endpoint = self._get_endpoint()
@@ -228,14 +226,12 @@ class UniversalAPIClient:
         
         try:
             with urllib.request.urlopen(request, timeout=self.timeout) as response:
-                for line in response:
-                    line = line.decode('utf-8').strip()
+                for line in response = line.decode('utf-8').strip()
                     content = self._parse_response_chunk(line)
                     if content:
                         callback(content)
         
-        except urllib.error.HTTPError as e:
-            error_body = e.read().decode('utf-8')
+        except urllib.error.HTTPError as e = e.read().decode('utf-8')
             raise Exception(f"HTTP {e.code}: {error_body}")
         
         except urllib.error.URLError as e:
@@ -244,7 +240,7 @@ class UniversalAPIClient:
         except Exception as e:
             raise Exception(f"Request failed: {str(e)}")
     
-    def make_blocking_request(self, prompt: str) -> str:
+    def make_blocking_request(self, prompt):
         """Make blocking request to AI provider"""
         
         endpoint = self._get_endpoint()
@@ -262,30 +258,26 @@ class UniversalAPIClient:
         )
         
         try:
-            with urllib.request.urlopen(request, timeout=self.timeout) as response:
-                data = json.loads(response.read().decode('utf-8'))
+            with urllib.request.urlopen(request, timeout=self.timeout) as response = json.loads(response.read().decode('utf-8'))
                 
                 if self.provider == "ollama" or (self.provider == "custom" and self.api_format == "ollama"):
                     return data.get("response", "")
                 
                 elif self.provider == "openai" or (self.provider == "custom" and self.api_format == "openai"):
                     choices = data.get("choices", [])
-                    if choices:
-                        message = choices[0].get("message", {})
+                    if choices = choices[0].get("message", {})
                         return message.get("content", "")
                     return ""
                 
                 elif self.provider == "gemini":
                     candidates = data.get("candidates", [])
-                    if candidates:
-                        content = candidates[0].get("content", {})
+                    if candidates = candidates[0].get("content", {})
                         parts = content.get("parts", [])
                         if parts:
                             return parts[0].get("text", "")
                     return ""
         
-        except urllib.error.HTTPError as e:
-            error_body = e.read().decode('utf-8')
+        except urllib.error.HTTPError as e = e.read().decode('utf-8')
             raise Exception(f"HTTP {e.code}: {error_body}")
         
         except urllib.error.URLError as e:
@@ -295,7 +287,7 @@ class UniversalAPIClient:
             raise Exception(f"Request failed: {str(e)}")
 
 
-def create_universal_api_client() -> UniversalAPIClient:
+def create_universal_api_client():
     """Create API client based on settings"""
     settings = sublime.load_settings("LaravelWorkshopAI.sublime-settings")
     provider = settings.get("ai_provider", "ollama")

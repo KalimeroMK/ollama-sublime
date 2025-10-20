@@ -30,7 +30,7 @@ class LaravelWorkshopAgentGenerateFeatureCommand(sublime_plugin.WindowCommand):
             self.on_description
         )
     
-    def on_description(self, description: str):
+    def on_description(self, description):
         if not description.strip():
             return
         
@@ -59,7 +59,7 @@ class LaravelWorkshopAgentGenerateFeatureCommand(sublime_plugin.WindowCommand):
             api_client.model
         )
         
-        def append_log(message: str):
+        def append_log(message):
             UIHelpers.append_to_tab(output_tab, message + "\n")
         
         # Run agent workflow asynchronously
@@ -123,7 +123,7 @@ class LaravelWorkshopAgentDebugCommand(sublime_plugin.TextCommand):
             lambda error_msg: self.start_debugging(selected_text, error_msg)
         )
     
-    def start_debugging(self, code: str, error_message: str):
+    def start_debugging(self, code, error_message):
         # Get API client
         api_client = create_api_client_from_settings()
         
@@ -144,7 +144,7 @@ class LaravelWorkshopAgentDebugCommand(sublime_plugin.TextCommand):
             api_client.model
         )
         
-        def append_log(message: str):
+        def append_log(message):
             UIHelpers.append_to_tab(output_tab, message + "\n")
         
         # Run debugging workflow
@@ -208,7 +208,7 @@ class LaravelWorkshopAgentRefactorCommand(sublime_plugin.TextCommand):
             api_client.model
         )
         
-        def append_log(message: str):
+        def append_log(message):
             UIHelpers.append_to_tab(output_tab, message + "\n")
         
         # Run refactoring workflow
@@ -253,7 +253,7 @@ class LaravelWorkshopAgentCustomTaskCommand(sublime_plugin.WindowCommand):
             self.on_task_description
         )
     
-    def on_task_description(self, task_description: str):
+    def on_task_description(self, task_description):
         if not task_description.strip():
             return
         
@@ -285,7 +285,7 @@ class LaravelWorkshopAgentCustomTaskCommand(sublime_plugin.WindowCommand):
         
         self.window.show_quick_panel(roles, on_role_select)
     
-    def execute_custom_task(self, task_description: str, agent_role: AgentRole):
+    def execute_custom_task(self, task_description, agent_role):
         # Get API client
         api_client = create_api_client_from_settings()
         
@@ -308,7 +308,7 @@ class LaravelWorkshopAgentCustomTaskCommand(sublime_plugin.WindowCommand):
             api_client.model
         )
         
-        def append_log(message: str):
+        def append_log(message):
             UIHelpers.append_to_tab(output_tab, message + "\n")
         
         # Run custom task
@@ -396,7 +396,7 @@ class LaravelWorkshopAgentChatCommand(sublime_plugin.WindowCommand):
         
         self.window.show_quick_panel(roles, on_role_select)
     
-    def initialize_agent(self, role: AgentRole):
+    def initialize_agent(self, role):
         api_client = create_api_client_from_settings()
         tools = create_default_tools()
         
@@ -425,7 +425,7 @@ class LaravelWorkshopAgentChatCommand(sublime_plugin.WindowCommand):
             self.on_user_message
         )
     
-    def on_user_message(self, message: str):
+    def on_user_message(self, message):
         if not message.strip():
             return
         

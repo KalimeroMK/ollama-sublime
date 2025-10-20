@@ -48,7 +48,7 @@ class LaravelWorkshopLaravelAutocompleteCommand(sublime_plugin.EventListener):
             sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS
         )
     
-    def _detect_model_at_cursor(self, view, cursor_pos) -> str:
+    def _detect_model_at_cursor(self, view, cursor_pos):
         """Detect which model is being accessed"""
         # Get current line
         line_region = view.line(cursor_pos)
@@ -60,8 +60,7 @@ class LaravelWorkshopLaravelAutocompleteCommand(sublime_plugin.EventListener):
         
         # Pattern 1: $model->|
         match = re.search(r'\$(\w+)->', text_before_cursor)
-        if match:
-            var_name = match.group(1)
+        if match = match.group(1)
             # Try to find variable type
             model_name = self._find_variable_type(view, var_name, cursor_pos)
             if model_name:
@@ -69,8 +68,7 @@ class LaravelWorkshopLaravelAutocompleteCommand(sublime_plugin.EventListener):
         
         # Pattern 2: Model::|
         match = re.search(r'(\w+)::', text_before_cursor)
-        if match:
-            potential_model = match.group(1)
+        if match = match.group(1)
             if potential_model[0].isupper():  # PascalCase = likely a model
                 return potential_model
         
@@ -82,7 +80,7 @@ class LaravelWorkshopLaravelAutocompleteCommand(sublime_plugin.EventListener):
         
         return None
     
-    def _find_variable_type(self, view, var_name: str, cursor_pos: int) -> str:
+    def _find_variable_type(self, view, var_name, cursor_pos):
         """Try to find the type of a variable"""
         # Search backwards for variable assignment
         search_region = sublime.Region(max(0, cursor_pos - 5000), cursor_pos)
@@ -114,7 +112,7 @@ class LaravelWorkshopLaravelAutocompleteCommand(sublime_plugin.EventListener):
         
         return None
     
-    def _get_model_completions(self, analyzer, model_name: str, prefix: str) -> List[Tuple[str, str]]:
+    def _get_model_completions(self, analyzer, model_name, prefix):
         """Get completions for a model"""
         cache_key = f"{model_name}_{prefix}"
         
@@ -144,8 +142,7 @@ class LaravelWorkshopShowModelInfoCommand(sublime_plugin.TextCommand):
         cursor_pos = self.view.sel()[0].begin()
         model_name = LaravelContextDetector.detect_model_context(self.view, cursor_pos)
         
-        if not model_name:
-            model_name = LaravelContextDetector.get_current_model_name(self.view)
+        if not model_name = LaravelContextDetector.get_current_model_name(self.view)
         
         if not model_name:
             sublime.status_message("No model detected")
@@ -171,7 +168,7 @@ class LaravelWorkshopShowModelInfoCommand(sublime_plugin.TextCommand):
             max_height=400
         )
     
-    def _build_model_info_html(self, model_name: str, model_info: dict, properties: list) -> str:
+    def _build_model_info_html(self, model_name, model_info, properties):
         """Build HTML for model info"""
         html_parts = [
             f"<h2>📦 {model_name}</h2>",
