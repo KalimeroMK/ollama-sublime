@@ -46,7 +46,7 @@ class AgentMemoryStore:
             storage_path = os.path.join(
                 sublime.packages_path(),
                 'User',
-                'OllamaAI',
+                'LaravelWorkshopAI',
                 'agent_memory.json'
             )
         
@@ -298,7 +298,7 @@ class ProjectMemory:
         return os.path.join(
             sublime.packages_path(),
             'User',
-            'OllamaAI',
+            'LaravelWorkshopAI',
             'projects',
             f'{project_hash}.json'
         )

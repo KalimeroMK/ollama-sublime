@@ -36,14 +36,14 @@ class InlineChatManager:
         window = view.window()
         if not window or not window.folders():
             # Use global history
-            cache_dir = os.path.join(sublime.packages_path(), 'User', 'OllamaAI', 'chat_history')
+            cache_dir = os.path.join(sublime.packages_path(), 'User', 'LaravelWorkshopAI', 'chat_history')
             os.makedirs(cache_dir, exist_ok=True)
             return os.path.join(cache_dir, 'global_chat.json')
         
         # Use project-specific history
         project_root = window.folders()[0]
         project_name = os.path.basename(project_root)
-        cache_dir = os.path.join(sublime.packages_path(), 'User', 'OllamaAI', 'chat_history')
+        cache_dir = os.path.join(sublime.packages_path(), 'User', 'LaravelWorkshopAI', 'chat_history')
         os.makedirs(cache_dir, exist_ok=True)
         return os.path.join(cache_dir, f'{project_name}_chat.json')
     

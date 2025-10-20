@@ -377,7 +377,7 @@ class OllamaCacheManagerCommand(sublime_plugin.WindowCommand):
     
     def clear_all_cache(self):
         try:
-            cache_dir = os.path.join(sublime.packages_path(), 'User', 'OllamaAI', 'cache')
+            cache_dir = os.path.join(sublime.packages_path(), 'User', 'LaravelWorkshopAI', 'cache')
             if os.path.exists(cache_dir):
                 import shutil
                 shutil.rmtree(cache_dir)

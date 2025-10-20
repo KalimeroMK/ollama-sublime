@@ -71,7 +71,7 @@ You: "Create a Laravel CRUD for Products with API and tests"
    ```
 
 2. **Install the plugin**:
-   - Copy `Ollama AI` folder to your Sublime Text Packages directory
+   - Copy `LaravelWorkshopAI` folder to your Sublime Text Packages directory
    - Restart Sublime Text
 
 3. **Configure** (optional):
