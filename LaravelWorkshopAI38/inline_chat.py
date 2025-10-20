@@ -11,17 +11,18 @@ import json
 import os
 from typing import List, Dict, Optional
 
-from laravel_workshop_api import create_api_client_from_settings
-from context_analyzer import ContextAnalyzer
-from laravel_intelligence import get_laravel_analyzer, LaravelContextDetector
-from ui_helpers import UIHelpers
+from .laravel_workshop_api import create_api_client_from_settings
+from .context_analyzer import ContextAnalyzer
+# Temporarily disabled - laravel_intelligence has syntax errors
+# from .laravel_intelligence import get_laravel_analyzer, LaravelContextDetector
+from .ui_helpers import UIHelpers
 
 
 class InlineChatManager:
     """Manages inline chat sessions with persistent history"""
     
     def __init__(self):
-        self.chat_history, str]] = []
+        self.chat_history = []
         self.current_view: Optional[sublime.View] = None
         self.chat_view: Optional[sublime.View] = None
         self.is_active = False
@@ -56,7 +57,8 @@ class InlineChatManager:
         
         if os.path.exists(self.history_file):
             try:
-                with open(self.history_file, 'r', encoding='utf-8') as f = json.load(f)
+                with open(self.history_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
                     self.chat_history = data.get('history', [])
                     self.context_cache = data.get('context', {})
             except Exception as e:
@@ -68,7 +70,8 @@ class InlineChatManager:
         if not self.history_file:
             return
         
-        try = {
+        try:
+            data = {
                 'history': self.chat_history[-100:],  # Keep last 100 messages
                 'context': self.context_cache
             }
@@ -318,8 +321,10 @@ Type your question and press Enter!
         lines.append("╚═══════════════════════════════════════╝")
         lines.append("")
         
-        for msg in self.chat_history = msg['role']
-            content = msg['content']
+        for msg in self.chat_history:
+
+        
+            msg['role'] = content = msg['content']
             timestamp = msg.get('timestamp', '')
             
             if role == 'user':
@@ -475,7 +480,8 @@ Type your question and press Enter!
     
     def close_chat(self):
         """Close chat tab"""
-        if self.chat_view = self.chat_view.window()
+        if self.chat_view:
+            window = self.chat_view.window()
             if window:
                 window.focus_view(self.chat_view)
                 window.run_command('close_file')

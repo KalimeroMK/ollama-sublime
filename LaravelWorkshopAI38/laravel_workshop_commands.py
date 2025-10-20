@@ -9,10 +9,10 @@ import os
 import threading
 
 # Import modular components
-from laravel_workshop_api import create_api_client_from_settings
-from context_analyzer import ContextAnalyzer
-from ui_helpers import UIHelpers, TabManager
-from response_processor import ResponseProcessor, StreamingResponseHandler
+from .laravel_workshop_api import create_api_client_from_settings
+from .context_analyzer import ContextAnalyzer
+from .ui_helpers import UIHelpers, TabManager
+from .response_processor import ResponseProcessor, StreamingResponseHandler
 
 
 # ============================================================================
@@ -53,8 +53,8 @@ class LaravelWorkshopContextCommandBase(sublime_plugin.TextCommand):
 class LaravelWorkshopPhpCompletionCommand(LaravelWorkshopContextCommandBase):
     """AI-powered PHP/Laravel code completion - specialized autocomplete"""
     
-    def __init__(self):
-        super().__init__()
+    def __init__(self, view):
+        super().__init__(view)
         self.api_client = None
         self.completion_cache = {}
         self.detection_cache = {}
@@ -187,7 +187,8 @@ class LaravelWorkshopPhpCompletionCommand(LaravelWorkshopContextCommandBase):
         if not self.api_client:
             self.api_client = self.get_api_client()
         
-        try = self.api_client.make_blocking_request(prompt)
+        try:
+            response = self.api_client.make_blocking_request(prompt)
             completions = self._parse_completions(response, context, project_type)
             self.completion_cache[cache_key] = completions
             return completions
@@ -211,7 +212,8 @@ Provide 5 {framework}-specific completions. Return only code, one per line."""
     
     def _parse_completions(self, response, context, project_type):
         """Parse completions"""
-        try = [line.strip() for line in response.split('\n') if line.strip()]
+        try:
+            completions = [line.strip() for line in response.split('\n') if line.strip()]
             return completions[:5]
         except:
             return self._get_fallback_completions(context, project_type)
@@ -312,9 +314,9 @@ Generate only the file content, no explanations."""
         active_view = self.window.active_view()
         if active_view and active_view.file_name():
             current_file_path = active_view.file_name()
-            if context_analyzer.project_root = os.path.relpath(current_file_path, context_analyzer.project_root)
-        
-        symbol, usage_context = context_analyzer.analyze_text_for_context(self.description, current_file_path)
+            if context_analyzer.project_root:
+                relative_path = os.path.relpath(current_file_path, context_analyzer.project_root)
+                symbol, usage_context = context_analyzer.analyze_text_for_context(self.description, current_file_path)
         full_prompt = "{0}{1}".format(prompt, usage_context)
 
         handler = StreamingResponseHandler()
@@ -373,7 +375,8 @@ class LaravelWorkshopCacheManagerCommand(sublime_plugin.WindowCommand):
             self.show_cache_stats()
     
     def clear_all_cache(self):
-        try = os.path.join(sublime.packages_path(), 'User', 'LaravelWorkshopAI', 'cache')
+        try:
+            cache_dir = os.path.join(sublime.packages_path(), 'User', 'LaravelWorkshopAI', 'cache')
             if os.path.exists(cache_dir):
                 import shutil
                 shutil.rmtree(cache_dir)
@@ -431,9 +434,9 @@ class LaravelWorkshopAiPromptCommand(sublime_plugin.WindowCommand):
         current_file_path = None
         if view and view.file_name():
             current_file_path = view.file_name()
-            if context_analyzer.project_root = os.path.relpath(current_file_path, context_analyzer.project_root)
-        
-        symbol, usage_context = context_analyzer.analyze_text_for_context(user_input, current_file_path)
+            if context_analyzer.project_root:
+                relative_path = os.path.relpath(current_file_path, context_analyzer.project_root)
+                symbol, usage_context = context_analyzer.analyze_text_for_context(user_input, current_file_path)
         full_prompt = "{0}{1}".format(user_input, usage_context)
 
         tab = UIHelpers.create_output_tab(
@@ -443,7 +446,8 @@ class LaravelWorkshopAiPromptCommand(sublime_plugin.WindowCommand):
         )
 
         def fetch():
-            try = api_client.make_blocking_request(full_prompt)
+            try:
+                content = api_client.make_blocking_request(full_prompt)
                 if content:
                     UIHelpers.append_to_tab(tab, content)
                 else:
@@ -476,7 +480,8 @@ class LaravelWorkshopAiSmartCompletionCommand(LaravelWorkshopContextCommandBase)
 Provide a smart completion that makes sense in context. Return only the completion code."""
 
         def fetch():
-            try = api_client.make_blocking_request(prompt)
+            try:
+                completion = api_client.make_blocking_request(prompt)
                 if completion:
                     # Show completion in popup
                     self.view.show_popup(

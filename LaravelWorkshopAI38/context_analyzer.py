@@ -68,7 +68,8 @@ class ContextAnalyzer:
                 if any(file.endswith(ext) for ext in self.code_file_extensions):
                     file_path = os.path.join(root, file)
                     try:
-                        with open(file_path, 'r', encoding='utf-8') as f = f.readlines()
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            lines = f.readlines()
                             matching_snippets = []
                             
                             for i, line in enumerate(lines):
@@ -77,12 +78,13 @@ class ContextAnalyzer:
                                 if re.search(pattern, line):
                                     start = max(0, i - 2)
                                     end = min(len(lines), i + 3)
-                                    snippet = "".join(lines[start)
+                                    snippet = "".join(lines[start:end])
                                     matching_snippets.append(
                                         "... (line {})\n{}".format(i + 1, snippet)
                                     )
                             
-                            if matching_snippets = os.path.relpath(file_path, self.project_root)
+                            if matching_snippets:
+                                relative_path = os.path.relpath(file_path, self.project_root)
                                 contexts.append(
                                     "--- File: {}\n{}\n".format(
                                         relative_path, 
@@ -125,7 +127,8 @@ class ContextAnalyzer:
         symbol = self.extract_symbol_from_text(text)
         
         # Check if advanced context should be used
-        if use_advanced_context is None = sublime.load_settings("LaravelWorkshopAI.sublime-settings")
+        if use_advanced_context is None:
+            settings = sublime.load_settings("LaravelWorkshopAI.sublime-settings")
             use_advanced_context = settings.get("use_advanced_context", True)
         
         if use_advanced_context and current_file_path:

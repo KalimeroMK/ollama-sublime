@@ -259,7 +259,8 @@ class UIHelpers:
             template_base = template.format(selection="")
             available_for_selection = max_length - len(template_base) - 3  # Reserve 3 for "..."
             
-            if available_for_selection > 0 = selection[:available_for_selection] + "..."
+            if available_for_selection > 0:
+                truncated_selection = selection[:available_for_selection] + "..."
                 return template.format(selection=truncated_selection)
             else:
                 # If template itself is too long, just truncate the whole thing
@@ -323,7 +324,8 @@ class UIHelpers:
     @staticmethod
     def get_project_relative_path(file_path, project_root):
         """Get the relative path of a file within the project."""
-        try = os.path.relpath(file_path, project_root)
+        try:
+            rel_path = os.path.relpath(file_path, project_root)
             # If the relative path goes up directories (starts with ..), 
             # the file is outside the project root
             if rel_path.startswith('..'):
@@ -348,7 +350,8 @@ class TabManager:
         """Create and register an output tab."""
         tab = UIHelpers.create_output_tab(self.window, title)
         
-        if prompt or model = ""
+        if prompt or model:
+            header_content = ""
             if prompt:
                 header_content += "Prompt: {}\n".format(prompt)
             if model:

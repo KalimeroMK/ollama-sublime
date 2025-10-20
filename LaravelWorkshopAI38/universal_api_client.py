@@ -189,7 +189,8 @@ class UniversalAPIClient:
                 
                 data = json.loads(line)
                 choices = data.get("choices", [])
-                if choices = choices[0].get("delta", {})
+                if choices:
+                    delta = choices[0].get("delta", {})
                     return delta.get("content", "")
                 
                 return None
@@ -201,7 +202,8 @@ class UniversalAPIClient:
                 
                 data = json.loads(line)
                 candidates = data.get("candidates", [])
-                if candidates = candidates[0].get("content", {})
+                if candidates:
+                    content = candidates[0].get("content", {})
                     parts = content.get("parts", [])
                     if parts:
                         return parts[0].get("text", "")
@@ -226,12 +228,14 @@ class UniversalAPIClient:
         
         try:
             with urllib.request.urlopen(request, timeout=self.timeout) as response:
-                for line in response = line.decode('utf-8').strip()
+                for line in response:
+                    line = line.decode('utf-8').strip()
                     content = self._parse_response_chunk(line)
                     if content:
                         callback(content)
         
-        except urllib.error.HTTPError as e = e.read().decode('utf-8')
+        except urllib.error.HTTPError as e:
+            error_body = e.read().decode('utf-8')
             raise Exception("HTTP {0}: {1}".format(e.code, error_body))
         
         except urllib.error.URLError as e:
@@ -258,26 +262,30 @@ class UniversalAPIClient:
         )
         
         try:
-            with urllib.request.urlopen(request, timeout=self.timeout) as response = json.loads(response.read().decode('utf-8'))
+            with urllib.request.urlopen(request, timeout=self.timeout) as response:
+                data = json.loads(response.read().decode('utf-8'))
                 
                 if self.provider == "ollama" or (self.provider == "custom" and self.api_format == "ollama"):
                     return data.get("response", "")
                 
                 elif self.provider == "openai" or (self.provider == "custom" and self.api_format == "openai"):
                     choices = data.get("choices", [])
-                    if choices = choices[0].get("message", {})
+                    if choices:
+                        message = choices[0].get("message", {})
                         return message.get("content", "")
                     return ""
                 
                 elif self.provider == "gemini":
                     candidates = data.get("candidates", [])
-                    if candidates = candidates[0].get("content", {})
+                    if candidates:
+                        content = candidates[0].get("content", {})
                         parts = content.get("parts", [])
                         if parts:
                             return parts[0].get("text", "")
                     return ""
         
-        except urllib.error.HTTPError as e = e.read().decode('utf-8')
+        except urllib.error.HTTPError as e:
+            error_body = e.read().decode('utf-8')
             raise Exception("HTTP {0}: {1}".format(e.code, error_body))
         
         except urllib.error.URLError as e:

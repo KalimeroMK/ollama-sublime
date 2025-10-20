@@ -26,7 +26,8 @@ class ResponseProcessor:
             r'^```\s*\n'
         ]
         
-        for pattern in fence_patterns = re.sub(pattern, '', cleaned, flags=re.MULTILINE)
+        for pattern in fence_patterns:
+            cleaned = re.sub(pattern, '', cleaned, flags=re.MULTILINE)
         
         # Remove closing fences
         cleaned = re.sub(r'\n```\s*$', '', cleaned)
@@ -59,10 +60,12 @@ class ResponseProcessor:
         Validate that response content is not empty and meaningful.
         Returns tuple of (is_valid, cleaned_content).
         """
-        if not content, ""
+        if not content:
+            return False, ""
             
         cleaned = content.strip()
-        if not cleaned, ""
+        if not cleaned:
+            return False, ""
             
         # Check for common empty responses
         empty_indicators = [
@@ -72,7 +75,8 @@ class ResponseProcessor:
             "undefined"
         ]
         
-        if cleaned.lower() in empty_indicators, cleaned
+        if cleaned.lower() in empty_indicators:
+            return False, cleaned
             
         return True, cleaned
     
