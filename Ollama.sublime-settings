@@ -1,4 +1,52 @@
 {
+    // ============================================
+    // AI Provider Configuration
+    // ============================================
+    
+    // Provider: "ollama" (local), "openai", "gemini", "custom"
+    "ai_provider": "ollama",
+    
+    // Ollama Configuration (local)
+    "ollama": {
+        "base_url": "http://localhost:11434",
+        "model": "qwen2.5-coder:14b",
+        "timeout": 120,
+        "stream": true
+    },
+    
+    // OpenAI Configuration (ChatGPT, GPT-4)
+    "openai": {
+        "api_key": "",  // Add your OpenAI API key here
+        "base_url": "https://api.openai.com/v1",
+        "model": "gpt-4",
+        "temperature": 0.7,
+        "max_tokens": 4000,
+        "timeout": 60
+    },
+    
+    // Google Gemini Configuration
+    "gemini": {
+        "api_key": "",  // Add your Gemini API key here
+        "model": "gemini-1.5-pro",  // or "gemini-1.5-flash" for faster responses
+        "temperature": 0.7,
+        "max_tokens": 8000,
+        "timeout": 60
+    },
+    
+    // Custom Server Configuration (your Tesla L4 server)
+    "custom": {
+        "base_url": "http://your-server:8000",  // Your custom server URL
+        "api_key": "",  // Optional API key for authentication
+        "model": "your-model-name",
+        "headers": {
+            // Additional headers if needed
+            // "X-Custom-Header": "value"
+        },
+        "timeout": 120,
+        "stream": true,
+        "api_format": "openai"  // "openai" or "ollama" format
+    },
+    
     "enable_background_processing": true,
     
     // Cursor-like Features

@@ -1,66 +1,66 @@
 [
   {
-    "caption": "Ollama AI: Prompt",
+    "caption": "Laravel Workshop AI: Prompt",
     "command": "ollama_prompt"
   },
   {
-    "caption": "Ollama AI: Explain Selection",
+    "caption": "Laravel Workshop AI: Explain Selection",
     "command": "ollama_explain_selection"
   },
   {
-    "caption": "Ollama AI: Optimize Selection",
+    "caption": "Laravel Workshop AI: Optimize Selection",
     "command": "ollama_optimize_selection"
   },
   {
-    "caption": "Ollama AI: Find Code Smells...",
+    "caption": "Laravel Workshop AI: Find Code Smells...",
     "command": "ollama_code_smell_finder"
   },
   {
-    "caption": "Ollama AI: Custom Prompt for Selection...",
+    "caption": "Laravel Workshop AI: Custom Prompt for Selection...",
     "command": "ollama_selection_prompt"
   },
   {
-    "caption": "Ollama AI: Suggest Refactoring...",
+    "caption": "Laravel Workshop AI: Suggest Refactoring...",
     "command": "ollama_inline_refactor"
   },
   {
-    "caption": "Ollama AI: Create File From Prompt...",
+    "caption": "Laravel Workshop AI: Create File From Prompt...",
     "command": "ollama_create_file"
   },
   {
-    "caption": "Ollama AI: Generate Feature...",
+    "caption": "Laravel Workshop AI: Generate Feature...",
     "command": "ollama_generate_feature"
   },
   {
-    "caption": "Ollama AI: Edit Settings",
+    "caption": "Laravel Workshop AI: Edit Settings",
     "command": "ollama_edit_settings"
   },
   {
-    "caption": "Ollama AI: Analyze Project Architecture...",
+    "caption": "Laravel Workshop AI: Analyze Project Architecture...",
     "command": "ollama_architecture_analysis"
   },
   {
-    "caption": "Ollama AI: Show Related Files",
+    "caption": "Laravel Workshop AI: Show Related Files",
     "command": "ollama_related_files"
   },
   {
-    "caption": "Ollama AI: Analyze Change Impact...",
+    "caption": "Laravel Workshop AI: Analyze Change Impact...",
     "command": "ollama_impact_analysis"
   },
   {
-    "caption": "Ollama AI: Cache Management",
+    "caption": "Laravel Workshop AI: Cache Management",
     "command": "ollama_cache_manager"
   },
   {
-    "caption": "Ollama AI: Inline Chat",
+    "caption": "Laravel Workshop AI: Inline Chat",
     "command": "ollama_ai_prompt"
   },
   {
-    "caption": "Ollama AI: Smart Completion",
+    "caption": "Laravel Workshop AI: Smart Completion",
     "command": "ollama_ai_smart_completion"
   },
   {
-    "caption": "Ollama AI: PHP/Laravel Completion",
+    "caption": "Laravel Workshop AI: PHP/Laravel Completion",
     "command": "ollama_php_completion"
   }
 ]

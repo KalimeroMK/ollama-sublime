@@ -4,6 +4,24 @@
         "command": "ollama_cache_manager"
     },
     {
+        "keys": ["ctrl+shift+o"],
+        "command": "ollama_prompt"
+    },
+    {
+        "keys": ["cmd+k"],
+        "command": "ollama_inline_chat",
+        "context": [
+            { "key": "selector", "operator": "equal", "operand": "source.php" }
+        ]
+    },
+    {
+        "keys": ["cmd+shift+k"],
+        "command": "ollama_clear_chat_history",
+        "context": [
+            { "key": "selector", "operator": "equal", "operand": "source.php" }
+        ]
+    },
+    {
         "keys": ["cmd+shift+i"],
         "command": "ollama_ai_prompt"
     },

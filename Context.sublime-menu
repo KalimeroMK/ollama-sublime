@@ -1,0 +1,55 @@
+[
+    {
+        "caption": "Laravel Workshop AI",
+        "id": "ollama-ai",
+        "children": [
+            {
+                "caption": "🤖 AI Agents",
+                "children": [
+                    {
+                        "caption": "Generate Feature...",
+                        "command": "ollama_agent_generate_feature"
+                    },
+                    {
+                        "caption": "Debug Code",
+                        "command": "ollama_agent_debug"
+                    },
+                    {
+                        "caption": "Refactor Code",
+                        "command": "ollama_agent_refactor"
+                    },
+                    {
+                        "caption": "Custom Task...",
+                        "command": "ollama_agent_custom_task"
+                    },
+                    {
+                        "caption": "Chat with Agent...",
+                        "command": "ollama_agent_chat"
+                    }
+                ]
+            },
+            { "caption": "-" },
+            {
+                "caption": "Explain Selection",
+                "command": "ollama_explain_selection"
+            },
+            {
+                "caption": "Optimize Selection",
+                "command": "ollama_optimize_selection"
+            },
+            {
+                "caption": "Suggest Refactoring...",
+                "command": "ollama_selection_prompt"
+            },
+            {
+                "caption": "Find Code Smells",
+                "command": "ollama_code_smell_finder"
+            },
+            { "caption": "-" },
+            {
+                "caption": "PHP/Laravel Completion",
+                "command": "ollama_php_completion"
+            }
+        ]
+    }
+]

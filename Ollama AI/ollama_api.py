@@ -4,6 +4,9 @@ import sublime
 import socket
 import urllib.error
 
+# Import universal API client
+from .universal_api_client import create_universal_api_client
+
 
 class OllamaApiClient:
     """
@@ -102,13 +105,13 @@ class OllamaApiClient:
             error_msg += f"- URL: {self.base_url}\n"
             error_msg += f"- API Type: {'Chat' if self.is_chat_api else 'Generate'}"
             
-            print(f"[Ollama AI] {error_msg}")
+            print(f"[Laravel Workshop AI] {error_msg}")
             return error_msg
             
         except Exception as e:
             error_msg = f"🔴 **Unexpected Error:** {str(e)}\n\n"
             error_msg += "Please check the console for more details or report this issue."
-            print(f"[Ollama AI] Unexpected error: {e}")
+            print(f"[Laravel Workshop AI] Unexpected error: {e}")
             return error_msg
     
     def make_streaming_request(self, prompt, callback, messages=None):
@@ -154,10 +157,19 @@ class OllamaApiClient:
 def create_api_client_from_settings():
     """Factory function to create API client from Sublime settings."""
     settings = sublime.load_settings("Ollama.sublime-settings")
-    model = settings.get("model", "qwen2.5-coder")
-    url_from_settings = settings.get("url", "http://127.0.0.1:11434")
-    system_prompt = settings.get("system_prompt", "You are a Laravel PHP expert.")
-    is_chat_api = "/api/chat" in url_from_settings
-    base_url = url_from_settings.replace('/api/chat', '').replace('/api/generate', '')
     
-    return OllamaApiClient(base_url, model, system_prompt, is_chat_api)
+    # Check if using new universal API client
+    provider = settings.get("ai_provider", None)
+    
+    if provider:
+        # Use new universal API client
+        return create_universal_api_client()
+    else:
+        # Backward compatibility - use old Ollama client
+        model = settings.get("model", "qwen2.5-coder")
+        url_from_settings = settings.get("url", "http://127.0.0.1:11434")
+        system_prompt = settings.get("system_prompt", "You are a Laravel PHP expert.")
+        is_chat_api = "/api/chat" in url_from_settings
+        base_url = url_from_settings.replace('/api/chat', '').replace('/api/generate', '')
+        
+        return OllamaApiClient(base_url, model, system_prompt, is_chat_api)

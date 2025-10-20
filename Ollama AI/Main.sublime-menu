@@ -1,7 +1,7 @@
 [
     {
         "id": "ollama-ai",
-        "caption": "Ollama AI",
+        "caption": "Laravel Workshop AI",
         "children": [
             {
                 "caption": "Custom Prompt",

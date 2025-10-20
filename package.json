@@ -1,5 +1,6 @@
 {
-    "name": "Ollama AI",
+    "name": "laravel-workshop-ai",
+    "displayName": "Laravel Workshop AI",
     "details": "https://github.com/KalimeroMK/ollama-sublime",
     "labels": ["ai", "ollama", "code-assistant", "local-llm", "laravel", "php"],
     "releases": [
@@ -8,7 +9,7 @@
             "tags": true,
             "url": "https://github.com/KalimeroMK/ollama-sublime/archive/refs/tags/",
             "date": "2025-01-27 10:00:00",
-            "version": "1.0.0"
+            "version": "2.1.0"
         }
     ]
 }

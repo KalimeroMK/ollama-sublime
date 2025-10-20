@@ -304,12 +304,12 @@ class MultiFileContextAnalyzer:
             for file in files:
                 # Check timeout
                 if time.time() - start_time > self._scan_timeout:
-                    print(f"[Ollama AI] File scanning timeout after {self._scan_timeout}s")
+                    print(f"[Laravel Workshop AI] File scanning timeout after {self._scan_timeout}s")
                     break
                 
                 # Check file limit
                 if scanned_files >= self._max_files_to_scan:
-                    print(f"[Ollama AI] Reached maximum files limit ({self._max_files_to_scan})")
+                    print(f"[Laravel Workshop AI] Reached maximum files limit ({self._max_files_to_scan})")
                     break
                 
                 # Check file extension
@@ -323,7 +323,7 @@ class MultiFileContextAnalyzer:
                     # Check file size
                     file_size = os.path.getsize(file_path)
                     if file_size > self._file_size_limit:
-                        print(f"[Ollama AI] Skipping large file: {relative_path} ({file_size} bytes)")
+                        print(f"[Laravel Workshop AI] Skipping large file: {relative_path} ({file_size} bytes)")
                         continue
                     
                     # Read file content
@@ -343,10 +343,10 @@ class MultiFileContextAnalyzer:
                     # Progress update every 50 files
                     if scanned_files % 50 == 0 and total_files > 0:
                         progress = (scanned_files / total_files) * 100
-                        print(f"[Ollama AI] Scanning progress: {scanned_files}/{total_files} ({progress:.1f}%)")
+                        print(f"[Laravel Workshop AI] Scanning progress: {scanned_files}/{total_files} ({progress:.1f}%)")
                     
                 except Exception as e:
-                    print(f"[Ollama AI] Error reading file {relative_path}: {e}")
+                    print(f"[Laravel Workshop AI] Error reading file {relative_path}: {e}")
                     continue
         
         # Cache the scan results
@@ -360,14 +360,14 @@ class MultiFileContextAnalyzer:
         
         self.cache.set(self.project_root, cache_key, "", scan_result, ttl=1800)  # 30 minutes
         
-        print(f"[Ollama AI] File scanning completed: {scanned_files} files in {scan_result['scan_time']:.2f}s")
+        print(f"[Laravel Workshop AI] File scanning completed: {scanned_files} files in {scan_result['scan_time']:.2f}s")
     
     def _build_dependency_graph(self):
         """Build dependency graph with performance optimizations."""
         if not self._file_cache:
             return
         
-        print("[Ollama AI] Building dependency graph...")
+        print("[Laravel Workshop AI] Building dependency graph...")
         start_time = time.time()
         
         # Process files in batches for better performance
@@ -390,7 +390,7 @@ class MultiFileContextAnalyzer:
                         self._dependency_graph[file_path].append(relationship)
                         self._reverse_dependency_graph[dep].append(relationship)
         
-        print(f"[Ollama AI] Dependency graph built in {time.time() - start_time:.2f}s")
+        print(f"[Laravel Workshop AI] Dependency graph built in {time.time() - start_time:.2f}s")
     
     def _extract_dependencies(self, file_path, content):
         """Extract dependencies from file content with optimized patterns."""
