@@ -9,7 +9,7 @@ import os
 import threading
 
 # Import modular components
-from ollama_api import create_api_client_from_settings
+from laravel_workshop_api import create_api_client_from_settings
 from context_analyzer import ContextAnalyzer
 from ui_helpers import UIHelpers, TabManager
 from response_processor import ResponseProcessor, StreamingResponseHandler

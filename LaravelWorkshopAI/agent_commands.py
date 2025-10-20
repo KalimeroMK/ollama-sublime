@@ -9,7 +9,7 @@ import json
 import os
 from typing import Dict, Any
 
-from ollama_api import create_api_client_from_settings
+from laravel_workshop_api import create_api_client_from_settings
 from agent_framework import create_agent_workflow, AgentRole, Agent, Task, AgentCrew
 from agent_tools import create_default_tools
 from ui_helpers import UIHelpers, TabManager

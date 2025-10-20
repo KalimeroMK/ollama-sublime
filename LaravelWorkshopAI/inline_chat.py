@@ -11,7 +11,7 @@ import json
 import os
 from typing import List, Dict, Optional
 
-from ollama_api import create_api_client_from_settings
+from laravel_workshop_api import create_api_client_from_settings
 from context_analyzer import ContextAnalyzer
 from laravel_intelligence import get_laravel_analyzer, LaravelContextDetector
 from ui_helpers import UIHelpers
