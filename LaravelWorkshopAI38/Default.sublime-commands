@@ -63,4 +63,9 @@
     "caption": "Laravel Workshop AI: PHP/Laravel Completion",
     "command": "laravel_workshop_php_completion"
   }
+  ,
+  {
+    "caption": "Laravel Workshop AI: Scan Project for N+1",
+    "command": "laravel_workshop_agent_scan_project"
+  }
 ]

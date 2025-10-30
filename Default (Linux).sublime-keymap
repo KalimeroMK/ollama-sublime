@@ -1,0 +1,10 @@
+[
+    {
+        "keys": ["enter"],
+        "command": "commit_completion",
+        "context": [
+            { "key": "auto_complete_visible", "operator": "equal", "operand": true },
+            { "key": "setting.laravel_workshop_chat_tab", "operator": "not_equal", "operand": true }
+        ]
+    }
+]

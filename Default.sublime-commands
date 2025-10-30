@@ -58,6 +58,18 @@
         "caption": "Laravel Workshop AI: Smart Completion",
         "command": "laravel_workshop_ai_smart_completion"
     },
+    {
+        "caption": "Laravel Workshop AI: Generate Files (Cursor-like)",
+        "command": "laravel_workshop_ai_generate_files"
+    },
+    {
+        "caption": "Laravel Workshop AI: Find Code Smells",
+        "command": "laravel_workshop_code_smell_finder"
+    },
+    {
+        "caption": "Laravel Workshop AI: Optimize Project",
+        "command": "laravel_workshop_optimize_project"
+    },
     
     // Utility
     {

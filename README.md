@@ -1,6 +1,29 @@
 # Laravel Workshop AI
 
-AI-powered code assistance for Sublime Text 4, powered by local Ollama LLMs. **Now with AI Agents!** 🤖🚀
+AI-powered code assistance for Sublime Text 4, powered by local Ollama LLMs. **Now with Cursor-like file generation!** 🤖🚀
+
+## 🎯 **NEW: Automated File Generation (Cursor-like)**
+
+**Generate complete features automatically - just describe what you need!**
+
+- **✨ Smart File Generation** - AI analyzes your project structure and creates all necessary files
+- **📁 Multi-File Creation** - Generate models, controllers, migrations, routes, views in one go
+- **🔍 Project-Aware** - Understands Laravel structure, PSR-4 namespaces, existing patterns
+- **🎨 Best Practices** - Follows Laravel conventions automatically
+- **💻 Inline Chat with `create:` prefix** - Chat interface that can also create files
+
+### Usage Examples
+```bash
+# Generate complete CRUD for Products
+Command: Laravel Workshop AI: Generate Files
+Input: "Create a complete CRUD for Products with API endpoints"
+
+# Via Chat interface
+Command: Laravel Workshop AI: Inline Chat
+Input: "create: Build a blog post system with comments and tags"
+
+Result: AI analyzes project → creates 6+ files automatically!
+```
 
 ## 🤖 **NEW: AI Agent Framework**
 
@@ -38,6 +61,11 @@ You: "Create a Laravel CRUD for Products with API and tests"
   - [Model Autocomplete](#model-autocomplete)
   - [Show Model Info](#show-model-info)
 - [Project Structure Detection](#-project-structure-detection)
+- [Background Workers](#background-workers)
+- [Scanners and Auto-Fixes](#scanners-and-auto-fixes)
+  - [N+1 Detector](#n1-detector)
+  - [Controller Validation → FormRequest](#controller-validation--formrequest)
+- [Plugin Cleanup](#plugin-cleanup)
 - [Examples](#-examples)
 - [Troubleshooting](#-troubleshooting)
  - [AI Agents Guide](#-ai-agents-guide)
@@ -96,12 +124,15 @@ You: "Create a Laravel CRUD for Products with API and tests"
 ### **Specialized Commands**
 - **`Laravel Workshop AI: PHP/Laravel Completion`** - Smart PHP/Laravel autocomplete
 - **`Laravel Workshop AI: Create File`** - Generate single file from description
-- **`Laravel Workshop AI: Inline Chat`** - Quick chat interface
+- **`Laravel Workshop AI: Generate Files (Cursor-like)`** - ✨ **NEW!** AI analyzes project and generates multiple files
+- **`Laravel Workshop AI: Inline Chat`** - Quick chat interface (use `create: ` prefix for file creation)
 - **`Laravel Workshop AI: Smart Completion`** - AI-powered code completion
 
 ### **Utility Commands**
 - **`Laravel Workshop AI: Cache Manager`** - Manage cache
 - **`Laravel Workshop AI: Settings`** - Open settings
+- **`Laravel Workshop AI: Cleanup Deprecated`** - Move legacy plugin files to `_deprecated/`
+- **`Laravel Workshop AI: Auto Cleanup`** - Automatically move known legacy plugin files
 
 ### Right-Click Menu
 - **🤖 AI Agents** submenu with all agent commands
@@ -212,6 +243,21 @@ Run your own OpenAI-compatible server (e.g., vLLM) and point the client to it.
 
 ## 📝 Examples
 
+### **✨ NEW: Generate Multiple Files (Cursor-like)**
+```
+Command: "Laravel Workshop AI: Generate Files"
+Input: "Create a complete CRUD for Products - model, migration, controller, routes"
+Result: Creates app/Models/Product.php, database/migrations/xxx_create_products_table.php, 
+        app/Http/Controllers/ProductController.php, updates routes/web.php
+```
+
+### **Inline Chat with File Creation**
+```
+Command: "Laravel Workshop AI: Inline Chat"
+Input: "create: Build a User registration system with validation"
+Result: AI analyzes your project structure and creates all necessary files
+```
+
 ### **Inline Chat Example**
 ```
 You: "How can I optimize this Laravel query?"
@@ -318,6 +364,61 @@ Detectors recognize patterns and route generated code accordingly:
 - **Service**: `*Service.php` under `app/Services`.
 
 You can disable or force a structure via settings (e.g., `force_structure: "ddd"`).
+
+## Background Workers
+
+The plugin uses a shared priority WorkerManager to execute background tasks without blocking the UI.
+
+- Coalescing per task type and project (prevents duplicate scans).
+- Priorities: high (apply fixes), normal (scan), low (indexing).
+- Centralized scheduling for chat-triggered scans and commands.
+
+No configuration is required, but you can tune worker counts via settings:
+
+```json
+{
+  "scanner_max_workers": 8,
+  "scanner_excludes": ["vendor", "node_modules", ".git", "storage", "bootstrap", "build", "dist"]
+}
+```
+
+## Scanners and Auto-Fixes
+
+### N+1 Detector
+
+- Detects common N+1 patterns in PHP and Blade files.
+- Suggests safe eager loading by injecting `->with([...])` before `get()` and `paginate(...)`.
+- Uses the project index (models/relations) to boost suggestions with known relations.
+- Flow:
+  - Chat: type "scan n+1" / "skeniraj n+1".
+  - Review results in the chat tab.
+  - Choose:
+    - Apply safe fixes now (writes with `.bak` backups).
+    - Show diffs preview.
+
+### Controller Validation → FormRequest
+
+- Scans controllers for inline validation calls (`$request->validate(...)`, `Validator::make(...)`).
+- Extracts best-effort validation rules and generates `app/Http/Requests/*Request.php` classes with prefilled `rules()`.
+- Offers optional auto-refactor of controllers:
+  - Adds `use App\Http\Requests\...` imports.
+  - Changes method signatures to type-hint the generated FormRequest.
+  - Replaces `$request->validate(...)` with `$request->validated()`.
+- Flow:
+  - Chat: type "proveri kontroleri validacija" / "request klasi".
+  - Review the report, then choose:
+    - Preview refactor diffs (unified diff preview in a tab).
+    - Generate FormRequest classes.
+    - Refactor controllers to use FormRequest (writes with `.bak` backups).
+
+## Plugin Cleanup
+
+Keep your plugin folder tidy without deleting files permanently:
+
+- Command: "Laravel Workshop AI: Cleanup Deprecated" – pick files to move to `_deprecated/`.
+- Command: "Laravel Workshop AI: Auto Cleanup" – automatically moves known legacy files to `_deprecated/`.
+
+Only the plugin folder is affected; your Laravel project files are not touched.
 
 ## 🚀 Tesla L4 Server Setup
 

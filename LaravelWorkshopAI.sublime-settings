@@ -60,6 +60,9 @@
     "inline_chat_auto_focus": true,
     "inline_chat_show_history": true,
     "inline_chat_max_history": 10,
+    // Cursor-like UX options
+    "inline_chat_auto_place_right": true,
+    "inline_chat_inline_input": true,
     
     // Smart Completion Settings
     "smart_completion_trigger_chars": [".", "(", " ", "\n"],

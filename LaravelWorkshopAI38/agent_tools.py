@@ -25,3 +25,12 @@ class FileSystemTools:
             return True
         except Exception:
             return False
+
+
+def create_default_tools():
+    """Return a default empty tool list.
+
+    agent_commands imports this symbol. Keeping it minimal and compile-safe
+    is sufficient; advanced tool wiring can be added later.
+    """
+    return []

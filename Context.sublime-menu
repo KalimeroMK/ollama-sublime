@@ -4,51 +4,25 @@
         "id": "ollama-ai",
         "children": [
             {
-                "caption": "🤖 AI Agents",
-                "children": [
-                    {
-                        "caption": "Generate Feature...",
-                        "command": "laravel_workshop_agent_generate_feature"
-                    },
-                    {
-                        "caption": "Debug Code",
-                        "command": "laravel_workshop_agent_debug"
-                    },
-                    {
-                        "caption": "Refactor Code",
-                        "command": "laravel_workshop_agent_refactor"
-                    },
-                    {
-                        "caption": "Custom Task...",
-                        "command": "laravel_workshop_agent_custom_task"
-                    },
-                    {
-                        "caption": "Chat with Agent...",
-                        "command": "laravel_workshop_agent_chat"
-                    }
-                ]
-            },
-            { "caption": "-" },
-            {
-                "caption": "Explain Selection",
-                "command": "laravel_workshop_explain_selection"
+                "caption": "💬 Inline Chat",
+                "command": "laravel_workshop_inline_chat"
             },
             {
-                "caption": "Optimize Selection",
-                "command": "laravel_workshop_optimize_selection"
+                "caption": "Go To Definition",
+                "command": "laravel_workshop_goto_definition"
             },
             {
-                "caption": "Suggest Refactoring...",
-                "command": "laravel_workshop_selection_prompt"
-            },
-            {
-                "caption": "Find Code Smells",
+                "caption": "🔍 Find Code Smells",
                 "command": "laravel_workshop_code_smell_finder"
             },
+            {
+                "caption": "⚡ Optimize Project",
+                "command": "laravel_workshop_optimize_project"
+            },
             { "caption": "-" },
             {
-                "caption": "PHP/Laravel Completion",
-                "command": "laravel_workshop_php_completion"
+                "caption": "⚙️ Settings",
+                "command": "laravel_workshop_edit_settings"
             }
         ]
     }

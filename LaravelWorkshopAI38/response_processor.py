@@ -19,19 +19,27 @@ class ResponseProcessor:
             
         cleaned = content.strip()
         
-        # Remove opening fences with language specifiers
-        fence_patterns = [
-            r'^```' + re.escape(language_hint) + r'\s*\n',
-            r'^```[a-zA-Z]*\s*\n',
-            r'^```\s*\n'
-        ]
-        
-        for pattern in fence_patterns:
-            cleaned = re.sub(pattern, '', cleaned, flags=re.MULTILINE)
-        
-        # Remove closing fences
-        cleaned = re.sub(r'\n```\s*$', '', cleaned)
-        cleaned = re.sub(r'^```\s*$', '', cleaned, flags=re.MULTILINE)
+        # Try to extract code from markdown block first
+        code_block_pattern = r'```(?:[a-zA-Z]*)?\s*\n?(.*?)```'
+        match = re.search(code_block_pattern, cleaned, re.DOTALL)
+        if match:
+            # Found a code block, extract just the content
+            cleaned = match.group(1)
+        else:
+            # Try to remove fencing without code block wrapper
+            # Remove opening fences with language specifiers
+            fence_patterns = [
+                r'^```' + re.escape(language_hint) + r'\s*\n?',
+                r'^```[a-zA-Z]*\s*\n?',
+                r'^```\s*\n?'
+            ]
+            
+            for pattern in fence_patterns:
+                cleaned = re.sub(pattern, '', cleaned, flags=re.MULTILINE)
+            
+            # Remove closing fences
+            cleaned = re.sub(r'\n?```\s*$', '', cleaned)
+            cleaned = re.sub(r'^```\s*$', '', cleaned, flags=re.MULTILINE)
         
         return cleaned.strip()
     

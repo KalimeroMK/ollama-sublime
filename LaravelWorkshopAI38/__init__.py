@@ -45,5 +45,36 @@ from .laravel_workshop_commands import (
     LaravelWorkshopCacheManagerCommand,
     LaravelWorkshopEditSettingsCommand,
     LaravelWorkshopAiPromptCommand,
-    LaravelWorkshopAiSmartCompletionCommand
+    LaravelWorkshopAiSmartCompletionCommand,
+    LaravelWorkshopAiGenerateFilesCommand,
+    LaravelWorkshopCodeSmellFinderCommand,
+    LaravelWorkshopOptimizeProjectCommand
 )
+
+# Event listener for settings auto-save
+import sublime
+import sublime_plugin
+
+class LaravelWorkshopSettingsSaveListener(sublime_plugin.EventListener):
+    """Auto-save settings view content to actual settings file"""
+    
+    def on_pre_save(self, view):
+        settings_file_path = view.settings().get('settings_file_path')
+        if settings_file_path:
+            # Prevent saving the scratch view itself, redirect to actual file
+            # Get content from view
+            content = view.substr(sublime.Region(0, view.size()))
+            
+            # Save to actual file
+            try:
+                import os
+                os.makedirs(os.path.dirname(settings_file_path), exist_ok=True)
+                with open(settings_file_path, 'w', encoding='utf-8') as f:
+                    f.write(content)
+                sublime.status_message("✅ Settings saved to: " + os.path.basename(settings_file_path))
+                
+                # Clear the modified flag since we saved to the actual file
+                view.set_scratch(True)  # Mark as scratch to prevent normal save dialog
+                sublime.set_timeout(lambda: view.set_scratch(False), 100)
+            except Exception as e:
+                sublime.error_message("Error saving settings: " + str(e))

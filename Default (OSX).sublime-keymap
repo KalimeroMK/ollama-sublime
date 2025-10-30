@@ -8,11 +8,12 @@
         "command": "laravel_workshop_prompt"
     },
     {
+        "keys": ["cmd+alt+k"],
+        "command": "laravel_workshop_inline_chat"
+    },
+    {
         "keys": ["cmd+k"],
-        "command": "laravel_workshop_inline_chat",
-        "context": [
-            { "key": "selector", "operator": "equal", "operand": "source.php" }
-        ]
+        "command": "laravel_workshop_inline_chat"
     },
     {
         "keys": ["cmd+shift+k"],
@@ -22,11 +23,43 @@
         ]
     },
     {
+        "keys": ["enter"],
+        "command": "laravel_workshop_submit_inline_chat",
+        "context": [
+            { "key": "setting.laravel_workshop_chat_tab", "operator": "equal", "operand": true },
+            { "key": "in_chat_prompt_area", "operator": "equal", "operand": true }
+        ]
+    },
+    {
+        "keys": ["cmd+alt+enter"],
+        "command": "laravel_workshop_submit_inline_chat",
+        "context": [
+            { "key": "setting.laravel_workshop_chat_tab", "operator": "equal", "operand": true }
+        ]
+    },
+    {
         "keys": ["cmd+shift+i"],
         "command": "laravel_workshop_ai_prompt"
     },
     {
         "keys": ["cmd+shift+space"],
         "command": "laravel_workshop_ai_smart_completion"
+    }
+    ,
+    {
+        "keys": ["enter"],
+        "command": "commit_completion",
+        "context": [
+            { "key": "auto_complete_visible", "operator": "equal", "operand": true },
+            { "key": "setting.laravel_workshop_chat_tab", "operator": "not_equal", "operand": true }
+        ]
+    }
+    ,
+    {
+        "keys": ["f12"],
+        "command": "laravel_workshop_goto_definition",
+        "context": [
+            { "key": "selector", "operator": "equal", "operand": "source.php" }
+        ]
     }
 ]
